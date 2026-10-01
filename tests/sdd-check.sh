@@ -44,6 +44,12 @@ out="$(sh "$check" "$d")"
 printf '%s\n' "$out" | grep -q "status 'Done' no cabeçalho e 'Approved'" || fail "status divergente não apontado"
 printf '%s\n' "$out" | grep -q 'ROADMAP cita 001 FR-9' || fail "ID inexistente no ROADMAP não apontado"
 
+# 006 FR-4: linha ADDED/MODIFIED de "Mudanças" com ID inexistente é apontada; REMOVED não.
+printf '\n## Mudanças\n\n### Não lançado\n\n- ADDED FR-1 — x\n- MODIFIED AC-7 — y\n- REMOVED FR-8 — z\n' >> "$d/specs/001-x/spec.md"
+out="$(sh "$check" "$d")"
+printf '%s\n' "$out" | grep -q '"Mudanças" cita AC-7' || fail "MODIFIED com ID inexistente não apontado"
+if printf '%s\n' "$out" | grep -q 'cita FR-1,\|cita FR-8'; then fail "ID válido ou REMOVED apontado por engano"; fi
+
 # 006 AC-2: o próprio kit passa.
 sh "$check" "$root" >/dev/null || fail "sdd-check falhou no próprio kit"
 echo "tests/sdd-check.sh ok"

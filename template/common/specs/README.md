@@ -11,7 +11,7 @@ spec.md (O QUÊ / POR QUÊ)  →  revisão  →  testes a partir dos critérios 
 1. **Especificar** — requisitos (`FR-*`), não funcionais (`NFR-*`) e critérios de aceite (`AC-*`) no formato Dado/Quando/Então.
 2. **Resolver decisões** — itens em aberto são respondidos pelo dono antes de implementar.
 3. **Testar primeiro** — cada `AC-*` vira ao menos um teste automatizado.
-4. **Implementar** — o PR referencia os IDs (ex.: `002 FR-1, AC-2`).
+4. **Implementar** — o PR referencia os IDs (ex.: `002 FR-1, AC-2`) e, se o comportamento mudou, acrescenta uma linha `ADDED`, `MODIFIED` ou `REMOVED` na seção "Mudanças" da spec.
 5. **Fechar** — no PR de fechamento da fase (e não em cada PR de ticket), atualizar o status abaixo, o [ROADMAP](ROADMAP.md) e o `CHANGELOG.md`.
 
 Convenções: `MUST`/`SHOULD`/`MAY` seguem a RFC 2119. Prioridades: **P0** (bloqueia uso real), **P1** (confiabilidade), **P2** (polimento).

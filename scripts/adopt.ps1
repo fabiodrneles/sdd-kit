@@ -93,6 +93,7 @@ try {
 
   $utf8 = New-Object System.Text.UTF8Encoding($false)
   $created = 0; $skipped = 0; $overwritten = 0
+  $state = [System.Collections.Generic.List[string]]::new()
   foreach ($part in @('common', $lang)) {
     $base = (Resolve-Path (Join-Path $template $part)).Path
     # Mesma ordem do sh (LC_ALL=C sort): ordinal.
@@ -119,6 +120,26 @@ try {
         $mode = [IO.File]::GetUnixFileMode($src)
         if ($mode -band [IO.UnixFileMode]::UserExecute) { [IO.File]::SetUnixFileMode($dst, $mode) }
       }
+      $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $dst).Hash.ToLowerInvariant()
+      $state.Add('    "' + $rel + '": "' + $hash + '"')
+    }
+  }
+
+  # Arquivo de estado (spec 005 FR-2), igual byte a byte ao do adopt.sh.
+  $statePath = Join-Path $dest '.sdd-kit.json'
+  $stateExists = Test-Path -LiteralPath $statePath
+  if ($stateExists -and -not $force) {
+    Write-Output 'ignorado (já existe): .sdd-kit.json'
+    $skipped++
+  }
+  else {
+    if ($stateExists) { Write-Output 'sobrescrito: .sdd-kit.json'; $overwritten++ }
+    else { Write-Output 'criado: .sdd-kit.json'; $created++ }
+    if (-not $dry) {
+      $json = "{`n  `"kit`": `"sdd-kit`",`n  `"version`": `"$KitRef`",`n  `"lang`": `"$lang`",`n  `"files`": {"
+      if ($state.Count -gt 0) { $json += "`n" + ($state -join ",`n") }
+      $json += "`n  }`n}`n"
+      [IO.File]::WriteAllText($statePath, $json, $utf8)
     }
   }
 

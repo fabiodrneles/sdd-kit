@@ -28,11 +28,14 @@ try {
     $r = Invoke-Adopt (@('--lang', $lang) + $opts + @($d))
     if ($r.Code -ne 0) { Fail "$lang saiu com $($r.Code): $($r.Out)" }
     $want = @(Get-ChildItem (Join-Path $root 'template/common'), (Join-Path $root "template/$lang") -Recurse -File -Force).Count
+    $want++ # .sdd-kit.json
     $got = @(Get-ChildItem $d -Recurse -File -Force).Count
     if ($want -ne $got) { Fail "${lang}: esperava $want arquivos, gerou $got" }
     if (Get-ChildItem $d -Recurse -File -Force | Select-String -Pattern '\{\{[A-Z_]*\}\}' -CaseSensitive) { Fail "${lang}: sobrou marcador" }
     $bytes = [IO.File]::ReadAllBytes((Join-Path $d 'CLAUDE.md'))
     if ($bytes -contains 13) { Fail "${lang}: CLAUDE.md com CRLF" }
+    $st = Get-Content -Raw (Join-Path $d '.sdd-kit.json') | ConvertFrom-Json
+    if ($st.lang -ne $lang -or @($st.files.PSObject.Properties).Count -ne ($want - 1)) { Fail "${lang}: .sdd-kit.json inválido" }
     # 004 AC-3
     $before = Get-Snapshot $d
     $r = Invoke-Adopt (@('--lang', $lang) + $opts + @($d))

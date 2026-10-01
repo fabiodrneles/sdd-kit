@@ -122,7 +122,8 @@ else
   fi
   if [ "$dry" -eq 0 ]; then
     {
-      printf '{\n  "kit": "sdd-kit",\n  "version": "%s",\n  "lang": "%s",\n  "files": {' "$KIT_REF" "$lang"
+      printf '{\n  "kit": "sdd-kit",\n  "version": "%s",\n  "lang": "%s",\n  "project": "%s",\n  "owner": "%s",\n  "repo": "%s",\n  "files": {' \
+        "$KIT_REF" "$lang" "$project" "$owner" "$repo"
       sep=""
       while read -r rel hash; do
         printf '%s\n    "%s": "%s"' "$sep" "$rel" "$hash"

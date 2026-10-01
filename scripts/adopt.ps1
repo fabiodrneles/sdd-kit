@@ -136,7 +136,7 @@ try {
     if ($stateExists) { Write-Output 'sobrescrito: .sdd-kit.json'; $overwritten++ }
     else { Write-Output 'criado: .sdd-kit.json'; $created++ }
     if (-not $dry) {
-      $json = "{`n  `"kit`": `"sdd-kit`",`n  `"version`": `"$KitRef`",`n  `"lang`": `"$lang`",`n  `"files`": {"
+      $json = "{`n  `"kit`": `"sdd-kit`",`n  `"version`": `"$KitRef`",`n  `"lang`": `"$lang`",`n  `"project`": `"$project`",`n  `"owner`": `"$owner`",`n  `"repo`": `"$repo`",`n  `"files`": {"
       if ($state.Count -gt 0) { $json += "`n" + ($state -join ",`n") }
       $json += "`n  }`n}`n"
       [IO.File]::WriteAllText($statePath, $json, $utf8)

@@ -59,6 +59,9 @@ jobs:
       - name: sdd-check (spec 006 AC-1, AC-2) com as ferramentas do BSD
         if: runner.os == 'macOS'
         run: sh tests/sdd-check.sh
+      - name: sdd-sync (spec 005 AC-1..3) com as ferramentas do BSD
+        if: runner.os == 'macOS'
+        run: sh tests/sync.sh
       - name: adopt.ps1 (spec 004 AC-1..5)
         if: runner.os == 'Windows'
         shell: pwsh

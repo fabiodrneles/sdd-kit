@@ -33,5 +33,6 @@ Convenções: `MUST`/`SHOULD`/`MAY` seguem a RFC 2119. Prioridades: **P0** (bloq
 | 003 | [Template de repositório](003-template/spec.md) | P0 | Approved |
 | 004 | [Script de adoção](004-adoption-script/spec.md) | P0 | Approved |
 | 005 | [Sincronização dos repositórios](005-sync/spec.md) | P1 | Approved |
+| 006 | [Recursos inspirados na comunidade SDD](006-community-features/spec.md) | P1 | Approved |
 
 Status possíveis: `Draft` → `Approved` → `In Progress` → `Done`.

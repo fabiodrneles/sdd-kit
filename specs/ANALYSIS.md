@@ -37,3 +37,15 @@ O processo SDD nasceu no [cv-craft](https://github.com/fabiodrneles/cv-craft) (s
 | D2 | Linguagens com CI e hook prontos na v0.1 | **Go, mais as linguagens do trabalho do dono:** Node/TS (React), Java e Python (lista confirmada pelo dono). |
 | D3 | Atualização de quem já usa o kit | **(a)** PR automático semanal de sincronização, na Fase 2. |
 | D4 | Idioma | **(a)** Português, com um `README.en.md`. |
+
+## 6. Decisões da Fase 2 (respondidas pelo dono em 2026-10-01)
+
+Pedido do dono em 2026-10-01: tornar o kit uma referência aproveitando o que a comunidade de SDD já criou. Propostas na [spec 006](006-community-features/spec.md).
+
+| ID | Pergunta | Opções | Recomendação e resposta |
+|---|---|---|---|
+| D5 | Critérios em EARS (Kiro)? | (a) EARS opcional ao lado de Dado/Quando/Então; (b) EARS obrigatório; (c) manter só Dado/Quando/Então | **(a)** — **respondida: (a)**: EARS é ótimo para requisitos de sistema, Dado/Quando/Então para comportamento visto pelo usuário |
+| D6 | Checagem de rastreabilidade AC → teste no CI? | (a) aviso na Fase 2, erro a partir da Fase 3; (b) erro desde já; (c) não | **(a)** — **respondida: (a)**: dá tempo de os repositórios antigos citarem os IDs nos testes |
+| D7 | Comandos de barra no plugin (spec-kit, OpenSpec)? | (a) sim, os seis da spec 006 FR-3; (b) só `/sdd:status` e `/sdd:next`; (c) não | **(a)** — **respondida: (a)**: deixa o fluxo descobrível sem decorar frases |
+| D8 | Deltas de mudança (OpenSpec)? | (a) seção "Mudanças" com `ADDED`/`MODIFIED`/`REMOVED` dentro de cada spec, gerando o CHANGELOG; (b) pasta `specs/changes/` como no OpenSpec; (c) não | **(a)** — **respondida: (a)**: mesmo ganho de rastreio, sem um segundo lugar para procurar |
+| D9 | `AGENTS.md` para outros agentes? | (a) sim, no template, apontando para o `CLAUDE.md`; (b) não | **(a)** — **respondida: (a)**: custo baixo e amplia o público do kit |

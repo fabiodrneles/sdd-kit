@@ -29,3 +29,10 @@ D3 (a): melhorias na skill e nos modelos precisam chegar aos repositórios que j
 ## Decisões
 
 - D3 — PR automático semanal, entregue na Fase 2 (`v0.2.0`).
+- Revisado na implementação (#28):
+  - `template/common/scripts/sdd-sync.sh` gera o template da versão alvo com os valores do `.sdd-kit.json` (que passa a guardar `project`, `owner` e `repo`) e compara arquivo a arquivo;
+  - o workflow `sdd-sync.yml` abre ou atualiza o PR da branch `sdd-kit/sync`;
+  - arquivo que o kit não mudou fica intocado, mesmo se o repositório o alterou;
+  - arquivo alterado localmente que o kit também mudou recebe a versão nova no PR e aparece em "Conflitos" na descrição, para o dono restaurar o que quiser no próprio PR;
+  - o estado guarda o hash do conteúdo do kit, não do arquivo local, para que uma alteração local continue detectável;
+  - o repositório precisa permitir que o GitHub Actions crie PRs (Settings → Actions → General).

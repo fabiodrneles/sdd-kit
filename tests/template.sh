@@ -15,6 +15,15 @@ for lang in go node java python; do
   grep -q 'make ci' "$lang/.github/workflows/ci.yml" || err "template/$lang: o CI não roda make ci"
 done
 
+# Outros agentes leem AGENTS.md (spec 006 FR-5).
+[ -f common/AGENTS.md ] || err "template/common/AGENTS.md não existe"
+grep -q 'make ci' common/AGENTS.md || err "template/common/AGENTS.md não cita make ci"
+
+# O template habilita a skill pelo plugin do kit (spec 003 FR-1).
+jq -e '.extraKnownMarketplaces["sdd-kit"].source.repo == "fabiodrneles/sdd-kit"
+  and .enabledPlugins["sdd-delivery@sdd-kit"] == true' common/.claude/settings.json >/dev/null 2>&1 ||
+  err "template/common/.claude/settings.json não habilita sdd-delivery@sdd-kit"
+
 # 003 AC-2: nada específico do projeto de origem.
 if grep -rniI 'cv-craft' . >/dev/null; then
   err "o template cita cv-craft: $(grep -rlniI 'cv-craft' . | tr '\n' ' ')"

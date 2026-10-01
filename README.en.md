@@ -1,30 +1,121 @@
 # sdd-kit
 
+[![CI](https://github.com/fabiodrneles/sdd-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/fabiodrneles/sdd-kit/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [Português](README.md)
 
-A **Spec Driven Development (SDD)** kit for projects driven with Claude Code: the `sdd-delivery` skill, a repository template with per-language CI, and an adoption script. It packages the process that took [cv-craft](https://github.com/fabiodrneles/cv-craft) from prototype to a professional project: **the owner decides, the agent executes**.
+**Spec Driven Development from the first commit to the release**, driven by [Claude Code](https://claude.com/claude-code) and delivered the way a professional team delivers: specs with acceptance criteria, one epic per phase, one ticket per task, one branch and one PR per ticket, green CI, review, CHANGELOG and tag.
 
-```text
-discovery → ANALYSIS.md → owner decisions → constitution + specs + ROADMAP
-  → one epic per phase → tickets (sub-issues) → one branch and one PR per ticket
-  → green CI → owner review → merge → phase closing PR → tag → release
-```
+> **The owner decides, the agent executes.** You answer the decisions and review the PRs; the agent analyzes, specifies, opens the tickets, writes code and tests and keeps CI green.
 
-> **Status:** under construction. Phase 1 (`v0.1.0`) is tracked in [epic #1](https://github.com/fabiodrneles/sdd-kit/issues/1) and the [ROADMAP](specs/ROADMAP.md).
-
-The specs, issues and pull requests are written in Portuguese; code and commits are in English.
+The kit comes from [cv-craft](https://github.com/fabiodrneles/cv-craft), which went from prototype to `v1.x` with this process, and sdd-kit itself is built with it ([specs](specs/README.md), [epic #1](https://github.com/fabiodrneles/sdd-kit/issues/1)). Specs, issues and pull requests are written in Portuguese; code and commits are in English.
 
 ## What is in the kit
 
 | Part | Purpose | Spec |
 |---|---|---|
-| `sdd-delivery` skill | Teaches the agent the process: analysis, specs, epics, PRs, review, release | [002](specs/002-skill-plugin/spec.md) |
-| `template/` | `CLAUDE.md`, session hook, issue and PR templates, `specs/` and CI for Go, Node/TS, Java and Python | [003](specs/003-template/spec.md) |
-| Adoption script | Copies the template into a new or existing repository without overwriting anything | [004](specs/004-adoption-script/spec.md) |
+| `sdd-delivery` skill | Teaches the agent the whole process: evidence-based analysis, specs, epics, PRs, root-causing red CI, review, phase closing and release | [002](specs/002-skill-plugin/spec.md) |
+| `template/` | `CLAUDE.md`, session hook, issue and PR templates, `CONTRIBUTING.md`, `specs/` skeleton and ready-made CI for **Go, Node/TS, Java and Python** | [003](specs/003-template/spec.md) |
+| Adoption script | Copies the template into a new or existing repository **without overwriting anything**; sh and PowerShell | [004](specs/004-adoption-script/spec.md) |
+
+## How it works
+
+```mermaid
+flowchart LR
+  A[Discovery<br/>ANALYSIS.md] --> B{Owner<br/>decisions}
+  B --> C[Constitution<br/>specs + ROADMAP]
+  C --> D[Phase epic<br/>tickets = sub-issues]
+  D --> E[Branch + tests + code<br/>per ticket]
+  E --> F[PR with green CI]
+  F --> G{Owner<br/>review}
+  G --> H[Closing PR<br/>CHANGELOG]
+  H --> I[Tag and release]
+  G -. changes .-> E
+```
+
+| Step | Who | What lands in the repository |
+|---|---|---|
+| Discovery | Agent | `specs/ANALYSIS.md`: what was verified (command → result), findings by severity with evidence, open decisions D1..Dn with a recommendation |
+| Decisions | **Owner** | Answers recorded in the specs; nothing is implemented before |
+| Specs | Agent | `specs/constitution.md` (verifiable principles), one spec per area with `FR-*`, `NFR-*` and `AC-*` (Given/When/Then), `ROADMAP.md` by phases and versions |
+| Planning | Agent | One epic per phase and one ticket per task, as native GitHub sub-issues |
+| Implementation | Agent | One branch and one PR per ticket; every `AC-*` becomes a test; `make ci` green before every push |
+| Review and merge | **Owner** | Review in the epic's order; the agent answers and fixes |
+| Closing | Agent → **Owner** | Closing PR (spec status, ROADMAP, CHANGELOG); the owner creates the tag and the workflow publishes the release |
+
+**Work state lives on GitHub**, not in the chat: the epic keeps a "phase status" comment with PRs, CI, decisions and the next step. A new session reads that comment and resumes where the last one stopped.
+
+## Starting a new repository
+
+1. Create the repository on GitHub and clone it.
+2. Adopt the template with the project's language:
+
+   ```text
+   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v0.1.0/scripts/adopt.sh | sh -s -- --lang go .
+   ```
+
+3. Commit what was created (`CLAUDE.md`, `.github/`, `specs/`, `Makefile`, CI) and open Claude Code in the repository.
+4. Ask: *"use the sdd-delivery skill: create the constitution, specs and ROADMAP for my idea: …"*. The agent proposes the open decisions and **stops** until you answer.
+5. After answering: *"create the Phase 1 epic with its tickets and go ticket by ticket"*.
+
+## Adopting in an existing repository
+
+Same script, built not to break anything:
+
+- existing files (`README.md`, `CLAUDE.md`, CI…) are **never overwritten** without `--force`; the report lists what was created and what was skipped;
+- `--dry-run` shows everything before writing;
+- running it again changes nothing (idempotent).
+
+```text
+cd my-repo
+sh /path/to/sdd-kit/scripts/adopt.sh --lang node --dry-run .
+sh /path/to/sdd-kit/scripts/adopt.sh --lang node .
+```
+
+Then ask the agent for the **discovery phase**: *"use the sdd-delivery skill: analyze and verify this repository"*. It reads the code, runs what the README promises, records evidence-backed findings in `specs/ANALYSIS.md` and proposes decisions. From there the flow is the same as for a new repository.
+
+### How the skill reaches each repository
+
+The skill is **not copied** into repositories. It is published as a Claude Code plugin from this repository, and each project only declares that it uses it:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "sdd-kit": { "source": { "source": "github", "repo": "fabiodrneles/sdd-kit" } }
+  },
+  "enabledPlugins": { "sdd-delivery@sdd-kit": true }
+}
+```
+
+Repositories adopted by the script get this configuration; if yours already had a `.claude/settings.json`, the script leaves it alone and you only add the two keys above. An improvement to the skill made here reaches every repository, with no diverging copies. What belongs to the project (specs, `CLAUDE.md`, CI) stays in the project.
+
+## Where the gain is
+
+| Common problem with agents | How the kit handles it |
+|---|---|
+| The agent "forgets" the project every session and rereads everything | `CLAUDE.md` with map and pitfalls + the epic's status comment: resuming reads one comment, not the whole repository |
+| Tokens spent on reading and validation | The skill tells the agent to read excerpts, ask CI only for summaries and validate with one command (`make ci`) |
+| Code that "looks done" but misses the request | Verifiable acceptance criteria; every `AC-*` becomes a test; each new test is mutation-checked |
+| Huge PRs that are hard to review | One ticket = one branch = one PR, with a review order in the epic |
+| Red CI "fixed" by disabling tests | Explicit rule: root cause, never skip a test or loosen a gate |
+| Decisions made by the agent behind your back | Stop points: decisions, review, merge and tag belong to the owner |
+
+## Why sdd-kit
+
+The community already has great SDD tools, each strong at something:
+
+| Tool | Best at | Focus |
+|---|---|---|
+| [spec-kit](https://github.com/github/spec-kit) (GitHub) | New projects and teams that want a standard flow | `constitution` → `specify` → `plan` → `tasks` → `implement`, for many agents |
+| [OpenSpec](https://github.com/Fission-AI/OpenSpec) | Changes to existing code | Change proposals with deltas (`ADDED`/`MODIFIED`/`REMOVED`) archived into the specs |
+| [Kiro](https://github.com/kirodotdev/Kiro) (AWS) | Integrated IDE experience | `requirements.md` in EARS notation, `design.md`, `tasks.md` and hooks |
+| [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) | Large and regulated projects | A simulated agile team with roles (analyst, PM, architect, QA…) |
+
+**sdd-kit** covers the stretch those tools leave to you: **delivery**. The spec becomes an epic and tickets on GitHub, every ticket becomes a reviewable PR with green CI, the phase closes with a CHANGELOG and the release comes from a tag — with clear roles (the owner decides), cheap resumption across sessions and ready-made CI per language. Their ideas that fit here are under evaluation in spec 006 (EARS criteria, deltas for existing code, AC → test traceability checks, slash commands).
 
 ## Installing the skill
 
-In Claude Code (from `v0.1.0` on):
+In Claude Code:
 
 ```text
 /plugin marketplace add fabiodrneles/sdd-kit
@@ -33,17 +124,22 @@ In Claude Code (from `v0.1.0` on):
 
 On claude.ai: download `sdd-delivery.zip` from the [latest release](https://github.com/fabiodrneles/sdd-kit/releases) and upload it under *Settings → Capabilities → Skills*.
 
-## Adopting in a repository
-
-Run the script from the root of the target repository (new or existing). Nothing that already exists is overwritten; the report lists what was created and what was skipped.
+## Adoption script
 
 ```text
-sh /path/to/sdd-kit/scripts/adopt.sh --lang go .
-curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v0.1.0/scripts/adopt.sh | sh -s -- --lang node .
-pwsh -File C:\path\to\sdd-kit\scripts\adopt.ps1 --lang java .
+sh scripts/adopt.sh --lang go|node|java|python [options] [TARGET]
+pwsh -File scripts/adopt.ps1 --lang go|node|java|python [options] [TARGET]
 ```
 
-Options: `--lang go|node|java|python` (required), `--project`, `--owner`/`--repo` (default: taken from `origin`), `--dry-run`, `--force`.
+Options: `--lang` (required), `--project` (default: directory name), `--owner`/`--repo` (default: taken from `origin`), `--dry-run`, `--force`. Every language template is tested in the kit's CI: the script adopts it into a minimal project and runs the generated `make ci`.
+
+## FAQ
+
+**Do I need Claude Code?** The skill is written for it. The template (specs, CI, issue and PR templates) works for any team, with or without an agent.
+
+**Does the agent merge on its own?** No. Merge, tag and release belong to the owner, unless explicitly delegated for one round.
+
+**What if I already have `CLAUDE.md` or CI?** The script leaves them alone and lists them in the report; the discovery phase proposes how to integrate.
 
 ## License
 

@@ -1,0 +1,18 @@
+{
+  "name": "sdd-kit",
+  "owner": {
+    "name": "fabiodrneles",
+    "url": "https://github.com/fabiodrneles"
+  },
+  "metadata": {
+    "description": "Kit de Spec Driven Development (SDD) para o Claude Code"
+  },
+  "plugins": [
+    {
+      "name": "sdd-delivery",
+      "source": "./plugins/sdd-delivery",
+      "description": "Processo SDD ponta a ponta: análise, specs, épicos, um PR por ticket, CI verde, revisão e release",
+      "category": "development"
+    }
+  ]
+}

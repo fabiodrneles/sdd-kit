@@ -1,0 +1,40 @@
+#!/bin/sh
+# Testes da spec 002: manifests, skill e zip (AC-1..AC-3).
+set -eu
+
+root="$(cd "$(dirname "$0")/.." && pwd)"
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+
+sh "$root/scripts/check-plugin.sh"
+
+# A checagem precisa falhar quando o manifest está errado (mutação).
+cp -R "$root/.claude-plugin" "$root/plugins" "$root/scripts" "$tmp/"
+jq 'del(.plugins[0].source)' "$root/.claude-plugin/marketplace.json" > "$tmp/.claude-plugin/marketplace.json"
+if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
+  echo "FALHOU: check-plugin aceitou marketplace sem plugins[].source" >&2
+  exit 1
+fi
+cp "$root/.claude-plugin/marketplace.json" "$tmp/.claude-plugin/"
+echo '[quebrado](references/nao-existe.md)' >> "$tmp/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md"
+if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
+  echo "FALHOU: check-plugin aceitou link quebrado na skill" >&2
+  exit 1
+fi
+
+zip="$(sh "$root/scripts/package-skill.sh" "$tmp/out/sdd-delivery.zip")"
+list="$(unzip -Z1 "$zip")"
+for f in SKILL.md references/process.md references/templates.md \
+  references/quality-gates.md references/bootstrap-checklist.md; do
+  printf '%s\n' "$list" | grep -qx "sdd-delivery/$f" || { echo "FALHOU: zip sem sdd-delivery/$f" >&2; exit 1; }
+done
+echo "tests/plugin.sh ok"
+
+# AC-4: a release recusa tag diferente da versão do plugin.json.
+v="$(jq -r .version "$root/plugins/sdd-delivery/.claude-plugin/plugin.json")"
+sh "$root/scripts/check-version.sh" "v$v" >/dev/null
+if sh "$root/scripts/check-version.sh" "v$v-outra" 2>/dev/null; then
+  echo "FALHOU: check-version aceitou tag diferente" >&2
+  exit 1
+fi
+echo "tests/plugin.sh (versão) ok"

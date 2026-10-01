@@ -19,7 +19,7 @@ md: ## markdownlint em todos os .md
 .PHONY: sh
 sh: ## shellcheck em todos os scripts versionados
 	@command -v shellcheck >/dev/null || { echo "shellcheck não instalado (veja .claude/hooks/session-start.sh)"; exit 1; }
-	git ls-files -z '*.sh' | xargs -0 -r shellcheck
+	git ls-files -z -co --exclude-standard '*.sh' | xargs -0 -r shellcheck
 
 .PHONY: test
 test: ## Testes dos scripts (tests/*.sh)

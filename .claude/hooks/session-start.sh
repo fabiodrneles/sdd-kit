@@ -9,7 +9,7 @@ fi
 
 cd "${CLAUDE_PROJECT_DIR:-$(pwd)}"
 
-# shellcheck na mesma versão do CI e do Makefile.
+# Versão do shellcheck igual à do CI e do Makefile.
 want="$(sed -n 's/^SHELLCHECK_VERSION *:\?= *//p' Makefile)"
 bin="$HOME/.local/bin"
 mkdir -p "$bin"

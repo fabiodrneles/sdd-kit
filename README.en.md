@@ -33,6 +33,18 @@ In Claude Code (from `v0.1.0` on):
 
 On claude.ai: download `sdd-delivery.zip` from the [latest release](https://github.com/fabiodrneles/sdd-kit/releases) and upload it under *Settings → Capabilities → Skills*.
 
+## Adopting in a repository
+
+Run the script from the root of the target repository (new or existing). Nothing that already exists is overwritten; the report lists what was created and what was skipped.
+
+```text
+sh /path/to/sdd-kit/scripts/adopt.sh --lang go .
+curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v0.1.0/scripts/adopt.sh | sh -s -- --lang node .
+pwsh -File C:\path\to\sdd-kit\scripts\adopt.ps1 --lang java .
+```
+
+Options: `--lang go|node|java|python` (required), `--project`, `--owner`/`--repo` (default: taken from `origin`), `--dry-run`, `--force`.
+
 ## License
 
 [MIT](LICENSE)

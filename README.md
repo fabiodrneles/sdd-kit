@@ -31,6 +31,36 @@ No Claude Code (a partir da `v0.1.0`):
 
 No claude.ai: baixe `sdd-delivery.zip` da [última release](https://github.com/fabiodrneles/sdd-kit/releases) e envie em *Configurações → Capacidades → Skills*.
 
+## Adotar num repositório
+
+Com o kit clonado, rode o script na raiz do repositório de destino (novo ou existente). Nada que já existe é sobrescrito; o relatório lista o que foi criado e o que foi ignorado.
+
+```text
+sh /caminho/do/sdd-kit/scripts/adopt.sh --lang go .
+```
+
+Sem clonar (baixa o template da versão do script):
+
+```text
+curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v0.1.0/scripts/adopt.sh | sh -s -- --lang node .
+```
+
+No Windows, com as mesmas opções:
+
+```text
+pwsh -File C:\caminho\do\sdd-kit\scripts\adopt.ps1 --lang java .
+```
+
+| Opção | Efeito |
+|---|---|
+| `--lang` | `go`, `node`, `java` ou `python` (obrigatório) |
+| `--project` | Nome do projeto (padrão: nome do diretório) |
+| `--owner`, `--repo` | Dono e repositório no GitHub (padrão: deduzidos do `origin`) |
+| `--dry-run` | Mostra o que seria feito, sem escrever |
+| `--force` | Sobrescreve arquivos existentes |
+
+Depois da adoção: preencha `CLAUDE.md` e `specs/`, e peça ao Claude Code para rodar a fase de descoberta da skill `sdd-delivery`.
+
 ## Contribuir
 
 O kit é desenvolvido com o próprio processo. Veja a [constituição](specs/constitution.md), as [specs](specs/README.md) e o [CLAUDE.md](CLAUDE.md). Antes de todo push:

@@ -1,7 +1,7 @@
 # 005 — Sincronização dos repositórios
 
 - **Prioridade:** P1
-- **Status:** Approved
+- **Status:** Done — entregue na `v0.1.0`
 - **Código afetado:** `template/common/.github/workflows/sdd-sync.yml`, `scripts/`
 - **Resolve:** M1
 

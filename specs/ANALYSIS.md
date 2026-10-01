@@ -16,13 +16,13 @@ O processo SDD nasceu no [cv-craft](https://github.com/fabiodrneles/cv-craft) (s
 
 ### Altas
 
-- **A1** A skill tem uma única cópia, dentro de um projeto de aplicação; outros repositórios precisam copiá-la à mão e ela diverge. → spec 002.
-- **A2** Os arquivos de processo citam o cv-craft (Go, `make ci`, golden files) e não servem como molde sem edição. → spec 003.
-- **A3** Não há forma de adotar o processo num repositório existente sem risco de sobrescrever arquivos. → spec 004.
+- **A1** A skill tem uma única cópia, dentro de um projeto de aplicação; outros repositórios precisam copiá-la à mão e ela diverge. → spec 002. *(resolvido na `v0.1.0`)*
+- **A2** Os arquivos de processo citam o cv-craft (Go, `make ci`, golden files) e não servem como molde sem edição. → spec 003. *(resolvido na `v0.1.0`)*
+- **A3** Não há forma de adotar o processo num repositório existente sem risco de sobrescrever arquivos. → spec 004. *(resolvido na `v0.1.0`)*
 
 ### Médias
 
-- **M1** Melhorias na skill não chegam aos repositórios que já a usam. → spec 005 (Fase 2).
+- **M1** Melhorias na skill não chegam aos repositórios que já a usam. → spec 005 (Fase 2). *(resolvido na `v0.1.0`)*
 
 ## 4. Pontos positivos (manter)
 

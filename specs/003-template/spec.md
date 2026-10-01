@@ -1,7 +1,7 @@
 # 003 — Template de repositório
 
 - **Prioridade:** P0
-- **Status:** Approved
+- **Status:** Done — entregue na `v0.1.0`
 - **Código afetado:** `template/`
 - **Resolve:** A2, #5
 

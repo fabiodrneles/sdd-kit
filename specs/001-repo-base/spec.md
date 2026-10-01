@@ -1,7 +1,7 @@
 # 001 — Base do repositório
 
 - **Prioridade:** P0
-- **Status:** Approved
+- **Status:** Done — entregue na `v0.1.0`
 - **Código afetado:** raiz (`README*.md`, `LICENSE`, `CLAUDE.md`, `Makefile`), `.claude/`, `.github/`
 - **Resolve:** #3
 

@@ -1,7 +1,7 @@
 # 002 — Skill e plugin
 
 - **Prioridade:** P0
-- **Status:** Approved
+- **Status:** Done — entregue na `v0.1.0`
 - **Código afetado:** `plugins/sdd-delivery/`, `.claude-plugin/marketplace.json`, `scripts/package-skill.sh`, `.github/workflows/release.yml`
 - **Resolve:** A1, #4, #7
 

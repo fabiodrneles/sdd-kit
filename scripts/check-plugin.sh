@@ -31,7 +31,20 @@ jq -e '(.name == "sdd-delivery") and (.version | test("^[0-9]+\\.[0-9]+\\.[0-9]+
 # Frontmatter: primeira linha "---", name e description não vazios.
 fm="$(awk 'NR == 1 && $0 != "---" { exit } NR > 1 && $0 == "---" { exit } NR > 1' "$skill/SKILL.md")"
 printf '%s\n' "$fm" | grep -qx 'name: sdd-delivery' || err "SKILL.md: frontmatter sem name: sdd-delivery"
-printf '%s\n' "$fm" | grep -Eq '^description: *[^ ]' || err "SKILL.md: frontmatter sem description"
+# description inline ou em bloco (>- ou |), com 1 a 1024 caracteres (limite do
+# Claude; mesma regra do TestRepoSkills do cv-craft).
+desc="$(printf '%s\n' "$fm" | awk '
+  /^description:/ {
+    v = $0; sub(/^description: */, "", v)
+    if (v ~ /^[>|][-+]?$/) { block = 1; next }
+    print v; exit
+  }
+  block && /^[ \t]/ { sub(/^[ \t]+/, ""); printf "%s%s", sep, $0; sep = " "; next }
+  block { exit }')"
+n="$(printf '%s' "$desc" | LC_ALL=C.UTF-8 wc -m | tr -d ' ')"
+if [ "$n" -lt 1 ] || [ "$n" -gt 1024 ]; then
+  err "SKILL.md: description com $n caracteres (deve ter de 1 a 1024)"
+fi
 
 # Links relativos fora de blocos de código apontam para arquivos existentes.
 for md in "$skill"/SKILL.md "$skill"/references/*.md; do

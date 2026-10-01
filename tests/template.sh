@@ -19,6 +19,11 @@ done
 [ -f common/AGENTS.md ] || err "template/common/AGENTS.md não existe"
 grep -q 'make ci' common/AGENTS.md || err "template/common/AGENTS.md não cita make ci"
 
+# O template habilita a skill pelo plugin do kit (spec 003 FR-1).
+jq -e '.extraKnownMarketplaces["sdd-kit"].source.repo == "fabiodrneles/sdd-kit"
+  and .enabledPlugins["sdd-delivery@sdd-kit"] == true' common/.claude/settings.json >/dev/null 2>&1 ||
+  err "template/common/.claude/settings.json não habilita sdd-delivery@sdd-kit"
+
 # AC-2: nada específico do projeto de origem.
 if grep -rniI 'cv-craft' . >/dev/null; then
   err "o template cita cv-craft: $(grep -rlniI 'cv-craft' . | tr '\n' ' ')"

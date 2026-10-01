@@ -19,6 +19,11 @@ Cada tarefa referencia a spec e os critérios de aceite que ela fecha. Ordem sug
 
 - [ ] **T7** Arquivo de estado `.sdd-kit.json` escrito pela adoção — 005 FR-2
 - [ ] **T8** Workflow semanal de sincronização por PR — 005 FR-1, FR-3, FR-4, AC-1..3
+- [ ] **T11** Critérios em EARS na skill e no template — 006 FR-1
+- [ ] **T12** `sdd-check`: rastreabilidade AC → teste, status e ROADMAP — 006 FR-2, AC-1/2
+- [ ] **T13** Comandos de barra no plugin — 006 FR-3, AC-3
+- [ ] **T14** Seção "Mudanças" nas specs gerando o CHANGELOG — 006 FR-4
+- [ ] **T15** `AGENTS.md` no template — 006 FR-5, AC-4
 
 ## Fase 3 — Profissional → `v1.0.0`
 

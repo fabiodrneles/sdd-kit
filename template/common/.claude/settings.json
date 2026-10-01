@@ -10,5 +10,16 @@
         ]
       }
     ]
+  },
+  "extraKnownMarketplaces": {
+    "sdd-kit": {
+      "source": {
+        "source": "github",
+        "repo": "fabiodrneles/sdd-kit"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "sdd-delivery@sdd-kit": true
   }
 }

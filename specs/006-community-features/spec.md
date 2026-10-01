@@ -22,7 +22,7 @@ Ferramentas estudadas:
 
 - **FR-1 (D5)** A skill e o template SHOULD aceitar critérios de aceite em **EARS** (`QUANDO <gatilho>, O SISTEMA DEVE <resposta>`; variantes `ENQUANTO`, `SE … ENTÃO`, `ONDE`) além de Dado/Quando/Então, com exemplos dos dois.
 - **FR-2 (D6)** O kit MUST oferecer `scripts/sdd-check.sh` (e o template, um alvo `make sdd-check`) que verifica a **rastreabilidade**:
-  - todo `AC-*` de spec `Approved`, `In Progress` ou `Done` é citado em pelo menos um teste (ID no nome ou num comentário);
+  - todo `AC-*` de spec `In Progress` ou `Done` é citado em pelo menos um teste, no formato `NNN AC-n` (no nome ou num comentário);
   - o status de cada spec é igual no cabeçalho e em `specs/README.md`;
   - toda tarefa do ROADMAP cita IDs (`NNN FR-x`, `AC-y`) que existem;
   - saída em tabela (spec → AC → testes) para colar no PR.
@@ -32,7 +32,7 @@ Ferramentas estudadas:
 
 ## Critérios de aceite
 
-- **AC-1** Dado um AC de spec `Approved` sem teste que o cite, quando `sdd-check` roda, então a saída lista o AC e o código de saída é diferente de zero (na Fase 2, aviso com código 0; a partir da Fase 3, erro — D6).
+- **AC-1** Dado um AC de spec `In Progress` ou `Done` sem teste que o cite, quando `sdd-check` roda, então a saída lista o AC e o código de saída é diferente de zero (na Fase 2, aviso com código 0; a partir da Fase 3, erro — D6).
 - **AC-2** Dado o repositório do próprio kit, quando `sdd-check` roda no CI, então passa.
 - **AC-3** Dado o plugin instalado, quando o usuário digita `/sdd:status`, então o agente lê o épico aberto e publica o comentário "Estado da fase".
 - **AC-4** Dado um repositório adotado, quando um agente que lê `AGENTS.md` abre o repositório, então encontra o processo e os comandos de verificação.
@@ -51,3 +51,4 @@ Respondidas pelo dono em 2026-10-01, todas na opção (a) ([ANALYSIS.md §6](../
 - D7 — os seis comandos de barra.
 - D8 — seção "Mudanças" em cada spec, gerando o CHANGELOG.
 - D9 — `AGENTS.md` no template.
+- Revisado na implementação (#24): a exigência de teste vale para specs `In Progress` e `Done`, e não `Approved`. Uma spec aprovada ainda não foi implementada, e cobrar testes dela geraria avisos falsos. O script fica em `template/common/scripts/sdd-check.sh` (fonte única); o kit roda a mesma cópia.

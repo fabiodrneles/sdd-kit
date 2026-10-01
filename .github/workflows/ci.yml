@@ -56,6 +56,9 @@ jobs:
       - name: adopt.sh (spec 004 AC-1..5)
         if: runner.os != 'Windows'
         run: sh tests/adopt.sh
+      - name: sdd-check (spec 006 AC-1, AC-2) com as ferramentas do BSD
+        if: runner.os == 'macOS'
+        run: sh tests/sdd-check.sh
       - name: adopt.ps1 (spec 004 AC-1..5)
         if: runner.os == 'Windows'
         shell: pwsh

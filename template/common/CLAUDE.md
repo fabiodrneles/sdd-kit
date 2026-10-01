@@ -23,6 +23,7 @@ O estado do trabalho vive no GitHub, e não na conversa. Abra o ticket e o PR as
 ```text
 make ci     # a mesma verificação do CI (rode antes de todo push)
 make docs   # markdownlint (os links são verificados no CI)
+make sdd-check  # cada AC de spec In Progress/Done citado num teste ("NNN AC-n")
 ```
 
 Numa sessão na web, o hook `.claude/hooks/session-start.sh` instala as dependências e as ferramentas do CI.

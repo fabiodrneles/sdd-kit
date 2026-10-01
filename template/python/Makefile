@@ -17,3 +17,7 @@ deps: ## Instala o projeto com as dependências de desenvolvimento
 .PHONY: docs
 docs: ## markdownlint (o CI também verifica links)
 	npx --yes markdownlint-cli2@0.23.3
+
+.PHONY: sdd-check
+sdd-check: ## Rastreabilidade specs × testes × ROADMAP (--strict para falhar)
+	sh scripts/sdd-check.sh

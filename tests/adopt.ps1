@@ -23,7 +23,7 @@ function Get-Snapshot([string]$Dir) {
 
 try {
   foreach ($lang in 'go', 'node', 'java', 'python') {
-    # AC-1
+    # 004 AC-1
     $d = Join-Path $tmp "$lang-empty"; New-Item -ItemType Directory -Path $d | Out-Null
     $r = Invoke-Adopt (@('--lang', $lang) + $opts + @($d))
     if ($r.Code -ne 0) { Fail "$lang saiu com $($r.Code): $($r.Out)" }
@@ -33,21 +33,21 @@ try {
     if (Get-ChildItem $d -Recurse -File -Force | Select-String -Pattern '\{\{[A-Z_]*\}\}' -CaseSensitive) { Fail "${lang}: sobrou marcador" }
     $bytes = [IO.File]::ReadAllBytes((Join-Path $d 'CLAUDE.md'))
     if ($bytes -contains 13) { Fail "${lang}: CLAUDE.md com CRLF" }
-    # AC-3
+    # 004 AC-3
     $before = Get-Snapshot $d
     $r = Invoke-Adopt (@('--lang', $lang) + $opts + @($d))
     if (Compare-Object $before (Get-Snapshot $d)) { Fail "${lang}: segunda execução mudou arquivos" }
     if ($r.Out -notmatch ': 0 criados') { Fail "${lang}: segunda execução criou arquivos" }
   }
 
-  # AC-2
+  # 004 AC-2
   $d = Join-Path $tmp 'existing'; New-Item -ItemType Directory -Path $d | Out-Null
   Set-Content -LiteralPath (Join-Path $d 'CLAUDE.md') -Value 'meu claude' -NoNewline
   $r = Invoke-Adopt (@('--lang', 'go') + $opts + @($d))
   if ((Get-Content -Raw (Join-Path $d 'CLAUDE.md')) -ne 'meu claude') { Fail 'CLAUDE.md existente foi sobrescrito' }
   if ($r.Out -notmatch '(?m)^ignorado \(já existe\): CLAUDE\.md$') { Fail 'CLAUDE.md não aparece como ignorado' }
 
-  # AC-4
+  # 004 AC-4
   $d = Join-Path $tmp 'invalid'; New-Item -ItemType Directory -Path $d | Out-Null
   foreach ($argList in @((@('--lang', 'cobol') + $opts + @($d)), ($opts + @($d)), @('--lang'))) {
     $r = Invoke-Adopt $argList
@@ -55,7 +55,7 @@ try {
     if (@(Get-ChildItem -Force $d).Count -ne 0) { Fail "'$($argList -join ' ')' escreveu no destino" }
   }
 
-  # AC-5
+  # 004 AC-5
   $r = Invoke-Adopt (@('--lang', 'python', '--dry-run') + $opts + @($d))
   if (@(Get-ChildItem -Force $d).Count -ne 0) { Fail '--dry-run escreveu no destino' }
   if ($r.Out -notmatch '(?m)^\(dry-run\) ') { Fail '--dry-run sem resumo' }

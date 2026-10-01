@@ -11,7 +11,7 @@ help: ## Lista os alvos
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-8s %s\n", $$1, $$2}'
 
 .PHONY: ci
-ci: md sh test ## Tudo o que o CI verifica sem rede (rode antes de todo push)
+ci: md sh test ## Tudo o que o CI verifica sem rede (rode antes de todo push; 001 AC-1, 003 AC-3)
 
 .PHONY: md
 md: ## markdownlint em todos os .md
@@ -25,6 +25,10 @@ sh: ## shellcheck em todos os scripts (versionados ou novos)
 .PHONY: test
 test: ## Testes dos scripts (tests/*.sh)
 	@set -e; for t in tests/*.sh; do [ -e "$$t" ] || continue; echo "== $$t"; sh "$$t"; done
+
+.PHONY: sdd-check
+sdd-check: ## Rastreabilidade specs × testes × ROADMAP do próprio kit
+	sh template/common/scripts/sdd-check.sh
 
 .PHONY: links
 links: ## Verificação de links (requer lychee; o CI sempre roda)

@@ -18,6 +18,8 @@ O kit nasceu do [cv-craft](https://github.com/fabiodrneles/cv-craft), que saiu d
 - [Adotar num repositório existente](#adotar-num-repositório-existente)
 - [Onde está o ganho](#onde-está-o-ganho)
 - [Por que o sdd-kit](#por-que-o-sdd-kit)
+- [Comandos e verificações](#comandos-e-verificações)
+- [Atualização automática](#atualização-automática)
 - [Instalar a skill](#instalar-a-skill)
 - [Script de adoção](#script-de-adoção)
 - [Perguntas frequentes](#perguntas-frequentes)
@@ -125,7 +127,39 @@ A comunidade já tem ótimas ferramentas de SDD, e cada uma brilha num ponto:
 | [Kiro](https://github.com/kirodotdev/Kiro) (AWS) | Experiência integrada na IDE | `requirements.md` em notação EARS, `design.md`, `tasks.md` e hooks |
 | [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) | Projetos grandes e regulados | Time ágil simulado com papéis (analista, PM, arquiteto, QA…) |
 
-O **sdd-kit** cobre o trecho que essas ferramentas deixam para você: **a entrega**. A spec vira épico e tickets no GitHub, cada ticket vira um PR revisável com CI verde, a fase fecha com CHANGELOG e a release sai de uma tag. Tudo com papéis claros (o dono decide), retomada barata entre sessões e CI pronto por linguagem. As ideias delas que fazem sentido aqui estão em avaliação na spec 006 (critérios em EARS, deltas para código existente, checagem de rastreabilidade AC → teste, comandos de barra).
+O **sdd-kit** cobre o trecho que essas ferramentas deixam para você: **a entrega**. A spec vira épico e tickets no GitHub, cada ticket vira um PR revisável com CI verde, a fase fecha com CHANGELOG e a release sai de uma tag. Tudo com papéis claros (o dono decide), retomada barata entre sessões e CI pronto por linguagem. E o kit incorpora o melhor delas ([spec 006](specs/006-community-features/spec.md)): critérios em EARS (Kiro), deltas `ADDED`/`MODIFIED`/`REMOVED` por spec (OpenSpec), checagem de rastreabilidade AC → teste e comandos de barra (spec-kit), e `AGENTS.md` para outros agentes.
+
+## Comandos e verificações
+
+Com o plugin instalado, cada etapa do fluxo tem um comando:
+
+| Comando | Faz |
+|---|---|
+| `/sdd-analyze` | Descoberta: `specs/ANALYSIS.md` com evidências e decisões; para e espera o dono |
+| `/sdd-specs` | Constituição, specs e ROADMAP a partir das decisões |
+| `/sdd-epic <fase>` | Épico da fase com os tickets como sub-issues |
+| `/sdd-next` | Próximo ticket do épico até um PR com CI verde |
+| `/sdd-status` | Comentário "Estado da fase" no épico (para retomar em qualquer sessão) |
+| `/sdd-close <versão>` | PR de fechamento (status das specs, ROADMAP, CHANGELOG); a tag fica com o dono |
+
+Nos repositórios adotados:
+
+- **`make ci`**: a mesma verificação do CI da linguagem.
+- **`make sdd-check`**: rastreabilidade. Todo critério de aceite de spec `In Progress`/`Done` precisa ser citado num teste como `NNN AC-n` (ex.: `// 003 AC-2`), o status das specs bate com o índice e o ROADMAP só cita IDs que existem. Sem `--strict`, só avisa.
+- **Critérios de aceite** em Dado/Quando/Então ou em **EARS** (`QUANDO <gatilho>, O SISTEMA DEVE <resposta>`).
+- **Seção "Mudanças"** em cada spec (`ADDED`/`MODIFIED`/`REMOVED` + ID), que vira o CHANGELOG no fechamento da fase.
+- **`AGENTS.md`**, para Codex, Copilot, Cursor e outros agentes seguirem o mesmo processo.
+
+## Atualização automática
+
+A adoção grava `.sdd-kit.json` (versão do kit e o hash de cada arquivo gerenciado). Toda segunda-feira, o workflow `sdd-kit sync` compara com a última release e abre **um PR** com as atualizações:
+
+- arquivos que você não alterou são atualizados;
+- arquivos que o kit não mudou ficam como estão, mesmo se você os alterou;
+- se você e o kit mudaram o mesmo arquivo, o PR traz a versão nova e lista o arquivo em **"Conflitos"**, para você decidir no próprio PR;
+- arquivos que são só do seu repositório nunca são tocados.
+
+Para o workflow abrir PRs, ative em *Settings → Actions → General* a opção **"Allow GitHub Actions to create and approve pull requests"**.
 
 ## Instalar a skill
 

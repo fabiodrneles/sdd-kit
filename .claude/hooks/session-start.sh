@@ -22,5 +22,12 @@ if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "export PATH=\"$bin:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 fi
 
+# actionlint na mesma versão do CI.
+want="$(sed -n 's/^ACTIONLINT_VERSION *:\?= *//p' Makefile)"
+if ! "$bin/actionlint" --version 2>/dev/null | grep -qx "${want#v}"; then
+  curl -fsSL "https://github.com/rhysd/actionlint/releases/download/${want}/actionlint_${want#v}_linux_amd64.tar.gz" |
+    tar -xz -C "$bin" actionlint
+fi
+
 # Cache do markdownlint-cli2 usado pelo `make ci`.
 npx --yes "markdownlint-cli2@$(sed -n 's/^MARKDOWNLINT_VERSION *:\?= *//p' Makefile)" --help >/dev/null 2>&1 || true

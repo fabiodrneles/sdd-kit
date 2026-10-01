@@ -2,6 +2,7 @@
 # lidas também pelo CI e pelo hook de sessão: mude só aqui.
 SHELLCHECK_VERSION := v0.10.0
 MARKDOWNLINT_VERSION := 0.23.3
+ACTIONLINT_VERSION := v1.7.12
 
 .DEFAULT_GOAL := help
 
@@ -17,7 +18,7 @@ md: ## markdownlint em todos os .md
 	npx --yes markdownlint-cli2@$(MARKDOWNLINT_VERSION)
 
 .PHONY: sh
-sh: ## shellcheck em todos os scripts versionados
+sh: ## shellcheck em todos os scripts (versionados ou novos)
 	@command -v shellcheck >/dev/null || { echo "shellcheck não instalado (veja .claude/hooks/session-start.sh)"; exit 1; }
 	git ls-files -z -co --exclude-standard '*.sh' | xargs -0 -r shellcheck
 

@@ -195,7 +195,19 @@ Status possíveis: `Draft` → `Approved` → `In Progress` → `Done`.
 
 - D<n> — <decisão do dono e o porquê>.
 - <Revisado na implementação: o que mudou em relação ao requisito original e por quê.>
+
+## Mudanças
+
+### Não lançado
+
+- ADDED FR-3 — <o que passou a existir>
+- MODIFIED AC-2 — <o que mudou no comportamento>
+- REMOVED FR-1 — <o que saiu e por quê>
 ```
+
+A seção "Mudanças" é o delta da spec por versão, no estilo do OpenSpec: cada PR de ticket acrescenta
+suas linhas sob `### Não lançado`, e o PR de fechamento renomeia para a versão e gera o CHANGELOG
+a partir dela. `ADDED` e `MODIFIED` apontam para IDs que existem na spec (o `sdd-check` confere).
 
 ## Formatos de critério de aceite
 
@@ -384,7 +396,8 @@ Fecha a Fase N → `vX.Y.Z`.
 - [ ] Cabeçalho `Status:` de cada spec igual ao do índice
 - [ ] Seção "Estado atual" das specs que a tiverem, refletindo o que foi entregue
 - [ ] `specs/ROADMAP.md`: checkboxes das tarefas concluídas; antecipadas/riscadas explicadas
-- [ ] `CHANGELOG.md`: `[Unreleased]` → `[X.Y.Z] - AAAA-MM-DD`; nova `[Unreleased]` vazia; links de comparação
+- [ ] Seção "Mudanças" das specs: `### Não lançado` → `### vX.Y.Z`
+- [ ] `CHANGELOG.md` gerado das seções "Mudanças": `[Unreleased]` → `[X.Y.Z] - AAAA-MM-DD`; nova `[Unreleased]` vazia; links de comparação
 - [ ] `specs/ANALYSIS.md`: achados resolvidos marcados (se o projeto mantiver esse controle)
 - [ ] Verificação local completa verde; CI verde
 - [ ] Próximo passo do dono: após o merge, `git tag vX.Y.Z && git push origin vX.Y.Z`

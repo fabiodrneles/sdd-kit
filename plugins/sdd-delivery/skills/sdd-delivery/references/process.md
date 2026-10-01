@@ -164,7 +164,12 @@ Prática recomendada: antes de pedir a revisão, simular o merge par a par das b
 
 - **FR-42** PR de fechamento: status das specs (`specs/README.md` e cabeçalhos), seção
   "Estado atual" das specs que a tiverem, checkboxes do
-  ROADMAP, `CHANGELOG.md` (Keep a Changelog: `[Unreleased]` → `[X.Y.Z] - AAAA-MM-DD`).
+  ROADMAP, `CHANGELOG.md` (Keep a Changelog: `[Unreleased]` → `[X.Y.Z] - AAAA-MM-DD`),
+  gerado a partir da seção "Mudanças" de cada spec (`ADDED` → Adicionado,
+  `MODIFIED` → Alterado, `REMOVED` → Removido).
+- **FR-42a** Todo PR de ticket que muda o comportamento descrito numa spec acrescenta uma linha
+  na seção "Mudanças" dela, sob `### Não lançado`: `ADDED`, `MODIFIED` ou `REMOVED` + o ID
+  (`FR-n`, `NFR-n`, `AC-n`) + uma frase. O PR de fechamento troca `Não lançado` pela versão.
 - **FR-43** Após o merge, o dono cria a tag `vX.Y.Z` (SemVer). Release roda o CI completo antes
   de publicar binários e checksums.
 - **FR-44** Épico fecha quando a release da fase está publicada.

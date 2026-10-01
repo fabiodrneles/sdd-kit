@@ -4,7 +4,9 @@
 #   1. o status de cada spec é o mesmo no cabeçalho e em specs/README.md;
 #   2. todo AC-n de spec In Progress ou Done é citado em algum arquivo
 #      fora de specs/ e dos .md, no formato "NNN AC-n" ou "NNN/AC-n";
-#   3. todo ID citado no ROADMAP ("NNN FR-n", "NNN NFR-n", "NNN AC-n") existe.
+#   3. todo ID citado no ROADMAP ("NNN FR-n", "NNN NFR-n", "NNN AC-n") existe;
+#   4. toda linha ADDED ou MODIFIED da seção "Mudanças" de uma spec aponta para
+#      um ID que existe nela (REMOVED pode citar um ID que já saiu).
 #
 # Uso: sdd-check.sh [--strict] [DIRETÓRIO]
 # Sem --strict, só avisa e sai com 0; com --strict, sai com 1 se houver aviso.
@@ -72,6 +74,11 @@ for spec in specs/[0-9][0-9][0-9]-*/spec.md; do
   elif [ "$st" != "$rst" ]; then
     warn "$nnn: status '$st' no cabeçalho e '$rst' em specs/README.md"
   fi
+  awk '/^## Mudanças/ { on = 1; next } /^## / { on = 0 } on' "$spec" |
+    grep -oE '^- (ADDED|MODIFIED) (FR|NFR|AC)-[0-9]+' | sed 's/^- [A-Z]* //' | sort -u > "$tmp/changes" || true
+  while read -r id; do
+    grep -qE "\*\*$id( [^*]*)?\*\*" "$spec" || warn "$nnn: \"Mudanças\" cita $id, que não existe na spec"
+  done < "$tmp/changes"
   case "$st" in "In Progress" | Done) ;; *) continue ;; esac
   grep -oE '\*\*AC-[0-9]+( [^*]*)?\*\*' "$spec" | sed 's/^\*\*AC-\([0-9]*\).*/\1/' | sort -n -u > "$tmp/acs"
   while read -r n; do

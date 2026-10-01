@@ -22,11 +22,11 @@ Guia rápido para agentes (Claude Code) trabalharem neste repositório. O proces
 ## Comandos
 
 ```text
-make ci     # markdownlint + shellcheck + testes (rode antes de todo push)
+make ci     # markdownlint + shellcheck + testes (template e actionlint incluídos) (rode antes de todo push)
 make links  # verificação de links com lychee (se instalado; o CI sempre roda)
 ```
 
-Numa sessão na web, o hook `.claude/hooks/session-start.sh` instala o shellcheck na versão do CI.
+Numa sessão na web, o hook `.claude/hooks/session-start.sh` instala o shellcheck e o actionlint nas versões do CI.
 
 ## Convenções
 

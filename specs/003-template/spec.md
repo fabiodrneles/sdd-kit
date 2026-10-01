@@ -11,8 +11,8 @@ Os arquivos de processo do cv-craft citam Go, `make ci` e golden files. O templa
 
 ## Requisitos funcionais
 
-- **FR-1** `template/common/` MUST conter: `CLAUDE.md`, `CONTRIBUTING.md`, `.github/ISSUE_TEMPLATE/` (tarefa, bug, config), `.github/pull_request_template.md`, `.github/CODEOWNERS`, `.github/dependabot.yml`, `specs/` (`README.md`, `constitution.md`, `ROADMAP.md`, `ANALYSIS.md`), `.markdownlint-cli2.yaml`, `lychee.toml` e o workflow de documentação.
-- **FR-2** `template/<lang>/` MUST existir para `go`, `node`, `java` e `python` (D2), cada um com: workflow `ci.yml` (lint + testes + build), `.claude/hooks/session-start.sh` e `.claude/settings.json`, e um ponto de entrada local equivalente ao CI documentado no `CLAUDE.md` (`make ci`).
+- **FR-1** `template/common/` MUST conter: `CLAUDE.md`, `CONTRIBUTING.md`, `.github/ISSUE_TEMPLATE/` (tarefa, bug, config), `.github/pull_request_template.md`, `.github/CODEOWNERS`, `.claude/settings.json`, `specs/` (`README.md`, `constitution.md`, `ROADMAP.md`, `ANALYSIS.md`), `.markdownlint-cli2.yaml`, `lychee.toml` e o workflow de documentação.
+- **FR-2** `template/<lang>/` MUST existir para `go`, `node`, `java` e `python` (D2), cada um com: workflow `ci.yml` que roda `make ci`, `.github/dependabot.yml`, `.claude/hooks/session-start.sh` e um `Makefile` com `make ci` (o mesmo que o CI roda) e `make docs` (markdownlint).
 - **FR-3** Os arquivos MUST usar os marcadores `{{PROJECT}}`, `{{OWNER}}` e `{{REPO}}`, substituídos pelo script de adoção (spec 004).
 - **FR-4** Nenhum arquivo do template MAY citar "cv-craft".
 - **FR-5** O `dependabot.yml` de cada linguagem MUST cobrir GitHub Actions e o gerenciador de pacotes da linguagem (gomod, npm, maven/gradle, pip).
@@ -36,4 +36,6 @@ Os arquivos de processo do cv-craft citam Go, `make ci` e golden files. O templa
 ## Decisões
 
 - D2 — Go, Node/TS (React), Java e Python na v0.1.
-- Java usa Maven por padrão (`mvn -B verify`); Gradle fica fora da v0.1.
+- Java usa Maven por padrão (`mvn -B verify`, ou `./mvnw` se existir); Gradle fica fora da v0.1.
+- Python segue a convenção de declarar `ruff` e `pytest` no extra `dev` do `pyproject.toml`; Node exige o script `test` e roda `lint` e `build` se existirem.
+- Revisado na implementação: `.claude/settings.json` é igual em todas as linguagens e foi para `common/`; o `dependabot.yml` depende da linguagem e foi para `<lang>/`. O CI de cada linguagem roda `make ci`, para que a verificação local e a do CI sejam a mesma.

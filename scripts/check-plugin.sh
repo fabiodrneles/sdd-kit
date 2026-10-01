@@ -43,5 +43,17 @@ for md in "$skill"/SKILL.md "$skill"/references/*.md; do
     done || fail=1
 done
 
+# Comandos de barra (spec 006 FR-3): frontmatter com description e uso da skill.
+for cmd in plugins/sdd-delivery/commands/*.md; do
+  [ -f "$cmd" ] || continue
+  head -n1 "$cmd" | grep -qx -- '---' || err "$cmd: sem frontmatter"
+  awk 'NR > 1 && $0 == "---" { exit } NR > 1' "$cmd" | grep -Eq '^description: *[^ ]' ||
+    err "$cmd: frontmatter sem description"
+  grep -q 'sdd-delivery' "$cmd" || err "$cmd: não usa a skill sdd-delivery"
+done
+for name in analyze specs epic next status close; do
+  [ -f "plugins/sdd-delivery/commands/sdd-$name.md" ] || err "falta o comando /sdd-$name"
+done
+
 [ "$fail" -eq 0 ] && echo "plugin ok"
 exit "$fail"

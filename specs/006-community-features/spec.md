@@ -26,7 +26,7 @@ Ferramentas estudadas:
   - o status de cada spec é igual no cabeçalho e em `specs/README.md`;
   - toda tarefa do ROADMAP cita IDs (`NNN FR-x`, `AC-y`) que existem;
   - saída em tabela (spec → AC → testes) para colar no PR.
-- **FR-3 (D7)** O plugin SHOULD trazer **comandos de barra** que disparam as etapas da skill: `/sdd:analyze` (descoberta), `/sdd:specs` (constituição, specs e ROADMAP), `/sdd:epic` (épico e tickets da fase), `/sdd:next` (próximo ticket), `/sdd:status` (comentário "Estado da fase") e `/sdd:close` (PR de fechamento).
+- **FR-3 (D7)** O plugin SHOULD trazer **comandos de barra** que disparam as etapas da skill: `/sdd-analyze` (descoberta), `/sdd-specs` (constituição, specs e ROADMAP), `/sdd-epic` (épico e tickets da fase), `/sdd-next` (próximo ticket), `/sdd-status` (comentário "Estado da fase") e `/sdd-close` (PR de fechamento).
 - **FR-4 (D8)** Toda spec SHOULD ter uma seção **"Mudanças"** por versão, com itens `ADDED`, `MODIFIED` e `REMOVED` apontando para os FR/AC; o PR de fechamento gera o CHANGELOG a partir dela.
 - **FR-5 (D9)** O template SHOULD gerar um `AGENTS.md` (lido por Codex, Copilot, Cursor e outros) que aponta para o `CLAUDE.md` e resume o processo, para que o repositório funcione com outros agentes.
 
@@ -34,7 +34,7 @@ Ferramentas estudadas:
 
 - **AC-1** Dado um AC de spec `In Progress` ou `Done` sem teste que o cite, quando `sdd-check` roda, então a saída lista o AC e o código de saída é diferente de zero (na Fase 2, aviso com código 0; a partir da Fase 3, erro — D6).
 - **AC-2** Dado o repositório do próprio kit, quando `sdd-check` roda no CI, então passa.
-- **AC-3** Dado o plugin instalado, quando o usuário digita `/sdd:status`, então o agente lê o épico aberto e publica o comentário "Estado da fase".
+- **AC-3** Dado o plugin instalado, quando o usuário digita `/sdd-status`, então o agente lê o épico aberto e publica o comentário "Estado da fase".
 - **AC-4** Dado um repositório adotado, quando um agente que lê `AGENTS.md` abre o repositório, então encontra o processo e os comandos de verificação.
 
 ## Fora de escopo
@@ -52,3 +52,4 @@ Respondidas pelo dono em 2026-10-01, todas na opção (a) ([ANALYSIS.md §6](../
 - D8 — seção "Mudanças" em cada spec, gerando o CHANGELOG.
 - D9 — `AGENTS.md` no template.
 - Revisado na implementação (#24): a exigência de teste vale para specs `In Progress` e `Done`, e não `Approved`. Uma spec aprovada ainda não foi implementada, e cobrar testes dela geraria avisos falsos. O script fica em `template/common/scripts/sdd-check.sh` (fonte única); o kit roda a mesma cópia.
+- Revisado na implementação (#25): os comandos se chamam `/sdd-analyze`, `/sdd-status` etc. (e não `/sdd:status`). O Claude Code coloca comandos de plugin no namespace do plugin (`/sdd-delivery:status`), e `/status` sozinho colide com um comando nativo; com o prefixo `sdd-`, a forma curta funciona sem conflito.

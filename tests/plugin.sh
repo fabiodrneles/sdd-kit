@@ -22,6 +22,20 @@ if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
   exit 1
 fi
 
+# 006 AC-3 (estrutura): comando sem description e comando ausente são recusados.
+cp "$root/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md" "$tmp/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md"
+sed '/^description:/d' "$root/plugins/sdd-delivery/commands/sdd-status.md" > "$tmp/plugins/sdd-delivery/commands/sdd-status.md"
+if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
+  echo "FALHOU: check-plugin aceitou comando sem description" >&2
+  exit 1
+fi
+cp "$root/plugins/sdd-delivery/commands/sdd-status.md" "$tmp/plugins/sdd-delivery/commands/"
+rm "$tmp/plugins/sdd-delivery/commands/sdd-next.md"
+if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
+  echo "FALHOU: check-plugin aceitou a falta do /sdd-next" >&2
+  exit 1
+fi
+
 zip="$(sh "$root/scripts/package-skill.sh" "$tmp/out/sdd-delivery.zip")"
 list="$(unzip -Z1 "$zip")"
 for f in SKILL.md references/process.md references/templates.md \

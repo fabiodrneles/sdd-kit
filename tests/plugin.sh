@@ -22,6 +22,23 @@ if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
   exit 1
 fi
 
+# description vazia e longa demais (AC-2).
+skill_md="$tmp/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md"
+cp "$root/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md" "$skill_md"
+awk 'NR == 1 { print; next } /^description:/ { print "description: >-"; skip = 1; next } skip && /^[ \t]/ { next } { skip = 0; print }' \
+  "$root/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md" > "$skill_md"
+if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
+  echo "FALHOU: check-plugin aceitou description vazia" >&2
+  exit 1
+fi
+long="$(awk 'BEGIN { for (i = 0; i < 1025; i++) printf "a" }')"
+awk -v long="$long" 'NR == 1 { print; next } /^description:/ { print "description: " long; skip = 1; next } skip && /^[ \t]/ { next } { skip = 0; print }' \
+  "$root/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md" > "$skill_md"
+if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
+  echo "FALHOU: check-plugin aceitou description com mais de 1024 caracteres" >&2
+  exit 1
+fi
+
 zip="$(sh "$root/scripts/package-skill.sh" "$tmp/out/sdd-delivery.zip")"
 list="$(unzip -Z1 "$zip")"
 for f in SKILL.md references/process.md references/templates.md \

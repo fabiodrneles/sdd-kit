@@ -8,7 +8,7 @@ Este diretório organiza o desenvolvimento em **Spec Driven Development (SDD)**:
 spec.md (O QUÊ / POR QUÊ)  →  revisão  →  testes a partir dos critérios de aceite  →  implementação  →  status: Done
 ```
 
-1. **Especificar** — requisitos (`FR-*`), não funcionais (`NFR-*`) e critérios de aceite (`AC-*`) no formato Dado/Quando/Então.
+1. **Especificar** — requisitos (`FR-*`), não funcionais (`NFR-*`) e critérios de aceite (`AC-*`) no formato Dado/Quando/Então (comportamento visto pelo usuário) ou EARS — `QUANDO <gatilho>, O SISTEMA DEVE <resposta>` (requisitos de sistema).
 2. **Resolver decisões** — itens em aberto são respondidos pelo dono antes de implementar.
 3. **Testar primeiro** — cada `AC-*` vira ao menos um teste automatizado.
 4. **Implementar** — o PR referencia os IDs (ex.: `002 FR-1, AC-2`) e, se o comportamento mudou, acrescenta uma linha `ADDED`, `MODIFIED` ou `REMOVED` na seção "Mudanças" da spec.

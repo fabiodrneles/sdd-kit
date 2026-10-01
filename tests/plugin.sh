@@ -22,6 +22,23 @@ if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
   exit 1
 fi
 
+# description vazia e longa demais (AC-2).
+skill_md="$tmp/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md"
+cp "$root/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md" "$skill_md"
+awk 'NR == 1 { print; next } /^description:/ { print "description: >-"; skip = 1; next } skip && /^[ \t]/ { next } { skip = 0; print }' \
+  "$root/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md" > "$skill_md"
+if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
+  echo "FALHOU: check-plugin aceitou description vazia" >&2
+  exit 1
+fi
+long="$(awk 'BEGIN { for (i = 0; i < 1025; i++) printf "a" }')"
+awk -v long="$long" 'NR == 1 { print; next } /^description:/ { print "description: " long; skip = 1; next } skip && /^[ \t]/ { next } { skip = 0; print }' \
+  "$root/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md" > "$skill_md"
+if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
+  echo "FALHOU: check-plugin aceitou description com mais de 1024 caracteres" >&2
+  exit 1
+fi
+
 # 006 AC-3 (estrutura): comando sem description e comando ausente são recusados.
 cp "$root/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md" "$tmp/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md"
 sed '/^description:/d' "$root/plugins/sdd-delivery/commands/sdd-status.md" > "$tmp/plugins/sdd-delivery/commands/sdd-status.md"

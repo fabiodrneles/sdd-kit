@@ -29,6 +29,7 @@ for lang in go node java python; do
   ! grep -rq '{{[A-Z_]*}}' "$d" || fail "$lang: sobrou marcador: $(grep -rl '{{[A-Z_]*}}' "$d")"
   grep -q 'Demo' "$d/CLAUDE.md" || fail "$lang: {{PROJECT}} não substituído"
   grep -q '@acme' "$d/.github/CODEOWNERS" || fail "$lang: {{OWNER}} não substituído"
+  grep -q 'Demo' "$d/AGENTS.md" || fail "$lang: AGENTS.md sem {{PROJECT}} substituído (006 AC-4)"
   [ -x "$d/.claude/hooks/session-start.sh" ] || fail "$lang: hook perdeu permissão de execução"
 
   # 004 AC-3: segunda execução não muda nada.

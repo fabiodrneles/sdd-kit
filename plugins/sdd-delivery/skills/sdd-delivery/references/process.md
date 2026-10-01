@@ -57,7 +57,7 @@ corrigida no mesmo PR que a notar).
 - **FR-5** `specs/constitution.md`; uma spec por área em `specs/NNN-nome/spec.md`;
   `specs/README.md` com índice e status; `specs/ROADMAP.md` com fases e tarefas `T1..Tn`.
 - **FR-6** Formato da spec: cabeçalho (Prioridade, Status, Código afetado e/ou Resolve),
-  Contexto, `FR-*`/`NFR-*` com MUST/SHOULD/MAY, `AC-*` verificáveis (Dado/Quando/Então),
+  Contexto, `FR-*`/`NFR-*` com MUST/SHOULD/MAY, `AC-*` verificáveis (Dado/Quando/Então ou EARS; ver templates.md),
   Fora de escopo, Decisões. (Opcional: "Estado atual (verificado)".)
 - **FR-7** Cada tarefa do ROADMAP cita os IDs que fecha (`003 FR-2..5`). Fases padrão:
   0 decisões; 1 "funcionar de verdade" `v0.1.0`; 2 "confiável" `v0.2.0`; 3 "profissional"

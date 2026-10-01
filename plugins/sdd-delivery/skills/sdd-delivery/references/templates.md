@@ -8,6 +8,7 @@ Esqueletos para copiar e preencher. Substitua `<…>`. Escreva no idioma do dono
 - [specs/constitution.md](#specsconstitutionmd)
 - [specs/README.md](#specsreadmemd)
 - [specs/NNN-nome/spec.md](#specsnnn-nomespecmd)
+- [Formatos de critério de aceite](#formatos-de-critério-de-aceite)
 - [specs/ROADMAP.md](#specsroadmapmd)
 - [Épico](#épico)
 - [Ticket](#ticket)
@@ -128,7 +129,7 @@ de comportamento entra no código sem uma spec que a descreva e critérios de ac
 spec.md (O QUÊ / POR QUÊ) → revisão → testes a partir dos AC → implementação → status: Done
 ```
 
-1. **Especificar** — `FR-*`, `NFR-*` e `AC-*` (Dado/Quando/Então).
+1. **Especificar** — `FR-*`, `NFR-*` e `AC-*` (Dado/Quando/Então ou EARS).
 2. **Resolver decisões** — antes de implementar.
 3. **Testar primeiro** — cada `AC-*` vira ao menos um teste.
 4. **Implementar** — o PR referencia os IDs (`003 FR-1, AC-2`).
@@ -184,6 +185,7 @@ Status possíveis: `Draft` → `Approved` → `In Progress` → `Done`.
 
 - **AC-1** Dado <contexto>, quando <ação>, então <resultado observável>.
 - **AC-2** Golden test: <saída de exemplo> é igual a `<testdata/arquivo>`.
+- **AC-3** QUANDO <gatilho>, O SISTEMA DEVE <resposta observável>.   ← EARS
 
 ## Fora de escopo
 
@@ -206,6 +208,27 @@ Status possíveis: `Draft` → `Approved` → `In Progress` → `Done`.
 A seção "Mudanças" é o delta da spec por versão, no estilo do OpenSpec: cada PR de ticket acrescenta
 suas linhas sob `### Não lançado`, e o PR de fechamento renomeia para a versão e gera o CHANGELOG
 a partir dela. `ADDED` e `MODIFIED` apontam para IDs que existem na spec (o `sdd-check` confere).
+
+## Formatos de critério de aceite
+
+Os dois formatos são aceitos; escolha pelo tipo de requisito e mantenha um só por spec quando possível.
+
+| Formato | Use para | Exemplo |
+|---|---|---|
+| Dado/Quando/Então | Comportamento visto pelo usuário, cenários com contexto | Dado um YAML sem `name`, quando `build` roda, então sai com código 2 e cita `name` |
+| EARS | Requisitos de sistema: eventos, estados, erros, opções | QUANDO o arquivo de saída já existe, O SISTEMA DEVE perguntar antes de sobrescrever |
+
+Padrões EARS (Easy Approach to Requirements Syntax), em português:
+
+| Padrão | Forma |
+|---|---|
+| Ubíquo | `O SISTEMA DEVE <resposta>` |
+| Evento | `QUANDO <gatilho>, O SISTEMA DEVE <resposta>` |
+| Estado | `ENQUANTO <estado>, O SISTEMA DEVE <resposta>` |
+| Indesejado | `SE <condição indesejada>, ENTÃO O SISTEMA DEVE <resposta>` |
+| Opcional | `ONDE <recurso presente>, O SISTEMA DEVE <resposta>` |
+
+Em ambos, o resultado precisa ser **observável** por um teste automatizado.
 
 ## specs/ROADMAP.md
 

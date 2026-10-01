@@ -37,3 +37,4 @@ D1 (a): um único script, para repositórios novos e antigos, que copia o templa
 ## Decisões
 
 - D1 — script único, sem repositório-template no GitHub.
+- Confirmado pelo dono (2026-10-01): o `adopt.ps1` usa as mesmas opções do `adopt.sh` (`--lang`, …), e não o estilo `-Lang` do PowerShell, para que documentação e testes sejam os mesmos e erro de uso saia com código 2.

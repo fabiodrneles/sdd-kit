@@ -34,6 +34,6 @@ O processo SDD nasceu no [cv-craft](https://github.com/fabiodrneles/cv-craft) (s
 | ID | Pergunta | Resposta |
 |---|---|---|
 | D1 | Forma de adoção | **(a)** Um script só (sh e PowerShell), para repositórios novos e antigos, que copia `template/` sem sobrescrever o que existe. |
-| D2 | Linguagens com CI e hook prontos na v0.1 | **Go, mais as linguagens do trabalho do dono:** Node/TS (React), Java e Python. |
+| D2 | Linguagens com CI e hook prontos na v0.1 | **Go, mais as linguagens do trabalho do dono:** Node/TS (React), Java e Python (lista confirmada pelo dono). |
 | D3 | Atualização de quem já usa o kit | **(a)** PR automático semanal de sincronização, na Fase 2. |
 | D4 | Idioma | **(a)** Português, com um `README.en.md`. |

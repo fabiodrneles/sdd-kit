@@ -16,8 +16,8 @@ Guia rápido para agentes (Claude Code) trabalharem neste repositório. O proces
 | `plugins/sdd-delivery/` | A skill, empacotada como plugin do Claude Code (spec 002) |
 | `.claude-plugin/marketplace.json` | O repositório como marketplace de plugins |
 | `template/common/`, `template/<lang>/` | O que a adoção copia para outros repositórios (spec 003) |
-| `scripts/` | Adoção (`adopt.sh`, `adopt.ps1`), empacotamento da skill, verificações (spec 004) |
-| `tests/` | Testes dos scripts, rodados por `make ci` |
+| `scripts/` | Adoção (`adopt.sh`, `adopt.ps1`), empacotamento e checagens da skill, `e2e-template.sh` (spec 003 AC-4) |
+| `tests/` | Testes dos scripts (`make ci`), `adopt.ps1` (Windows no CI) e `fixtures/` (projetos mínimos por linguagem) |
 
 ## Comandos
 

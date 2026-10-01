@@ -1,0 +1,130 @@
+#!/usr/bin/env pwsh
+# Adota o sdd-kit num repositório novo ou existente (spec 004): copia
+# template/common e template/<lang> sem sobrescrever o que já existe.
+# Equivalente a scripts/adopt.sh, com as mesmas opções e a mesma saída.
+#
+# Uso: adopt.ps1 --lang go|node|java|python [--project NOME] [--owner DONO]
+#                [--repo REPO] [--dry-run] [--force] [DESTINO]
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
+$KitRef = if ($env:SDD_KIT_REF) { $env:SDD_KIT_REF } else { 'v0.1.0' }
+$Langs = @('go', 'node', 'java', 'python')
+
+function Show-Usage {
+  [Console]::Error.WriteLine(@"
+uso: adopt.ps1 --lang go|node|java|python [opções] [DESTINO]
+
+  --lang LING      linguagem do repositório (obrigatório): $($Langs -join ' ')
+  --project NOME   nome do projeto (padrão: nome do diretório de destino)
+  --owner DONO     dono no GitHub (padrão: deduzido do remote origin)
+  --repo REPO      repositório no GitHub (padrão: deduzido do remote origin)
+  --dry-run        mostra o que seria feito, sem escrever nada
+  --force          sobrescreve arquivos que já existem
+  DESTINO          diretório do repositório (padrão: diretório atual)
+"@)
+  exit 2
+}
+
+function Stop-WithUsage([string]$Message) {
+  [Console]::Error.WriteLine("erro: $Message")
+  Show-Usage
+}
+
+$lang = ''; $project = ''; $owner = ''; $repo = ''; $dry = $false; $force = $false; $dest = '.'
+for ($i = 0; $i -lt $args.Count; $i++) {
+  $a = [string]$args[$i]
+  switch -CaseSensitive ($a) {
+    { $_ -in '--lang', '--project', '--owner', '--repo' } {
+      if ($i + 1 -ge $args.Count) { Stop-WithUsage "$a precisa de um valor" }
+      $i++
+      $v = [string]$args[$i]
+      switch ($a) {
+        '--lang' { $lang = $v }
+        '--project' { $project = $v }
+        '--owner' { $owner = $v }
+        '--repo' { $repo = $v }
+      }
+      break
+    }
+    '--dry-run' { $dry = $true; break }
+    '--force' { $force = $true; break }
+    { $_ -in '-h', '--help' } { Show-Usage }
+    { $_.StartsWith('-') } { Stop-WithUsage "opção desconhecida: $a" }
+    default { $dest = $a }
+  }
+}
+
+if (-not $lang) { Stop-WithUsage '--lang é obrigatório' }
+if ($lang -cnotin $Langs) { Stop-WithUsage "linguagem inválida: $lang" }
+if (-not (Test-Path -LiteralPath $dest -PathType Container)) { Stop-WithUsage "destino não é um diretório: $dest" }
+$dest = (Resolve-Path -LiteralPath $dest).Path
+
+# Dono e repositório a partir do remote origin (https, ssh ou proxy).
+if (-not $owner -or -not $repo) {
+  $url = ''
+  try { $url = (& git -C $dest remote get-url origin 2>$null) } catch { $url = '' }
+  if ($LASTEXITCODE -ne 0 -or -not $url) { $url = '' }
+  $url = ($url -replace '\.git$', '') -replace '^[a-z]*@[^:/]*:', '/'
+  $parts = @($url -split '/' | Where-Object { $_ -ne '' })
+  if ($parts.Count -ge 2) {
+    if (-not $owner) { $owner = $parts[-2] }
+    if (-not $repo) { $repo = $parts[-1] }
+  }
+}
+if (-not $owner) { Stop-WithUsage 'não foi possível deduzir --owner do remote origin' }
+if (-not $repo) { Stop-WithUsage 'não foi possível deduzir --repo do remote origin' }
+if (-not $project) { $project = Split-Path -Leaf $dest }
+
+# Template: ao lado do script ou baixado da versão do kit.
+$tmp = Join-Path ([IO.Path]::GetTempPath()) ("sdd-kit-" + [guid]::NewGuid())
+New-Item -ItemType Directory -Path $tmp | Out-Null
+try {
+  $template = Join-Path (Split-Path -Parent $PSScriptRoot) 'template'
+  if (-not $PSScriptRoot -or -not (Test-Path (Join-Path $template 'common'))) {
+    [Console]::Error.WriteLine("baixando o template do sdd-kit $KitRef…")
+    $tgz = Join-Path $tmp 'kit.tar.gz'
+    Invoke-WebRequest -Uri "https://github.com/fabiodrneles/sdd-kit/archive/$KitRef.tar.gz" -OutFile $tgz
+    & tar -xzf $tgz -C $tmp
+    $template = Get-ChildItem -Path $tmp -Directory | ForEach-Object { Join-Path $_.FullName 'template' } |
+      Where-Object { Test-Path (Join-Path $_ 'common') } | Select-Object -First 1
+    if (-not $template) { [Console]::Error.WriteLine("erro: template não encontrado em $KitRef"); exit 1 }
+  }
+
+  $utf8 = New-Object System.Text.UTF8Encoding($false)
+  $created = 0; $skipped = 0; $overwritten = 0
+  foreach ($part in @('common', $lang)) {
+    $base = (Resolve-Path (Join-Path $template $part)).Path
+    # Mesma ordem do sh (LC_ALL=C sort): ordinal.
+    $files = [string[]]@(Get-ChildItem -LiteralPath $base -Recurse -File -Force |
+        ForEach-Object { $_.FullName.Substring($base.Length + 1).Replace('\', '/') })
+    [Array]::Sort($files, [StringComparer]::Ordinal)
+    foreach ($rel in $files) {
+      $src = Join-Path $base $rel
+      $dst = Join-Path $dest $rel
+      $exists = Test-Path -LiteralPath $dst
+      if ($exists -and -not $force) {
+        Write-Output "ignorado (já existe): $rel"
+        $skipped++
+        continue
+      }
+      if ($exists) { $action = 'sobrescrito'; $overwritten++ } else { $action = 'criado'; $created++ }
+      Write-Output "${action}: $rel"
+      if ($dry) { continue }
+      New-Item -ItemType Directory -Force -Path (Split-Path -Parent $dst) | Out-Null
+      $text = [IO.File]::ReadAllText($src, $utf8)
+      $text = $text.Replace('{{PROJECT}}', $project).Replace('{{OWNER}}', $owner).Replace('{{REPO}}', $repo)
+      [IO.File]::WriteAllText($dst, $text, $utf8)
+      if (-not $IsWindows) {
+        $mode = [IO.File]::GetUnixFileMode($src)
+        if ($mode -band [IO.UnixFileMode]::UserExecute) { [IO.File]::SetUnixFileMode($dst, $mode) }
+      }
+    }
+  }
+
+  $prefix = if ($dry) { '(dry-run) ' } else { '' }
+  Write-Output "${prefix}sdd-kit $lang em ${dest}: $created criados, $skipped ignorados, $overwritten sobrescritos"
+}
+finally {
+  Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
+}

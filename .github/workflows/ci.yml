@@ -43,3 +43,57 @@ jobs:
           fail: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  adopt:
+    name: Adoção (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - name: adopt.sh (spec 004 AC-1..5)
+        if: runner.os != 'Windows'
+        run: sh tests/adopt.sh
+      - name: adopt.ps1 (spec 004 AC-1..5)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./tests/adopt.ps1
+
+  template:
+    name: Template (${{ matrix.lang }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lang: [go, node, java, python]
+    steps:
+      - uses: actions/checkout@v7
+      - if: matrix.lang == 'go'
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: tests/fixtures/go/go.mod
+      - if: matrix.lang == 'go'
+        id: lint
+        run: echo "version=$(sed -n 's/^GOLANGCI_LINT_VERSION *:= *//p' template/go/Makefile)" >> "$GITHUB_OUTPUT"
+      - if: matrix.lang == 'go'
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: ${{ steps.lint.outputs.version }}
+          install-only: true
+      - if: matrix.lang == 'node'
+        uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+      - if: matrix.lang == 'java'
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+      - if: matrix.lang == 'python'
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Adotar o template e rodar o make ci gerado (spec 003 AC-4)
+        run: sh scripts/e2e-template.sh ${{ matrix.lang }}

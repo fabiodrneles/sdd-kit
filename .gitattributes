@@ -1,0 +1,4 @@
+# Finais de linha LF em todos os sistemas: o script de adoção copia os arquivos
+# do template byte a byte, e o Windows (core.autocrlf) trocaria por CRLF.
+* text=auto eol=lf
+*.zip binary

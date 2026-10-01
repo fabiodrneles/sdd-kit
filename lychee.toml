@@ -1,0 +1,11 @@
+# Verificação de links da documentação (spec 001 FR-4). Roda no CI.
+exclude_path = ["node_modules", "dist"]
+
+exclude = [
+  '^mailto:',
+  # Links de versão do CHANGELOG e da release: só existem depois da tag do dono.
+  '^https://github\.com/fabiodrneles/sdd-kit/(compare|releases)',
+]
+
+max_retries = 3
+accept = ["200..=299", "429"]

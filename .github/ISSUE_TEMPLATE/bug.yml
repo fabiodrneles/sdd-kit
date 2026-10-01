@@ -1,0 +1,38 @@
+name: Bug
+description: A skill, o template ou o script de adoção não funciona como as specs descrevem
+title: "fix: "
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Versão do kit
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: part
+    attributes:
+      label: Parte
+      options: [skill, template, script de adoção, CI do kit]
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Como reproduzir
+      description: Comando, sistema operacional e linguagem do repositório de destino
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: O que você esperava
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: O que aconteceu
+    validations:
+      required: true

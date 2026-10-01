@@ -15,7 +15,7 @@ for lang in go node java python; do
   grep -q 'make ci' "$lang/.github/workflows/ci.yml" || err "template/$lang: o CI não roda make ci"
 done
 
-# AC-2: nada específico do projeto de origem.
+# 003 AC-2: nada específico do projeto de origem.
 if grep -rniI 'cv-craft' . >/dev/null; then
   err "o template cita cv-craft: $(grep -rlniI 'cv-craft' . | tr '\n' ' ')"
 fi
@@ -24,7 +24,7 @@ fi
 unknown="$(grep -rhoI '{{[A-Z_]*}}' . | sort -u | grep -vxE '\{\{(PROJECT|OWNER|REPO)\}\}' || true)"
 [ -z "$unknown" ] || err "marcadores desconhecidos: $unknown"
 
-# AC-1: workflows válidos.
+# 003 AC-1: workflows válidos.
 command -v actionlint >/dev/null || { echo "actionlint não instalado (veja .claude/hooks/session-start.sh)" >&2; exit 1; }
 # shellcheck disable=SC2046 # lista de arquivos sem espaços
 actionlint $(find . -path '*/.github/workflows/*.yml') || fail=1

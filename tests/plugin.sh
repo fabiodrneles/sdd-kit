@@ -1,5 +1,5 @@
 #!/bin/sh
-# Testes da spec 002: manifests, skill e zip (AC-1..AC-3).
+# Testes da spec 002: manifests (002 AC-1), skill (002 AC-2) e zip (002 AC-3).
 set -eu
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -30,7 +30,7 @@ for f in SKILL.md references/process.md references/templates.md \
 done
 echo "tests/plugin.sh ok"
 
-# AC-4: a release recusa tag diferente da versão do plugin.json.
+# 002 AC-4: a release recusa tag diferente da versão do plugin.json.
 v="$(jq -r .version "$root/plugins/sdd-delivery/.claude-plugin/plugin.json")"
 sh "$root/scripts/check-version.sh" "v$v" >/dev/null
 if sh "$root/scripts/check-version.sh" "v$v-outra" 2>/dev/null; then

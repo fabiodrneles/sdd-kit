@@ -12,7 +12,7 @@ snapshot() { (cd "$1" && find . -type f -exec cksum {} + | LC_ALL=C sort); }
 opts="--project Demo --owner acme --repo demo"
 
 for lang in go node java python; do
-  # AC-1: diretório vazio recebe common + linguagem, sem marcadores.
+  # 004 AC-1: diretório vazio recebe common + linguagem, sem marcadores.
   d="$tmp/$lang-empty"; mkdir "$d"
   # shellcheck disable=SC2086 # opts são palavras separadas de propósito
   sh "$adopt" --lang "$lang" $opts "$d" > "$tmp/out"
@@ -24,7 +24,7 @@ for lang in go node java python; do
   grep -q '@acme' "$d/.github/CODEOWNERS" || fail "$lang: {{OWNER}} não substituído"
   [ -x "$d/.claude/hooks/session-start.sh" ] || fail "$lang: hook perdeu permissão de execução"
 
-  # AC-3: segunda execução não muda nada.
+  # 004 AC-3: segunda execução não muda nada.
   before="$(snapshot "$d")"
   # shellcheck disable=SC2086
   sh "$adopt" --lang "$lang" $opts "$d" > "$tmp/out"
@@ -32,7 +32,7 @@ for lang in go node java python; do
   grep -q ': 0 criados' "$tmp/out" || fail "$lang: segunda execução criou arquivos"
 done
 
-# AC-2: arquivos existentes ficam intactos e aparecem como ignorados.
+# 004 AC-2: arquivos existentes ficam intactos e aparecem como ignorados.
 d="$tmp/existing"; mkdir "$d"
 printf 'meu readme\n' > "$d/README.md"
 printf 'meu claude\n' > "$d/CLAUDE.md"
@@ -46,7 +46,7 @@ grep -qx 'ignorado (já existe): CLAUDE.md' "$tmp/out" || fail "CLAUDE.md não a
 sh "$adopt" --lang go $opts --force "$d" > "$tmp/out"
 grep -q 'Demo' "$d/CLAUDE.md" || fail "--force não sobrescreveu CLAUDE.md"
 
-# AC-4: linguagem inválida e argumento ausente saem com 2 sem escrever nada.
+# 004 AC-4: linguagem inválida e argumento ausente saem com 2 sem escrever nada.
 d="$tmp/invalid"; mkdir "$d"
 for args in "--lang cobol $opts" "$opts" "--lang"; do
   set +e
@@ -58,7 +58,7 @@ for args in "--lang cobol $opts" "$opts" "--lang"; do
   [ -z "$(ls -A "$d")" ] || fail "'$args' escreveu no destino"
 done
 
-# AC-5: --dry-run não escreve nada.
+# 004 AC-5: --dry-run não escreve nada.
 # shellcheck disable=SC2086
 sh "$adopt" --lang python $opts --dry-run "$d" > "$tmp/out"
 [ -z "$(ls -A "$d")" ] || fail "--dry-run escreveu no destino"
@@ -72,7 +72,7 @@ sh "$adopt" --lang node "$d" > /dev/null
 grep -q '@octo' "$d/.github/CODEOWNERS" || fail "owner não deduzido do remote ssh"
 grep -q 'octo/widget' "$d/.github/ISSUE_TEMPLATE/config.yml" || fail "repo não deduzido do remote ssh"
 
-# AC-6: a versão PowerShell gera a mesma árvore.
+# 004 AC-6: a versão PowerShell gera a mesma árvore.
 if command -v pwsh >/dev/null; then
   for lang in go node java python; do
     a="$tmp/$lang-empty" b="$tmp/$lang-ps"; mkdir "$b"

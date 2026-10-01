@@ -1,7 +1,7 @@
 # 006 — Recursos inspirados na comunidade SDD
 
 - **Prioridade:** P1
-- **Status:** Approved — D5–D9 respondidas (a)
+- **Status:** Done — entregue na `v0.1.0`
 - **Código afetado:** `plugins/sdd-delivery/`, `template/`, `scripts/`
 - **Resolve:** #16
 

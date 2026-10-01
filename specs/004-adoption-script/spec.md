@@ -1,7 +1,7 @@
 # 004 — Script de adoção
 
 - **Prioridade:** P0
-- **Status:** Approved
+- **Status:** Done — entregue na `v0.1.0`
 - **Código afetado:** `scripts/adopt.sh`, `scripts/adopt.ps1`, `tests/`
 - **Resolve:** A3, #6
 

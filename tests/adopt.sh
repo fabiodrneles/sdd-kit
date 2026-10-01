@@ -18,7 +18,14 @@ for lang in go node java python; do
   sh "$adopt" --lang "$lang" $opts "$d" > "$tmp/out"
   want="$( (cd "$root/template/common" && find . -type f; cd "$root/template/$lang" && find . -type f) | wc -l)"
   got="$(cd "$d" && find . -type f | wc -l)"
+  want=$((want + 1)) # .sdd-kit.json
   [ "$want" -eq "$got" ] || fail "$lang: esperava $want arquivos, gerou $got"
+  # 005 FR-2: estado com versão, linguagem e um hash por arquivo gerenciado.
+  jq -e --arg l "$lang" '.kit == "sdd-kit" and .lang == $l and (.files | length) == '"$((want - 1))" "$d/.sdd-kit.json" >/dev/null ||
+    fail "$lang: .sdd-kit.json inválido"
+  h="$(jq -r '.files["CLAUDE.md"]' "$d/.sdd-kit.json")"
+  [ "$h" = "$( (sha256sum "$d/CLAUDE.md" 2>/dev/null || shasum -a 256 "$d/CLAUDE.md") | cut -d' ' -f1)" ] ||
+    fail "$lang: hash do CLAUDE.md no estado não confere"
   ! grep -rq '{{[A-Z_]*}}' "$d" || fail "$lang: sobrou marcador: $(grep -rl '{{[A-Z_]*}}' "$d")"
   grep -q 'Demo' "$d/CLAUDE.md" || fail "$lang: {{PROJECT}} não substituído"
   grep -q '@acme' "$d/.github/CODEOWNERS" || fail "$lang: {{OWNER}} não substituído"
@@ -41,6 +48,7 @@ sh "$adopt" --lang go $opts "$d" > "$tmp/out"
 [ "$(cat "$d/CLAUDE.md")" = "meu claude" ] || fail "CLAUDE.md existente foi sobrescrito"
 [ "$(cat "$d/README.md")" = "meu readme" ] || fail "README.md existente foi alterado"
 grep -qx 'ignorado (já existe): CLAUDE.md' "$tmp/out" || fail "CLAUDE.md não aparece como ignorado"
+jq -e '.files | has("CLAUDE.md") | not' "$d/.sdd-kit.json" >/dev/null || fail "arquivo do repositório entrou no estado como gerenciado"
 # --force sobrescreve.
 # shellcheck disable=SC2086
 sh "$adopt" --lang go $opts --force "$d" > "$tmp/out"

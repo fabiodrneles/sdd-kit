@@ -78,7 +78,12 @@ fi
 esc() { printf '%s\n' "$1" | sed 's/[\/&\\]/\\&/g'; }
 s_project="$(esc "$project")" s_owner="$(esc "$owner")" s_repo="$(esc "$repo")"
 
+sha256() {
+  if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1"; else shasum -a 256 "$1"; fi | cut -d' ' -f1
+}
+
 created=0 skipped=0 overwritten=0
+: > "$tmp/state"
 for part in common "$lang"; do
   # Ordenado para o relatório ser estável entre execuções e sistemas.
   (cd "$template/$part" && find . -type f | sed 's#^\./##' | LC_ALL=C sort) > "$tmp/files"
@@ -100,8 +105,33 @@ for part in common "$lang"; do
     mkdir -p "$(dirname "$dst")"
     sed -e "s/{{PROJECT}}/$s_project/g" -e "s/{{OWNER}}/$s_owner/g" -e "s/{{REPO}}/$s_repo/g" "$src" > "$dst"
     if [ -x "$src" ]; then chmod +x "$dst"; fi
+    echo "$rel $(sha256 "$dst")" >> "$tmp/state"
   done < "$tmp/files"
 done
+
+# Arquivo de estado (spec 005 FR-2): versão do kit, linguagem e o hash de cada
+# arquivo gerenciado. Como qualquer outro arquivo, só é reescrito com --force.
+if [ -e "$dest/.sdd-kit.json" ] && [ "$force" -eq 0 ]; then
+  echo "ignorado (já existe): .sdd-kit.json"
+  skipped=$((skipped + 1))
+else
+  if [ -e "$dest/.sdd-kit.json" ]; then
+    echo "sobrescrito: .sdd-kit.json"; overwritten=$((overwritten + 1))
+  else
+    echo "criado: .sdd-kit.json"; created=$((created + 1))
+  fi
+  if [ "$dry" -eq 0 ]; then
+    {
+      printf '{\n  "kit": "sdd-kit",\n  "version": "%s",\n  "lang": "%s",\n  "files": {' "$KIT_REF" "$lang"
+      sep=""
+      while read -r rel hash; do
+        printf '%s\n    "%s": "%s"' "$sep" "$rel" "$hash"
+        sep=","
+      done < "$tmp/state"
+      printf '\n  }\n}\n'
+    } > "$dest/.sdd-kit.json"
+  fi
+fi
 
 prefix=""
 [ "$dry" -eq 0 ] || prefix="(dry-run) "

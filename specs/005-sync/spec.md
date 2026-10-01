@@ -1,0 +1,31 @@
+# 005 — Sincronização dos repositórios
+
+- **Prioridade:** P1
+- **Status:** Approved
+- **Código afetado:** `template/common/.github/workflows/sdd-sync.yml`, `scripts/`
+- **Resolve:** M1
+
+## Contexto
+
+D3 (a): melhorias na skill e nos modelos precisam chegar aos repositórios que já adotaram o kit, sem trabalho manual e sem sobrescrever personalizações (constituição, princípio 2).
+
+## Requisitos funcionais
+
+- **FR-1** O template MUST incluir um workflow semanal (e `workflow_dispatch`) que compara os arquivos gerenciados pelo kit com a última release e abre (ou atualiza) um único PR com as diferenças.
+- **FR-2** A lista de arquivos gerenciados e a versão adotada MUST ficar num arquivo de estado (`.sdd-kit.json`) escrito pela adoção.
+- **FR-3** Um arquivo gerenciado que o repositório alterou MUST NOT ser sobrescrito em silêncio: o PR traz a nova versão e a descrição lista o conflito.
+- **FR-4** Sem diferenças, o workflow MUST NOT abrir PR.
+
+## Critérios de aceite
+
+- **AC-1** Dado um repositório na versão anterior sem alterações locais, quando o workflow roda, então abre um PR com a atualização.
+- **AC-2** Dado um repositório já na última versão, quando o workflow roda, então nenhum PR é aberto.
+- **AC-3** Dado um arquivo gerenciado alterado localmente, quando o workflow roda, então o PR lista o arquivo como conflito.
+
+## Fora de escopo
+
+- Sincronizar arquivos que o repositório criou por conta própria.
+
+## Decisões
+
+- D3 — PR automático semanal, entregue na Fase 2 (`v0.2.0`).

@@ -30,3 +30,5 @@ O uso do kit em outros repositórios (#51) gerou achados de processo, que entrar
 ## Mudanças
 
 ### Não lançado
+
+- ADDED FR-1 — a adoção Node avisa lockfile ausente ou fora de sincronia e projeto sem script de teste (T27, #86).

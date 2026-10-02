@@ -92,6 +92,33 @@ echo 'meu código' > "$sk/hello.go"
 sh "$root/scripts/adopt.sh" --lang go --project demo --owner acme --repo demo --skeleton --force "$sk" > /dev/null
 [ "$(cat "$sk/hello.go")" = 'meu código' ] || fail "--skeleton --force sobrescreveu código do projeto"
 
+# 011 AC-1: a adoção Node avisa lockfile ausente ou fora de sincronia e projeto
+# sem testes, sem falhar; com o projeto em ordem, não avisa. Com pwsh, o
+# adopt.ps1 avisa igual.
+n="$tmp/node-warn"; mkdir "$n"
+warns() {
+  # shellcheck disable=SC2086
+  sh "$adopt" --lang node $opts --dry-run "$n" > "$tmp/out" || fail "adoção Node com avisos falhou"
+  grep '^aviso:' "$tmp/out" > "$tmp/warns" || true
+  if command -v pwsh >/dev/null; then
+    # shellcheck disable=SC2086
+    pwsh -NoProfile -File "$root/scripts/adopt.ps1" --lang node $opts --dry-run "$n" > "$tmp/out-ps"
+    [ "$(cat "$tmp/warns")" = "$(grep '^aviso:' "$tmp/out-ps" || true)" ] ||
+      fail "adopt.ps1 avisa diferente do adopt.sh: $(cat "$tmp/out-ps")"
+  fi
+}
+printf '{"name":"x","scripts":{"test":"echo \\"Error: no test specified\\" && exit 1"}}\n' > "$n/package.json"
+warns
+grep -q '^aviso: package.json sem script "test"' "$tmp/warns" || fail "sem aviso de projeto sem testes"
+grep -q '^aviso: sem package-lock.json' "$tmp/warns" || fail "sem aviso de lockfile ausente"
+cp "$root/tests/fixtures/node/package.json" "$root/tests/fixtures/node/package-lock.json" "$n/"
+warns
+[ ! -s "$tmp/warns" ] || fail "projeto Node em ordem recebeu aviso: $(cat "$tmp/warns")"
+jq '.devDependencies = {"c8": "^10.0.0"}' "$root/tests/fixtures/node/package.json" > "$n/package.json"
+warns
+grep -qx 'aviso: package-lock.json fora de sincronia .*' "$tmp/warns" || fail "sem aviso de lockfile fora de sincronia"
+[ "$(wc -l < "$tmp/warns")" -eq 1 ] || fail "avisos demais: $(cat "$tmp/warns")"
+
 # 004 AC-6: a versão PowerShell gera a mesma árvore.
 if command -v pwsh >/dev/null; then
   for lang in go node java python rust dotnet; do

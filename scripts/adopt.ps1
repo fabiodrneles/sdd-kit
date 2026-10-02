@@ -153,6 +153,41 @@ try {
 
   $prefix = if ($dry) { '(dry-run) ' } else { '' }
   Write-Output "${prefix}sdd-kit $lang em ${dest}: $created criados, $skipped ignorados, $overwritten sobrescritos"
+
+  # Spec 011 FR-1: avisa o que faria o CI Node nascer vermelho, sem falhar.
+  $pkgPath = Join-Path $dest 'package.json'
+  if ($lang -eq 'node' -and (Test-Path -LiteralPath $pkgPath)) {
+    # -AsHashtable: o lockfile tem a chave vazia "", que um PSCustomObject não aceita.
+    function Get-Field($Obj, [string]$Name) {
+      if ($Obj -is [Collections.IDictionary] -and $Obj.Contains($Name)) { return $Obj[$Name] }
+      return $null
+    }
+    function Get-Norm($Obj) {
+      if ($Obj -isnot [Collections.IDictionary]) { return '' }
+      return (@($Obj.Keys | Sort-Object -CaseSensitive | ForEach-Object { $_ + '=' + $Obj[$_] }) -join "`n")
+    }
+    $pkg = [IO.File]::ReadAllText($pkgPath, $utf8) | ConvertFrom-Json -AsHashtable
+    $test = Get-Field (Get-Field $pkg 'scripts') 'test'
+    if (-not $test -or $test -match 'no test specified') {
+      Write-Output 'aviso: package.json sem script "test": o make ci falha até o projeto ter testes'
+    }
+    $lockPath = Join-Path $dest 'package-lock.json'
+    if (-not (Test-Path -LiteralPath $lockPath)) {
+      Write-Output 'aviso: sem package-lock.json: o npm ci do CI falha; rode npm install e versione o lockfile'
+    }
+    else {
+      $lock = [IO.File]::ReadAllText($lockPath, $utf8) | ConvertFrom-Json -AsHashtable
+      $root = Get-Field (Get-Field $lock 'packages') ''
+      if ($null -ne $root) {
+        foreach ($f in 'dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies') {
+          if ((Get-Norm (Get-Field $pkg $f)) -cne (Get-Norm (Get-Field $root $f))) {
+            Write-Output 'aviso: package-lock.json fora de sincronia com o package.json: o npm ci do CI falha; rode npm install'
+            break
+          }
+        }
+      }
+    }
+  }
 }
 finally {
   Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue

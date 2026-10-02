@@ -88,5 +88,27 @@ done
 jq -e '.plugins | any(.name == "sdd-release")' "$market" >/dev/null 2>&1 || err "$market: falta o plugin sdd-release"
 [ -f plugins/sdd-release/commands/sdd-release.md ] || err "falta o comando /sdd-release"
 
+# Idioma (spec 007 FR-6, AC-5): a skill e os comandos estão em inglês e mandam
+# escrever no idioma do dono, achado no CLAUDE.md/AGENTS.md ou perguntado uma vez.
+lang="$(awk '/^## Language$/ { on = 1; next } /^## / { on = 0 } on' "$skill/SKILL.md")"
+[ -n "$lang" ] || err "SKILL.md: falta a seção ## Language"
+for rule in "owner's language" 'CLAUDE.md' 'AGENTS.md' 'ask the owner once' 'Commits and code'; do
+  printf '%s\n' "$lang" | grep -qF "$rule" || err "SKILL.md: a seção Language não cita: $rule"
+done
+# Os termos em português que os scripts do template leem estão no glossário.
+for term in 'épico' 'fase-' 'tipo:' 'Estado da fase' '## Fase' '## Decis' '## Mudanças' '## Estado atual'; do
+  printf '%s\n' "$lang" | grep -qF -- "$term" || err "SKILL.md: o glossário não tem $term"
+  [ ! -d template/common/scripts ] || grep -qF -- "$term" template/common/scripts/*.sh ||
+    err "glossário da skill: $term não aparece mais nos scripts do template"
+done
+# Texto corrido em inglês: palavras comuns do português fora de código, links e
+# do glossário reprovam.
+for md in "$skill"/SKILL.md "$skill"/references/*.md plugins/*/commands/*.md; do
+  # shellcheck disable=SC2016 # crases literais (código Markdown)
+  pt="$(awk '/^```/ { code = !code; next } /^\| English \| Português \|/ { gl = 1 } gl && !/^\|/ { gl = 0 } !code && !gl' "$md" |
+    sed 's/`[^`]*`//g; s|https*://[^ )>]*||g' | grep -inwE 'não|para|uma|com|que|dono|são|também|pelo' | head -n 3)"
+  [ -z "$pt" ] || err "$md: texto em português (a skill é em inglês): $pt"
+done
+
 [ "$fail" -eq 0 ] && echo "plugin ok"
 exit "$fail"

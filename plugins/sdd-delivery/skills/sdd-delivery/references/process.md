@@ -1,252 +1,261 @@
-# Processo de entrega — regras normativas
+# Delivery process — normative rules
 
-Versão condensada da spec "009 — Processo de entrega" (seções genéricas). `MUST`/`SHOULD`/`MAY`
-seguem a RFC 2119. Os IDs `FR-*` são os da spec original, para rastreabilidade.
+Condensed version of the spec "009 — Delivery process" (generic sections). `MUST`/`SHOULD`/`MAY`
+follow RFC 2119. The `FR-*` IDs are the original spec's, for traceability. Documents, issues and PRs
+are written in the owner's language; commits and code in English (see the "Language" section of SKILL.md).
 
-## Sumário
+## Contents
 
-- [Termos](#termos)
-- [1. Descoberta e análise](#1-descoberta-e-análise)
-- [2. Artefatos SDD](#2-artefatos-sdd)
+- [Terms](#terms)
+- [1. Discovery and analysis](#1-discovery-and-analysis)
+- [2. SDD artifacts](#2-sdd-artifacts)
 - [3. Tickets](#3-tickets)
 - [4. Branches](#4-branches)
 - [5. Commits](#5-commits)
 - [6. Pull requests](#6-pull-requests)
-- [7. Validação antes do push](#7-validação-antes-do-push)
-- [8. Gates de qualidade](#8-gates-de-qualidade)
-- [9. CI vermelho](#9-ci-vermelho)
-- [10. Revisão e merge](#10-revisão-e-merge)
-- [11. Fechamento de fase](#11-fechamento-de-fase)
-- [12. Papéis](#12-papéis)
-- [13. Comunicação](#13-comunicação)
-- [Requisitos não funcionais](#requisitos-não-funcionais)
-- [Critérios de aceite do processo](#critérios-de-aceite-do-processo)
-- [Decisões de desenho](#decisões-de-desenho)
+- [7. Validation before the push](#7-validation-before-the-push)
+- [8. Quality gates](#8-quality-gates)
+- [9. Red CI](#9-red-ci)
+- [10. Review and merge](#10-review-and-merge)
+- [11. Phase closing](#11-phase-closing)
+- [12. Roles](#12-roles)
+- [13. Communication](#13-communication)
+- [14. Resuming and saving usage](#14-resuming-and-saving-usage)
+- [Non-functional requirements](#non-functional-requirements)
+- [Process acceptance criteria](#process-acceptance-criteria)
+- [Design decisions](#design-decisions)
 
-## Termos
+## Terms
 
-| Termo | Significado |
+| Term | Meaning |
 |---|---|
-| Dono | Mantém o repositório; palavra final (decisões, merges, tags, configurações). |
-| Agente | Executa o trabalho delegado: análise, specs, tickets, código, PRs. |
-| Fase | Conjunto de tarefas que leva a uma versão (Fase 1 → `v0.1.0`). |
-| Épico | Issue que representa uma fase e agrega as tarefas como sub-issues. |
-| Ticket | Issue de uma tarefa, sub-issue de um épico. |
-| PR empilhado | PR cuja base é a branch de outro PR ainda não mergeado. |
-| PR de fechamento | PR que encerra a fase: status das specs, ROADMAP e CHANGELOG. |
+| Owner | Maintains the repository; final word (decisions, merges, tags, settings). |
+| Agent | Does the delegated work: analysis, specs, tickets, code, PRs. |
+| Phase | Set of tasks that leads to a version (Phase 1 → `v0.1.0`). |
+| Epic | Issue that represents a phase and groups the tasks as sub-issues. |
+| Ticket | Issue for one task, sub-issue of an epic. |
+| Stacked PR | PR whose base is the branch of another PR not merged yet. |
+| Closing PR | PR that ends the phase: spec status, ROADMAP and CHANGELOG. |
 
-Hierarquia de documentos: a **constituição** está acima de tudo; a spec de processo é a fonte
-normativa; o `CONTRIBUTING.md` é o guia prático e MUST concordar com ela (divergência é
-corrigida no mesmo PR que a notar).
+Document hierarchy: the **constitution** is above everything; the process spec is the normative
+source; `CONTRIBUTING.md` is the practical guide and MUST agree with it (a divergence is
+fixed in the same PR that notices it).
 
-## 1. Descoberta e análise
+## 1. Discovery and analysis
 
-- **FR-1** Antes de alterar código num repositório novo, auditar: ler todo o código, compilar,
-  rodar todos os comandos documentados e os casos de borda (entrada inválida, arquivo existente,
-  stdin fechado, etc.).
-- **FR-2** Registrar em `specs/ANALYSIS.md`: resumo executivo; o que foi verificado e como;
-  achados **crítico/alto/médio/baixo** com evidência (`arquivo:linha` ou saída de comando) e a
-  spec que o resolve; pontos positivos; avaliação do README; melhorias priorizadas por fase;
-  decisões em aberto `D1..Dn` com opções e recomendação.
-- **FR-3** Nenhuma implementação antes das respostas do dono (Fase 0). Respostas registradas
-  em "Decisões" das specs afetadas.
-- **FR-4** Distinguir **verificado** (executado, com evidência) de **inferido** (leitura).
+- **FR-1** Before changing code in a new repository, audit it: read all the code, build it,
+  run every documented command and the edge cases (invalid input, existing file,
+  closed stdin, etc.).
+- **FR-2** Record in `specs/ANALYSIS.md`: executive summary; what was verified and how;
+  findings **critical/high/medium/low** with evidence (`file:line` or command output) and the
+  spec that resolves each; strengths; README assessment; improvements prioritized by phase;
+  open decisions `D1..Dn` with options and a recommendation.
+- **FR-3** No implementation before the owner's answers (Phase 0). Answers recorded
+  under "Decisions" in the affected specs.
+- **FR-4** Distinguish **verified** (executed, with evidence) from **inferred** (reading).
 
-## 2. Artefatos SDD
+## 2. SDD artifacts
 
-- **FR-5** `specs/constitution.md`; uma spec por área em `specs/NNN-nome/spec.md`;
-  `specs/README.md` com índice e status; `specs/ROADMAP.md` com fases e tarefas `T1..Tn`.
-- **FR-6** Formato da spec: cabeçalho (Prioridade, Status, Código afetado e/ou Resolve),
-  Contexto, `FR-*`/`NFR-*` com MUST/SHOULD/MAY, `AC-*` verificáveis (Dado/Quando/Então ou EARS; ver templates.md),
-  Fora de escopo, Decisões. (Opcional: "Estado atual (verificado)".)
-- **FR-7** Cada tarefa do ROADMAP cita os IDs que fecha (`003 FR-2..5`). Fases padrão:
-  0 decisões; 1 "funcionar de verdade" `v0.1.0`; 2 "confiável" `v0.2.0`; 3 "profissional"
-  `v1.0.0`. Outras fases MAY, desde que cada uma termine numa versão.
-- **FR-8** Status: `Draft` → `Approved` (decisões respondidas) → `In Progress` → `Done`.
-  Nota curta permitida (`In Progress (falta release)`).
-- **FR-9** Implementação divergiu da spec → atualizar a spec **no mesmo PR**, com entrada em
-  "Decisões" ou nota "Revisado na implementação".
+- **FR-5** `specs/constitution.md`; one spec per area in `specs/NNN-name/spec.md`;
+  `specs/README.md` with index and status; `specs/ROADMAP.md` with phases and tasks `T1..Tn`.
+- **FR-6** Spec format: header (Priority, Status, Affected code and/or Resolves),
+  Context, `FR-*`/`NFR-*` with MUST/SHOULD/MAY, verifiable `AC-*` (Given/When/Then or EARS; see templates.md),
+  Out of scope, Decisions. (Optional: "Current state (verified)".)
+- **FR-7** Each ROADMAP task cites the IDs it closes (`003 FR-2..5`). Default phases:
+  0 decisions; 1 "actually works" `v0.1.0`; 2 "reliable" `v0.2.0`; 3 "professional"
+  `v1.0.0`. Other phases MAY exist, as long as each one ends in a version.
+- **FR-8** Status: `Draft` → `Approved` (decisions answered) → `In Progress` → `Done`.
+  A short note is allowed (`In Progress (release pending)`).
+- **FR-9** Implementation diverged from the spec → update the spec **in the same PR**, with an entry in
+  "Decisions" or a note "Revised during implementation".
 
-Fluxo SDD técnico (núcleo): especificar → resolver decisões → testar primeiro (cada `AC-*` vira
-teste) → implementar (PR referencia IDs) → fechar (status, no PR de fechamento).
+Technical SDD flow (core): specify → resolve decisions → test first (each `AC-*` becomes a
+test) → implement (the PR references the IDs) → close (status, in the closing PR).
 
 ## 3. Tickets
 
-- **FR-10** Um **épico** por fase (labels `épico`, `fase-N`); cada tarefa é **sub-issue nativa**.
-- **FR-11** Corpo: **Contexto**, **O que fazer**, **Critérios de aceite**, **Spec(s)**, **Épico**;
-  "Decisão para a revisão" MAY.
-- **FR-12** Labels: `fase-N`; `tipo:feature|docs|ci|teste|chore` ou `bug` (label padrão do GitHub); `P1` alta, `P2` média, `P3` baixa.
-- **FR-13** Trabalho descoberto no meio da fase vira ticket novo no épico corrente (ou futuro);
-  não entra de carona num PR existente.
-- **FR-14** Issue e comentário do agente terminam com linha em branco, `---` e o rodapé de
-  atribuição da ferramenta (ex.: `_Generated by [Claude Code](https://claude.ai/code)_`).
-- **FR-15** Por API: criar a issue primeiro (cria labels inexistentes) e depois anexar como
-  sub-issue; criar já com o pai falha se alguma label não existir.
-- **FR-16** Trivial (typo, link quebrado) MAY ir direto para PR, sem ticket.
+- **FR-10** One **epic** per phase (labels epic and `phase-N`); each task is a **native sub-issue**.
+- **FR-11** Body: **Context**, **What to do**, **Acceptance criteria**, **Spec(s)**, **Epic**;
+  "Decision for the review" MAY.
+- **FR-12** Labels: `phase-N`; `type:feature|docs|ci|test|chore` or `bug` (GitHub's default label); `P1` high, `P2` medium, `P3` low.
+  In Portuguese repositories and with the template scripts: `épico`, `fase-N`, `tipo:*` (see SKILL.md).
+- **FR-13** Work discovered in the middle of the phase becomes a new ticket in the current (or a future) epic;
+  it does not ride along in an existing PR.
+- **FR-14** The agent's issues and comments end with a blank line, `---` and the tool's
+  attribution footer (e.g. `_Generated by [Claude Code](https://claude.ai/code)_`).
+- **FR-15** Through the API: create the issue first (creates missing labels) and then attach it as a
+  sub-issue; creating it with the parent already set fails if any label does not exist.
+- **FR-16** Trivial changes (typo, broken link) MAY go straight to a PR, without a ticket.
 
 ## 4. Branches
 
-- **FR-17** Uma branch por ticket: `<tipo>/<nº-da-issue>-<descrição-curta>`; `<tipo>` = prefixo
-  Conventional Commit (`feat`, `fix`, `docs`, `ci`, `test`, `chore`, …).
-- **FR-18** Parte da `main`, ou da branch da fase anterior ainda não mergeada (PR empilhado).
-- **FR-19** Uma fase inteira MAY ser um único PR quando for reestruturação coesa indivisível;
-  o PR referencia o épico e lista as tarefas.
+- **FR-17** One branch per ticket: `<type>/<issue-number>-<short-description>`; `<type>` = Conventional
+  Commit prefix (`feat`, `fix`, `docs`, `ci`, `test`, `chore`, …).
+- **FR-18** Starts from `main`, or from the previous phase's branch not merged yet (stacked PR).
+- **FR-19** A whole phase MAY be a single PR when it is a cohesive, indivisible restructuring;
+  the PR references the epic and lists the tasks.
 
 ## 5. Commits
 
-- **FR-20** Conventional Commits, inglês, imperativo. Incompatível usa `!` e explica no corpo.
-- **FR-21** O changelog da release é agrupado pelos prefixos: prefixo errado = item no lugar errado.
-- **FR-22** Linhas de atribuição da ferramenta (`Co-Authored-By:` etc.); nunca reescrever
-  histórico publicado.
+- **FR-20** Conventional Commits, English, imperative. A breaking change uses `!` and explains it in the body.
+- **FR-21** The release changelog is grouped by prefix: wrong prefix = item in the wrong place.
+- **FR-22** The tool's attribution lines (`Co-Authored-By:` etc.); never rewrite
+  published history.
 
 ## 6. Pull requests
 
-- **FR-23** Um PR por ticket. A primeira linha da descrição é `Closes #N · Épico #M · Spec NNN`
-  (`Spec —` se nenhuma); a nota de PR empilhado (FR-25) vem logo em seguida. Título em
+- **FR-23** One PR per ticket. The first line of the description is `Closes #N · Epic #M · Spec NNN`
+  (`Spec —` if none); the stacked PR note (FR-25) comes right after it. Title in
   Conventional Commits.
-- **FR-24** Seções **O que muda** e **Como foi testado** (MUST); **Notas ou decisões para a
-  revisão** (SHOULD). Seções extras do template do repo MAY.
-- **FR-25** PR empilhado diz no topo, logo após a linha `Closes`: `> PR empilhado sobre #NN`. Quando a base é mergeada e
-  apagada, o GitHub redireciona para a `main`; se a branch base não for apagada, o agente
-  redireciona os empilhados (editar a base do PR). Depois, conferir que o diff continua só com
-  o ticket e que o CI segue verde.
-- **FR-26** Escopo do ticket; o resto vira ticket novo.
-- **FR-27** PRs de ticket MUST NOT editar arquivos de status compartilhados: status em
-  `specs/README.md` e cabeçalhos das specs, checkboxes do ROADMAP, entradas do CHANGELOG.
-  Exceções: o ticket que **cria** o arquivo; o conteúdo normativo das specs (FR-9).
-- **FR-28** PR do agente termina com o rodapé da ferramenta e o link da sessão.
+- **FR-24** Sections **What changes** and **How it was tested** (MUST); **Review notes or
+  decisions** (SHOULD). Extra sections from the repo's template MAY.
+- **FR-25** A stacked PR says at the top, right after the `Closes` line: `> Stacked PR on #NN`. When the base is merged and
+  deleted, GitHub retargets it to `main`; if the base branch is not deleted, the agent
+  retargets the stacked ones (edit the PR's base). Then check that the diff still has only
+  the ticket and that CI stays green.
+- **FR-26** Ticket scope only; the rest becomes a new ticket.
+- **FR-27** Ticket PRs MUST NOT edit shared status files: status in
+  `specs/README.md` and spec headers, ROADMAP checkboxes, CHANGELOG entries.
+  Exceptions: the ticket that **creates** the file; the specs' normative content (FR-9).
+- **FR-28** The agent's PR ends with the tool's footer and the session link.
 
-## 7. Validação antes do push
+## 7. Validation before the push
 
-- **FR-29** Rodar a verificação local completa (ex.: `make ci`) e só enviar verde. Um push
-  validado vale mais que vários especulativos.
-- **FR-30** Para corrigir falha de CI: reproduzir primeiro (local ou leitura exata do log).
-- **FR-31** Todo teste novo passa por **checagem de mutação**: quebrar o código coberto,
-  ver o teste falhar, desfazer.
-- **FR-32** Reler o próprio diff de forma adversarial: escopo, arquivos esquecidos, segredos,
-  saídas geradas, consistência README × specs × código.
+- **FR-29** Run the full local check (e.g. `make ci`) and push only green. One validated
+  push is worth more than several speculative ones.
+- **FR-30** To fix a CI failure: reproduce it first (locally or by reading the exact log).
+- **FR-31** Every new test goes through the **mutation check**: break the covered code,
+  watch the test fail, undo.
+- **FR-32** Reread your own diff adversarially: scope, forgotten files, secrets,
+  generated outputs, README × specs × code consistency.
 
-## 8. Gates de qualidade
+## 8. Quality gates
 
-- **FR-33** CI em todo PR e push para `main`, cobrindo no mínimo: formatação e lint; testes em
-  todos os SOs suportados (race detector onde houver); gate de cobertura; smoke test do artefato
-  real; build para todos os alvos de release; varredura de vulnerabilidades; ensaio da release
-  sem publicar (se houver release automatizada).
-- **FR-34** PR só está pronto para revisão com CI verde; vermelho/pendente SHOULD ficar como
-  rascunho ou sinalizado.
-- **FR-35** O alvo local (`make ci`) roda o subconjunto viável do CI com os mesmos comandos e limites.
+- **FR-33** CI on every PR and push to `main`, covering at least: formatting and lint; tests on
+  every supported OS (race detector where available); coverage gate; smoke test of the real
+  artifact; build for every release target; vulnerability scan; release rehearsal
+  without publishing (if the release is automated).
+- **FR-34** A PR is ready for review only with green CI; red/pending SHOULD stay as a
+  draft or be flagged.
+- **FR-35** The local target (`make ci`) runs the feasible subset of CI with the same commands and limits.
 
-## 9. CI vermelho
+## 9. Red CI
 
-- **FR-36** Acompanhar eventos dos PRs abertos (inscrição na atividade do PR); responsável até verde.
-- **FR-37** Diagnosticar pelo log → causa raiz → corrigir → validar → enviar. MUST NOT: chamar
-  de flake sem evidência; pular/desativar/enfraquecer testes ou gates; commits vazios.
-- **FR-38** Correção fora do escopo que é pré-condição para o verde MAY entrar no mesmo PR,
-  explicada em "O que muda".
+- **FR-36** Follow the events of open PRs (subscribe to the PR's activity); responsible until green.
+- **FR-37** Diagnose from the log → root cause → fix → validate → push. MUST NOT: call it
+  a flake without evidence; skip/disable/weaken tests or gates; empty commits.
+- **FR-38** An out-of-scope fix that is a precondition for green MAY go in the same PR,
+  explained in "What changes".
 
-## 10. Revisão e merge
+## 10. Review and merge
 
-- **FR-39** Com a fase toda aberta e verde, o dono revisa na ordem do épico. O agente responde,
-  corrige pedidos pequenos e **propõe** mudanças grandes antes de implementar.
-- **FR-40** PRs de fase com empilhados → **merge commit**; PRs de ticket MAY usar squash.
-- **FR-41** O dono SHOULD proteger a `main` (CI obrigatório + Code Owners). Configuração do dono.
+- **FR-39** With the whole phase open and green, the owner reviews in the epic's order. The agent answers,
+  fixes small requests and **proposes** large changes before implementing them.
+- **FR-40** Phase PRs with stacked ones → **merge commit**; ticket PRs MAY use squash.
+- **FR-41** The owner SHOULD protect `main` (required CI + Code Owners). Owner's setting.
 
-Prática recomendada: antes de pedir a revisão, simular o merge par a par das branches da fase
-(`git merge-tree --write-tree`) e documentar conflitos e resoluções nos PRs.
+Recommended practice: before asking for the review, simulate the pairwise merge of the phase's branches
+(`git merge-tree --write-tree`) and document conflicts and resolutions in the PRs.
 
-- **FR-41a** Antes da rodada de merges, simular a integração completa: mergear localmente todas
-  as branches na ordem do épico e rodar as verificações locais (ex.: `make ci` e `make docs`).
-  Isso acha falhas que nenhum CI individual vê (ex.: lint novo de um PR reprovando arquivo de
-  outro). Na rodada, cada branch recebe a `main` atual (merge, não rebase) e fica verde antes
-  do seu merge.
+- **FR-41a** Before the merge round, simulate the full integration: merge locally all
+  branches in the epic's order and run the local checks (e.g. `make ci` and `make docs`).
+  This finds failures no individual CI sees (e.g. a new lint from one PR failing another
+  PR's file). In the round, each branch receives the current `main` (merge, not rebase) and turns green before
+  its merge.
 
-## 11. Fechamento de fase
+## 11. Phase closing
 
-- **FR-42** PR de fechamento: status das specs (`specs/README.md` e cabeçalhos), seção
-  "Estado atual" das specs que a tiverem, checkboxes do
-  ROADMAP, `CHANGELOG.md` (Keep a Changelog: `[Unreleased]` → `[X.Y.Z] - AAAA-MM-DD`),
-  gerado a partir da seção "Mudanças" de cada spec (`ADDED` → Adicionado,
-  `MODIFIED` → Alterado, `REMOVED` → Removido).
-- **FR-42a** Todo PR de ticket que muda o comportamento descrito numa spec acrescenta uma linha
-  na seção "Mudanças" dela, sob `### Não lançado`: `ADDED`, `MODIFIED` ou `REMOVED` + o ID
-  (`FR-n`, `NFR-n`, `AC-n`) + uma frase. O PR de fechamento troca `Não lançado` pela versão.
-- **FR-43** Após o merge, o dono cria a tag `vX.Y.Z` (SemVer). Release roda o CI completo antes
-  de publicar binários e checksums.
-- **FR-44** Épico fecha quando a release da fase está publicada.
+- **FR-42** Closing PR: spec status (`specs/README.md` and headers), the
+  "Current state" section of the specs that have one, ROADMAP
+  checkboxes, `CHANGELOG.md` (Keep a Changelog: `[Unreleased]` → `[X.Y.Z] - YYYY-MM-DD`),
+  generated from each spec's "Changes" section (`ADDED` → Added,
+  `MODIFIED` → Changed, `REMOVED` → Removed).
+- **FR-42a** Every ticket PR that changes the behavior described in a spec adds a line
+  to its "Changes" section, under `### Unreleased`: `ADDED`, `MODIFIED` or `REMOVED` + the ID
+  (`FR-n`, `NFR-n`, `AC-n`) + one sentence. The closing PR replaces `Unreleased` with the version.
+- **FR-43** After the merge, the owner creates the tag `vX.Y.Z` (SemVer). The release runs the full CI before
+  publishing binaries and checksums.
+- **FR-44** The epic closes when the phase's release is published.
 
-## 12. Papéis
+## 12. Roles
 
-| Responsabilidade | Dono | Agente |
+| Responsibility | Owner | Agent |
 |---|---|---|
-| Decisões em aberto, escopo, prioridades | ✔ | propõe |
-| Analisar, specs, épicos, tickets | revisa | ✔ |
-| Implementar, testar, validar, abrir PRs, CI verde | | ✔ |
-| Revisar e aprovar PRs | ✔ | responde |
-| Merge | ✔ | só com delegação explícita (FR-46) |
-| Tags, releases | ✔ | |
-| Configurações do repo (proteção, labels de sistema, segredos) | ✔ | sugere |
+| Open decisions, scope, priorities | ✔ | proposes |
+| Analysis, specs, epics, tickets | reviews | ✔ |
+| Implement, test, validate, open PRs, green CI | | ✔ |
+| Review and approve PRs | ✔ | answers |
+| Merge | ✔ | only with explicit delegation (FR-46) |
+| Tags, releases | ✔ | when the owner asks |
+| Repo settings (protection, system labels, secrets) | ✔ | suggests |
 
-- **FR-45** Ação irreversível ou visível para fora além do fluxo combinado é do dono.
-- **FR-46** Agente MUST NOT: merge (salvo delegação explícita do dono para uma rodada, na ordem
-  do épico e com CI verde em cada head); force-push em branch alheia; reescrever histórico
-  publicado; trabalhar fora das branches do seu ticket.
+- **FR-45** An irreversible or externally visible action beyond the agreed flow belongs to the owner.
+- **FR-46** The agent MUST NOT: merge (unless the owner explicitly delegates a round, in the epic's
+  order and with green CI on each head); force-push someone else's branch; rewrite published
+  history; work outside its ticket's branches.
 
-## 13. Comunicação
+## 13. Communication
 
-- **FR-47** Status curto: feito, falta, bloqueia.
-- **FR-48** Achados no repositório (specs, issues, PRs); o chat aponta para eles.
-- **FR-49** Dizer o que foi verificado e o que não foi.
+- **FR-47** Short status: done, missing, blocking.
+- **FR-48** Findings in the repository (specs, issues, PRs); the chat points to them.
+- **FR-49** Say what was verified and what was not.
+- **FR-49a** Specs, issues, PRs and documentation in the owner's language, found in `CLAUDE.md`/`AGENTS.md`
+  (explicit rule, then the file's own language), then in the existing specs and README; if none,
+  ask once and record it in `CLAUDE.md`. Commits and code in English.
 
-## 14. Retomada e economia de uso
+## 14. Resuming and saving usage
 
-- **FR-50** Ticket criado ao começar a tarefa; PR aberto assim que ela passa na verificação local.
-- **FR-51** Pedido novo do dono fora da tarefa em curso vira ticket na hora.
-- **FR-52** Comentário "Estado da fase" no épico, atualizado a cada marco (PRs e CI, decisões,
-  conflitos previstos, próximo passo).
-- **FR-53** Retomada: comentário de estado → PRs e issues abertas → `CLAUDE.md` → próximo passo.
-- **FR-54** SHOULD: `CLAUDE.md` (mapa, comandos, convenções, armadilhas) e hook de início de
-  sessão que instala as ferramentas do CI na web.
-- **FR-55** Economia: ler trechos e não reler; resumo do CI e fim do log da falha; validação
-  num comando; subagentes só para buscas amplas; chat curto.
+- **FR-50** Ticket created when starting the task; PR opened as soon as it passes the local check.
+- **FR-51** A new request from the owner outside the current task becomes a ticket right away.
+- **FR-52** "Phase status" comment on the epic, updated at each milestone (PRs and CI, decisions,
+  expected conflicts, next step).
+- **FR-53** Resuming: status comment → open PRs and issues → `CLAUDE.md` → next step.
+- **FR-54** SHOULD: `CLAUDE.md` (map, commands, conventions, pitfalls, language) and a
+  session-start hook that installs the CI tools on the web.
+- **FR-55** Saving: read excerpts and do not reread; CI summary and the end of the failing log;
+  validation in one command; subagents only for broad searches; short chat.
 
-## Requisitos não funcionais
+## Non-functional requirements
 
-- **NFR-1 Rastreabilidade:** de qualquer linha mergeada chega-se, por links, ao PR, ticket,
-  épico e spec (`FR`/`AC`).
-- **NFR-2 Reaplicável:** independe de linguagem e build; só GitHub + alvo local equivalente ao CI.
-- **NFR-3 Leve:** ticket pequeno = corpo do ticket + uma branch + um PR com as seções mínimas.
+- **NFR-1 Traceability:** from any merged line one reaches, through links, the PR, ticket,
+  epic and spec (`FR`/`AC`).
+- **NFR-2 Reusable:** independent of language and build; only GitHub + a local target equivalent to CI.
+- **NFR-3 Light:** small ticket = ticket body + one branch + one PR with the minimum sections.
 
-## Critérios de aceite do processo
+## Process acceptance criteria
 
-Use como autochecagem ao final de cada etapa.
+Use them as a self-check at the end of each step.
 
-- **AC-1** Fim da descoberta: `specs/ANALYSIS.md` com achados por severidade + evidência e
-  `D1..Dn` com recomendação; nenhum commit de código antes das respostas.
-- **AC-2** Cada fase tem épico (`épico`, `fase-N`) e cada tarefa é sub-issue dele.
-- **AC-3** Ticket tem Contexto, O que fazer, Critérios de aceite, Spec(s), Épico e labels
-  `fase-N`, `tipo:*` e prioridade.
-- **AC-4** Branch `<tipo>/<nº>-<descrição>`; PR começa com `Closes #N · Épico #M · Spec NNN`;
-  CI verde antes da revisão.
-- **AC-5** PR empilhado: primeira linha é a `Closes` e a seguinte declara a base.
-- **AC-6** Divergência implementação × spec → spec atualizada no mesmo PR.
-- **AC-7** Dois PRs de ticket da mesma fase não alteram status/ROADMAP/CHANGELOG.
-- **AC-8** Teste novo falha quando o código coberto é quebrado.
-- **AC-9** CI vermelho → commit seguinte corrige a causa raiz, sem pular teste, sem rebaixar
-  gate, sem commit vazio.
-- **AC-10** Fim de fase → PR de fechamento; tag só depois do merge dele.
-- **AC-11** PR de fase com empilhados é mergeado por merge commit.
-- **AC-12** Toda issue, PR e comentário do agente tem rodapé de atribuição.
-- **AC-13** `CONTRIBUTING.md` e a spec de processo não se contradizem.
+- **AC-1** End of discovery: `specs/ANALYSIS.md` with findings by severity + evidence and
+  `D1..Dn` with a recommendation; no code commit before the answers.
+- **AC-2** Each phase has an epic (epic and `phase-N` labels) and each task is a sub-issue of it.
+- **AC-3** A ticket has Context, What to do, Acceptance criteria, Spec(s), Epic and the labels
+  `phase-N`, `type:*` and priority.
+- **AC-4** Branch `<type>/<number>-<description>`; the PR starts with `Closes #N · Epic #M · Spec NNN`;
+  green CI before the review.
+- **AC-5** Stacked PR: the first line is the `Closes` line and the next one states the base.
+- **AC-6** Implementation × spec divergence → spec updated in the same PR.
+- **AC-7** Two ticket PRs of the same phase do not change status/ROADMAP/CHANGELOG.
+- **AC-8** A new test fails when the covered code is broken.
+- **AC-9** Red CI → the next commit fixes the root cause, without skipping tests, lowering
+  gates or empty commits.
+- **AC-10** End of phase → closing PR; tag only after it is merged.
+- **AC-11** A phase PR with stacked ones is merged with a merge commit.
+- **AC-12** Every issue, PR and comment by the agent has an attribution footer.
+- **AC-13** `CONTRIBUTING.md` and the process spec do not contradict each other.
+- **AC-14** Specs, issues and PRs are in the owner's language; commits and code in English.
 
-## Decisões de desenho
+## Design decisions
 
-- **Duas escalas de prioridade.** Specs: `P0..P2` (P0 bloqueia uso real, P1 confiabilidade,
-  P2 polimento). Tickets: labels `P1..P3` (ordem de trabalho dentro da fase). São distintas.
-- **Status no fechamento**, não em cada PR de ticket, para evitar conflitos.
-- **Primeira linha do PR** é `Closes #N · Épico #M · Spec NNN`; IDs finos (`003 FR-8, AC-6`)
-  vão na seção de specs do template ou em "O que muda".
-- **Merge commit para PRs de fase**: squash reescreveria a base dos empilhados e forçaria rebase
-  de todos; com merge commit o GitHub só redireciona a base.
+- **Two priority scales.** Specs: `P0..P2` (P0 blocks real use, P1 reliability,
+  P2 polish). Tickets: labels `P1..P3` (work order within the phase). They are distinct.
+- **Status at closing**, not in each ticket PR, to avoid conflicts.
+- **First line of the PR** is `Closes #N · Epic #M · Spec NNN`; fine-grained IDs (`003 FR-8, AC-6`)
+  go in the template's specs section or in "What changes".
+- **Merge commit for phase PRs**: squash would rewrite the base of the stacked ones and force a rebase
+  of all of them; with a merge commit GitHub just retargets the base.
+- **Skill in English, output in the owner's language** (sdd-kit D12): one skill serves any
+  owner; the documents stay readable by whoever maintains the repository.
 
-Fora de escopo do processo: configurações do GitHub (são do dono); automação que verifique o
-processo (lint de títulos/branches/rodapés — candidato a ticket); processo de segurança (`SECURITY.md`).
+Out of the process's scope: GitHub settings (they are the owner's); automation that checks the
+process (lint of titles/branches/footers — a ticket candidate); security process (`SECURITY.md`).

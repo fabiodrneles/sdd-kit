@@ -5,19 +5,19 @@
     "url": "https://github.com/fabiodrneles"
   },
   "metadata": {
-    "description": "Kit de Spec Driven Development (SDD) para o Claude Code"
+    "description": "Spec Driven Development (SDD) kit for Claude Code"
   },
   "plugins": [
     {
       "name": "sdd-delivery",
       "source": "./plugins/sdd-delivery",
-      "description": "Processo SDD ponta a ponta: análise, specs, épicos, um PR por ticket, CI verde, revisão e release",
+      "description": "End-to-end SDD process: analysis, specs, epics, one PR per ticket, green CI, review and release; writes in the owner's language",
       "category": "development"
     },
     {
       "name": "sdd-release",
       "source": "./plugins/sdd-release",
-      "description": "Próxima versão SemVer pelos Conventional Commits (go-release-manager) para o fechamento de fase",
+      "description": "Next SemVer version from Conventional Commits (go-release-manager) for the phase closing",
       "category": "development"
     }
   ]

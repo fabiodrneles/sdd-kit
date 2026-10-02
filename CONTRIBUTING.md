@@ -20,7 +20,7 @@ Obrigado pelo interesse! O sdd-kit é desenvolvido com o próprio processo que e
 
    Roda markdownlint, shellcheck, actionlint, os testes dos scripts e o `sdd-check --strict`. O CI roda o mesmo em Linux, macOS e Windows, mais o e2e de cada linguagem do template.
 
-Specs, issues e PRs em português; código, commits e `README.en.md` em inglês. Merge, tags e releases são do mantenedor.
+Specs, issues e PRs em português; código, commits, `README.en.md` e a skill (`plugins/`) em inglês. A skill escreve no idioma do dono de cada repositório (constituição, princípio 8). Merge, tags e releases são do mantenedor.
 
 ## Adicionar uma linguagem ao template
 

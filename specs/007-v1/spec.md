@@ -30,6 +30,7 @@ A `v0.1.0` entregou o kit funcionando (Fases 1 e 2). A `v1.0.0` fecha o que um p
 - **AC-2** Dado o repositório, quando se abre Insights → Community Standards no GitHub, então todos os itens estão completos.
 - **AC-3** Dado o estudo de caso, quando o job de links roda, então todos os links resolvem.
 - **AC-4** Dada cada linguagem nova, quando o job "Template" roda, então a adoção num projeto mínimo e o `make ci` gerado passam.
+- **AC-5** Dado um repositório cujo `CLAUDE.md` está em português, quando a skill cria uma spec, então ela sai em português; em inglês, sai em inglês. Verificado pelas instruções da skill: ela está em inglês, manda achar o idioma no `CLAUDE.md`/`AGENTS.md` (ou perguntar uma vez) e tem o glossário dos termos que os scripts do template leem (`check-plugin.sh`).
 
 ## Fora de escopo
 
@@ -38,3 +39,9 @@ A `v0.1.0` entregou o kit funcionando (Fases 1 e 2). A `v1.0.0` fecha o que um p
 ## Decisões
 
 Respondidas pelo dono em 2026-10-02: D10 (a) Rust e C#/.NET; D11 (b) `sdd-kit-demo` mais um repositório existente do dono; D12 (a) skill em inglês que escreve no idioma do dono. Ver [ANALYSIS.md §7](../ANALYSIS.md#7-decisões-da-fase-3-respondidas-pelo-dono-em-2026-10-02).
+
+## Mudanças
+
+### Não lançado
+
+- ADDED AC-5 — a skill e os comandos dos plugins em inglês, escrevendo specs, issues e PRs no idioma do dono (T19, #50).

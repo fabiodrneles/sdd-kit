@@ -1,29 +1,29 @@
 ---
-description: Calcula a próxima versão pelos commits (go-release-manager) e propõe o fechamento da fase com ela
-argument-hint: "[canal de pré-release, ex.: rc]"
+description: Computes the next version from the commits (go-release-manager) and proposes closing the phase with it
+argument-hint: "[pre-release channel, e.g. rc]"
 ---
 
-Calcule a **próxima versão** deste repositório e proponha o fechamento da fase com ela. Não crie tags: a tag é do dono.
+Compute this repository's **next version** and propose closing the phase with it. Do not create tags: the tag is the owner's. Talk to the owner in their language.
 
-1. Confira se o `go-release-manager` está instalado (`go-release-manager --version`). Se não estiver, explique ao dono as duas formas de instalar e **pare**:
+1. Check that `go-release-manager` is installed (`go-release-manager --version`). If it is not, explain the two ways to install it to the owner and **stop**:
    - `go install github.com/fabiodrneles/go-release-manager@latest`
-   - binário da página <https://github.com/fabiodrneles/go-release-manager/releases>
-2. Na `main` atualizada, rode:
+   - a binary from <https://github.com/fabiodrneles/go-release-manager/releases>
+2. On an up-to-date `main`, run:
 
    ```text
    go-release-manager create --dry-run --output json
    ```
 
-   Com um canal de pré-release em $ARGUMENTS, acrescente `--pre-release $ARGUMENTS`.
-3. Mostre ao dono, em poucas linhas:
-   - a versão anterior (`previous`), a próxima (`next`) e o incremento (`increment`);
-   - os commits que determinaram o incremento (`git log <previous>..HEAD --oneline`, só os `feat`, `fix` e incompatíveis).
-4. Compare com a versão da fase em `specs/ROADMAP.md` (a fase aberta, `→ \`vX.Y.Z\``):
-   - **iguais:** siga;
-   - **diferentes, ou `next` vazio:** explique ao dono por quê. Por exemplo, num projeto de testes os commits `test:` não geram release pela regra padrão. Proponha uma das saídas e **pare** até ele escolher:
-     - seguir o ROADMAP com `--release-as vX.Y.Z` (exige go-release-manager `v1.1.0` ou mais novo);
-     - seguir os commits e atualizar o ROADMAP;
-     - um `.go-releaserc.yml` que faça os tipos do projeto gerarem release (ex.: `test: minor`).
-5. Proponha o fechamento com `/sdd-close <versão>` (skill `sdd-delivery`). Depois do merge do PR de fechamento, a tag é criada:
-   - pelo dono, ou pelo agente, se o dono delegou;
-   - pelo terminal (`go-release-manager create [--release-as vX.Y.Z] [--ref <commit>]`) ou pelo workflow `release-tag.yml` deste plugin (em `templates/`), que aceita `release-as` e `ref`.
+   With a pre-release channel in $ARGUMENTS, add `--pre-release $ARGUMENTS`.
+3. Show the owner, in a few lines:
+   - the previous version (`previous`), the next one (`next`) and the increment (`increment`);
+   - the commits that set the increment (`git log <previous>..HEAD --oneline`, only `feat`, `fix` and breaking ones).
+4. Compare it with the phase's version in `specs/ROADMAP.md` (the open phase, `` → `vX.Y.Z` ``):
+   - **equal:** go on;
+   - **different, or `next` empty:** explain why to the owner. For instance, in a test project `test:` commits do not produce a release under the default rule. Propose one of the ways out and **stop** until they choose:
+     - follow the ROADMAP with `--release-as vX.Y.Z` (requires go-release-manager `v1.1.0` or newer);
+     - follow the commits and update the ROADMAP;
+     - a `.go-releaserc.yml` that makes the project's types produce a release (e.g. `test: minor`).
+5. Propose the closing with `/sdd-close <version>` (`sdd-delivery` skill). After the closing PR is merged, the tag is created:
+   - by the owner, or by the agent, if the owner delegated it;
+   - from the terminal (`go-release-manager create [--release-as vX.Y.Z] [--ref <commit>]`) or by this plugin's `release-tag.yml` workflow (in `templates/`), which accepts `release-as` and `ref`.

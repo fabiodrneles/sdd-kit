@@ -1,9 +1,9 @@
 ---
-description: Publica o comentário "Estado da fase" no épico aberto (PRs, CI, decisões, próximo passo)
+description: Posts the "Phase status" comment on the open epic (PRs, CI, decisions, next step)
 ---
 
-Use a skill `sdd-delivery` para atualizar o **estado da fase**.
+Use the `sdd-delivery` skill to update the **phase status**, in the owner's language.
 
-1. Rode `sh scripts/sdd-phase-status.sh` (se existir): ele monta o comentário com a tabela ticket → PR → CI, as decisões pendentes e o próximo passo. Revise, acrescente os conflitos previstos e publique com `--post` (ou `--next "texto"` para ajustar o próximo passo). Sem o script, monte o mesmo comentário à mão.
-2. O comentário se chama "Estado da fase — AAAA-MM-DD".
-3. Responda no chat com um resumo de três linhas: feito, falta, bloqueia.
+1. Run `sh scripts/sdd-phase-status.sh` (if it exists): it builds the comment with the ticket → PR → CI table, the pending decisions and the next step. Review it, add the expected conflicts and post it with `--post` (or `--next "text"` to adjust the next step). Without the script, build the same comment by hand.
+2. The comment is titled "Phase status — YYYY-MM-DD" ("Estado da fase" in Portuguese).
+3. Reply in the chat with a three-line summary: done, missing, blocking.

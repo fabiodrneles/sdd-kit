@@ -1,68 +1,72 @@
-# Checklist de reaplicação num repositório novo
+# Checklist for applying the process to a new repository
 
-Siga em ordem. Itens marcados **(dono)** são configurações ou decisões do dono: o agente sugere,
-não executa. Os `⏸` são pontos de parada.
+Follow it in order. Items marked **(owner)** are the owner's settings or decisions: the agent suggests,
+it does not execute. The `⏸` are stop points.
 
-## 0. Antes de começar
+## 0. Before starting
 
-- [ ] Confirmar com o dono: branch principal, idioma dos documentos, SOs e versões suportados,
-      se haverá release automatizada.
-- [ ] Verificar o que já existe (`specs/`, `CONTRIBUTING.md`, `.github/`, CI, labels, épicos)
-      para **estender**, não duplicar.
+- [ ] Find the owner's language (see "Language" in SKILL.md): `CLAUDE.md`/`AGENTS.md`, then the
+      existing docs; if none, ask once and record it in `CLAUDE.md`.
+- [ ] Confirm with the owner: main branch, supported OSes and versions,
+      whether the release will be automated.
+- [ ] Check what already exists (`specs/`, `CONTRIBUTING.md`, `.github/`, CI, labels, epics)
+      to **extend** it, not duplicate it.
 
-## 1. Descoberta
+## 1. Discovery
 
-- [ ] Ler todo o código; compilar; rodar lint e testes existentes.
-- [ ] Executar cada comando documentado e os casos de borda (entrada inválida, arquivo
-      existente, stdin fechado / sem TTY, `--help`, `--version`).
-- [ ] Verificar cada promessa do README (instalação inclusive).
-- [ ] `specs/ANALYSIS.md` com achados por severidade + evidência, positivos, README,
-      melhorias por fase e decisões `D1..Dn` com recomendação.
-- [ ] Mensagem curta ao dono com as observações principais e as decisões.
-- [ ] ⏸ **Aguardar as respostas.** Nenhum commit de código antes.
+- [ ] Read all the code; build it; run the existing lint and tests.
+- [ ] Run each documented command and the edge cases (invalid input, existing
+      file, closed stdin / no TTY, `--help`, `--version`).
+- [ ] Verify each README promise (installation included).
+- [ ] `specs/ANALYSIS.md` with findings by severity + evidence, strengths, README,
+      improvements by phase and decisions `D1..Dn` with a recommendation.
+- [ ] Short message to the owner with the main findings and the decisions.
+- [ ] ⏸ **Wait for the answers.** No code commit before them.
 
-## 2. Artefatos SDD
+## 2. SDD artifacts
 
-- [ ] `specs/constitution.md` com 5–10 princípios verificáveis.
-- [ ] `specs/README.md` (fluxo SDD, convenções, índice de specs com status).
-- [ ] Uma spec por área: `specs/NNN-nome/spec.md` (FR/NFR, AC Dado/Quando/Então, Fora de
-      escopo, Decisões com as respostas do dono).
-- [ ] `specs/ROADMAP.md` com fases → versões e tarefas ligadas a `FR`/`AC`.
+- [ ] `specs/constitution.md` with 5–10 verifiable principles (language included).
+- [ ] `specs/README.md` (SDD flow, conventions, spec index with status).
+- [ ] One spec per area: `specs/NNN-name/spec.md` (FR/NFR, Given/When/Then AC, Out of
+      scope, Decisions with the owner's answers).
+- [ ] `specs/ROADMAP.md` with phases → versions and tasks linked to `FR`/`AC`.
 
 ## 3. GitHub
 
-- [ ] Labels: `épico`, `fase-0..N`, `tipo:feature|docs|ci|teste|chore` ou `bug` (label padrão do GitHub), `P1..P3`
-      (criadas pela primeira issue que as usar, ou explicitamente).
-- [ ] Um épico por fase, com a ordem sugerida de revisão.
-- [ ] Tickets: criar a issue → anexar como sub-issue do épico.
+- [ ] Labels: epic, `phase-0..N`, `type:feature|docs|ci|test|chore` or `bug` (GitHub's default label), `P1..P3`
+      (created by the first issue that uses them, or explicitly). With the template scripts:
+      `épico`, `fase-N`, `tipo:*`.
+- [ ] One epic per phase, with the suggested review order.
+- [ ] Tickets: create the issue → attach it as a sub-issue of the epic.
 
-## 4. Qualidade
+## 4. Quality
 
-- [ ] CI com os gates de [quality-gates.md](quality-gates.md): lint, testes em todos os SOs,
-      race, cobertura, smoke do artefato real, cross-build, vulnerabilidades, ensaio de release,
-      docs (markdownlint, links, comandos).
-- [ ] Alvo local equivalente (`make ci` ou similar) com os mesmos comandos e limites.
-- [ ] Golden files para saídas geradas e alvo para regravá-los.
+- [ ] CI with the gates from [quality-gates.md](quality-gates.md): lint, tests on every OS,
+      race, coverage, smoke of the real artifact, cross-build, vulnerabilities, release rehearsal,
+      docs (markdownlint, links, commands).
+- [ ] Equivalent local target (`make ci` or similar) with the same commands and limits.
+- [ ] Golden files for generated outputs and a target to rewrite them.
 
-## 5. Guia prático
+## 5. Practical guide
 
-- [ ] Templates de issue (tarefa, bug) com Contexto / O que fazer / Critérios de aceite /
-      Spec(s); bug pede versão, SO, comando, reprodução mínima, esperado × obtido e lembra de
-      não publicar dados pessoais.
-- [ ] Template de PR começando com `Closes # · Épico # · Spec`.
-- [ ] `CONTRIBUTING.md` resumindo o processo na prática (fluxo, branches, commits, PRs,
-      revisão, fechamento, ambiente e comandos).
+- [ ] Issue templates (task, bug) with Context / What to do / Acceptance criteria /
+      Spec(s); the bug template asks for version, OS, command, minimal reproduction, expected × actual and reminds
+      not to publish personal data.
+- [ ] PR template starting with `Closes # · Epic # · Spec`.
+- [ ] `CONTRIBUTING.md` summarizing the process in practice (flow, branches, commits, PRs,
+      review, closing, environment and commands).
+- [ ] `CLAUDE.md` with the code map, commands, conventions (language included) and pitfalls.
 - [ ] `CODEOWNERS`.
-- [ ] (Opcional) spec de processo própria do repo, adaptando [process.md](process.md) e
-      fixando os valores locais (labels, comandos, fases).
+- [ ] (Optional) the repo's own process spec, adapting [process.md](process.md) and
+      fixing the local values (labels, commands, phases).
 
 ## 6. Release
 
-- [ ] `CHANGELOG.md` em Keep a Changelog com `[Unreleased]`.
-- [ ] Workflow de release por tag `v*` que chama o CI completo antes de publicar com checksums.
+- [ ] `CHANGELOG.md` in Keep a Changelog with `[Unreleased]`.
+- [ ] Release workflow on `v*` tag that calls the full CI before publishing with checksums.
 
-## 7. Pedir ao dono
+## 7. Ask the owner
 
-- [ ] **(dono)** Proteção da `main`: CI obrigatório + revisão de Code Owners.
-- [ ] **(dono)** Política de merge: merge commit para PRs de fase com empilhados; squash permitido nos demais.
-- [ ] **(dono)** Permissões de Actions e segredos necessários para a release.
+- [ ] **(owner)** `main` protection: required CI + Code Owners review.
+- [ ] **(owner)** Merge policy: merge commit for phase PRs with stacked ones; squash allowed for the rest.
+- [ ] **(owner)** Actions permissions and secrets needed for the release.

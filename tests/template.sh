@@ -7,7 +7,7 @@ cd "$root/template"
 fail=0
 err() { echo "FALHOU: $*" >&2; fail=1; }
 
-for lang in go node java python; do
+for lang in go node java python rust; do
   for f in Makefile .github/workflows/ci.yml .github/dependabot.yml .claude/hooks/session-start.sh; do
     [ -f "$lang/$f" ] || err "template/$lang/$f não existe"
   done

@@ -66,7 +66,7 @@ O **estado do trabalho vive no GitHub**, não na conversa: o épico guarda um co
 2. Adote o template com a linguagem do projeto:
 
    ```text
-   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.0.0/scripts/adopt.sh | sh -s -- --lang go .
+   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.1.0/scripts/adopt.sh | sh -s -- --lang go .
    ```
 
 3. Faça o commit do que foi criado (`CLAUDE.md`, `.github/`, `specs/`, `Makefile`, CI) e abra o Claude Code no repositório. O `.claude/settings.json` gerado já carrega o hook de sessão.

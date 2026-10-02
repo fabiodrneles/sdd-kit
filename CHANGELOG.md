@@ -4,6 +4,27 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-02
+
+Fase 5 do [ROADMAP](specs/ROADMAP.md): a adoção ajustada pelo uso real (achados do #51, spec 011).
+
+### Adicionado
+
+- **Avisos da adoção Node:** `package-lock.json` ausente ou fora de sincronia com o `package.json` (o `npm ci` do CI falharia) e projeto sem script de teste, sem falhar a adoção (spec 011 FR-1, #86).
+- **`scripts/doc-commands.sh`** no template comum: o CI de docs roda os blocos ```` ```bash ```` do README marcados com `<!-- doc-commands -->` (spec 011 FR-3, #88).
+- **`make linkcheck`** em toda linguagem, com o lychee (spec 011 FR-3, #88).
+- Aviso de `LICENSE` ausente na adoção; a licença continua decisão do dono (spec 011 FR-3, #88).
+- **`CHANGELOG.md`** com `[Unreleased]` criado pela adoção, que o `sdd-mark close` exige (spec 011 FR-5, #90).
+- **Acessibilidade no template Node:** com `A11Y_PAGES`, o `make ci` roda o axe-core (num DOM do jsdom, sem contraste de cor) e falha em qualquer violação (spec 011 FR-6, #91).
+
+### Mudado
+
+- A adoção numera as fases do ROADMAP criado a partir da última tag `vX.Y.Z` do repositório (ex.: `v1.4.0` → Fase 1 na `v1.5.0`) (spec 011 FR-4, #89).
+
+### Corrigido
+
+- O hook de sessão Go compila o `covdata` que falta na toolchain baixada pelo `GOTOOLCHAIN`; sem ele, `go test -coverprofile ./...` falhava num pacote sem testes (spec 011 FR-2, #87).
+
 ## [1.0.0] - 2026-10-02
 
 Fim da Fase 3 do [ROADMAP](specs/ROADMAP.md) (profissional e pronto para a comunidade). O `sdd-check --strict`, os arquivos de comunidade, o estudo de caso, o plugin `sdd-release` e os scripts dos passos mecânicos já saíram na 0.2.0.
@@ -62,7 +83,8 @@ Primeira versão pública: Fases 1 e 2 do [ROADMAP](specs/ROADMAP.md).
 - Critérios de aceite em EARS e seção "Mudanças" por spec, que alimenta o CHANGELOG (spec 006 FR-1, FR-4).
 - CI do kit em Linux, macOS e Windows, com e2e dos templates nas quatro linguagens.
 
-[Unreleased]: https://github.com/fabiodrneles/sdd-kit/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/fabiodrneles/sdd-kit/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/fabiodrneles/sdd-kit/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/fabiodrneles/sdd-kit/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/fabiodrneles/sdd-kit/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/fabiodrneles/sdd-kit/releases/tag/v0.1.0

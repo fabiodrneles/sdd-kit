@@ -22,6 +22,7 @@ Fim da Fase 3 do [ROADMAP](specs/ROADMAP.md) (profissional e pronto para a comun
 ### Corrigido
 
 - O esqueleto e a fixture .NET saem sem BOM UTF-8 (#49).
+- A adoção via `curl` e o README baixam o template da versão atual, e não mais da `v0.1.0`, que não tinha Rust, .NET nem `--skeleton`.
 
 ## [0.2.0] - 2026-10-02
 

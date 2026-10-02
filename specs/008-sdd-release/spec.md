@@ -17,11 +17,17 @@ O fechamento de fase (`/sdd-close`) recebe a versão como argumento, escolhida a
 - **FR-4** O plugin MUST trazer um modelo de workflow de release, disparado à mão pelo dono (`workflow_dispatch`), que usa a GitHub Action do go-release-manager para criar a tag.
 - **FR-5** `scripts/check-plugin.sh` MUST validar todos os plugins do marketplace: manifest com `name` igual ao diretório, `version` SemVer e comandos com `description`.
 
+- **FR-6** O `/sdd-release` MUST comparar a versão da fase no ROADMAP com a calculada e, se divergirem, explicar ao dono e propor `--release-as`, a atualização do ROADMAP ou um `.go-releaserc.yml`. O modelo `release-tag.yml` MUST aceitar `release-as` e `ref` (go-release-manager `v1.1.0`).
+
 ## Critérios de aceite
 
 - **AC-1** Dado o marketplace, quando o CI roda `check-plugin.sh`, então o `sdd-release` está listado, com manifest válido e o comando `/sdd-release`.
 - **AC-2** Dado o comando `/sdd-release` sem `description`, ou o manifest com `name` diferente do diretório, quando `check-plugin.sh` roda, então falha.
 - **AC-3** Dado o modelo de workflow, quando o CI roda o actionlint, então passa, e ele usa `fabiodrneles/go-release-manager` com `create: true` só em `workflow_dispatch`.
+
+## Mudanças
+
+- ADDED FR-6: versão do ROADMAP × versão calculada; `release-as` e `ref` no modelo de workflow (#57).
 
 ## Fora de escopo
 

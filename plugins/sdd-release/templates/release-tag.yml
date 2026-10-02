@@ -1,5 +1,9 @@
-# Cria a tag da próxima versão, calculada pelos Conventional Commits.
-# Copie para .github/workflows/release-tag.yml. Só o dono dispara (Actions → Run workflow).
+# Cria a tag da próxima versão: calculada pelos Conventional Commits ou
+# informada (release-as), no commit "ref" (padrão: a branch disparada).
+# Copie para .github/workflows/release-tag.yml e dispare em Actions → Run workflow.
+# A tag criada com o GITHUB_TOKEN não dispara outros workflows: para publicar a
+# release no mesmo fluxo, chame o seu release.yml com workflow_call (exemplo no
+# release-tag.yml do go-release-manager).
 name: Release tag
 
 on:
@@ -7,6 +11,14 @@ on:
     inputs:
       pre-release:
         description: Canal de pré-release (vazio para versão estável)
+        required: false
+        default: ""
+      release-as:
+        description: Versão vX.Y.Z do ROADMAP (vazio para calcular pelos commits)
+        required: false
+        default: ""
+      ref:
+        description: Commit onde criar a tag (vazio para a branch disparada)
         required: false
         default: ""
 
@@ -21,10 +33,12 @@ jobs:
         with:
           fetch-depth: 0
       - id: version
-        uses: fabiodrneles/go-release-manager@v1.0.0
+        uses: fabiodrneles/go-release-manager@v1.1.0
         with:
           create: true
           pre-release: ${{ inputs.pre-release }}
+          release-as: ${{ inputs.release-as }}
+          ref: ${{ inputs.ref }}
           # A tag criada com o GITHUB_TOKEN padrão não dispara outros workflows.
           # Para disparar o workflow de release do repositório, use um PAT ou token de app.
           token: ${{ secrets.RELEASE_TOKEN || github.token }}

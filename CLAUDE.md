@@ -39,6 +39,7 @@ Numa sessão na web, o hook `.claude/hooks/session-start.sh` instala o shellchec
 
 ## Armadilhas
 
+- O PR de fechamento sobe a versão no `plugin.json` do `sdd-delivery`, no `KIT_REF` do `adopt.sh`/`adopt.ps1` e no `curl` dos READMEs; o `tests/plugin.sh` exige que batam, e o *Release tag* falha se a tag não bater com o `plugin.json`.
 - Arquivos em `template/` usam marcadores `{{PROJECT}}`, `{{OWNER}}`, `{{REPO}}`; o lint deles roda sobre uma cópia com os marcadores substituídos.
 - Arquivos gerados por ferramentas (ex.: `dotnet new`) podem vir com BOM UTF-8 ou CRLF; o `adopt.ps1` remove o BOM e o teste de adoção compara as árvores. Normalize antes do commit: sem `pwsh` local, esse teste só roda no CI.
 - Scripts precisam rodar em sh POSIX (Linux e macOS) e o equivalente em PowerShell no Windows; o shellcheck roda com `-s sh` nos scripts de adoção.

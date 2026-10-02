@@ -51,7 +51,7 @@ flowchart LR
 2. Adopt the template with the project's language:
 
    ```text
-   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v0.1.0/scripts/adopt.sh | sh -s -- --lang go .
+   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.0.0/scripts/adopt.sh | sh -s -- --lang go .
    ```
 
 3. Commit what was created (`CLAUDE.md`, `.github/`, `specs/`, `Makefile`, CI) and open Claude Code in the repository.

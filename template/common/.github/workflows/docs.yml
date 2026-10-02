@@ -18,7 +18,7 @@ jobs:
       - name: markdownlint
         run: npx --yes markdownlint-cli2@0.23.3
       - name: Rastreabilidade (sdd-check)
-        run: sh scripts/sdd-check.sh
+        run: sh scripts/sdd-check.sh --strict
       - name: Links
         uses: lycheeverse/lychee-action@v2
         with:

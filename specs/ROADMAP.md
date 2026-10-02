@@ -27,7 +27,11 @@ Cada tarefa referencia a spec e os critérios de aceite que ela fecha. Ordem sug
 
 Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README com o fluxo completo (#15, #36), template habilitando o plugin (#18) e a spec 006 (#16).
 
-## Fase 3 — Profissional → `v1.0.0`
+## Fase 3 — Profissional → `v1.0.0` · épico #39
 
-- [ ] **T9** Linguagens adicionais sob demanda (um ticket por linguagem) — 003
-- [ ] **T10** Revisão da skill com o uso em pelo menos dois repositórios além do cv-craft
+- [ ] **T9** Linguagens adicionais (um ticket por linguagem) — 003, 007 FR-4, AC-4 *(depende de D10)*
+- [ ] **T10** Revisão da skill com o uso em pelo menos dois repositórios além do cv-craft — 007 FR-5 *(depende de D11)*
+- [ ] **T16** `sdd-check --strict` no CI do kit e do template — 007 FR-1, AC-1 — #41
+- [ ] **T17** Arquivos de comunidade — 007 FR-2, AC-2 — #42
+- [ ] **T18** Estudo de caso do cv-craft — 007 FR-3, AC-3 — #43
+- [ ] **T19** Skill para quem não lê português — 007 FR-6 *(depende de D12)*

@@ -155,6 +155,10 @@ Options: `--lang` (required), `--project` (default: directory name), `--owner`/`
 
 **What if I already have `CLAUDE.md` or CI?** The script leaves them alone and lists them in the report; the discovery phase proposes how to integrate.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) (English summary at the end), the [code of conduct](CODE_OF_CONDUCT.md) and the [security policy](SECURITY.md).
+
 ## License
 
 [MIT](LICENSE)

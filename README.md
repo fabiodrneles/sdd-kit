@@ -210,7 +210,7 @@ Todo template é testado no CI do kit: o script adota cada linguagem num projeto
 
 ## Contribuir
 
-O kit é desenvolvido com o próprio processo: [constituição](specs/constitution.md), [specs](specs/README.md), [CLAUDE.md](CLAUDE.md). Antes de todo push:
+O kit é desenvolvido com o próprio processo: [constituição](specs/constitution.md), [specs](specs/README.md), [CLAUDE.md](CLAUDE.md). O passo a passo está em [CONTRIBUTING.md](CONTRIBUTING.md); veja também o [código de conduta](CODE_OF_CONDUCT.md) e a [política de segurança](SECURITY.md). Antes de todo push:
 
 ```text
 make ci

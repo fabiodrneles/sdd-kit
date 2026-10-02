@@ -1,0 +1,40 @@
+name: Nova linguagem
+description: Propor uma linguagem nova para o template (CI, hook e make ci prontos)
+title: "feat: add <linguagem> template"
+labels: ["tipo:feature"]
+body:
+  - type: input
+    id: lang
+    attributes:
+      label: Linguagem e versão mínima
+      placeholder: Rust 1.80
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: Gerenciador de pacotes e build
+      placeholder: cargo
+    validations:
+      required: true
+  - type: textarea
+    id: ci
+    attributes:
+      label: O que o `make ci` deve rodar
+      description: Lint, formatação, testes e build, com os comandos
+      placeholder: |
+        cargo fmt --check
+        cargo clippy -- -D warnings
+        cargo test
+    validations:
+      required: true
+  - type: input
+    id: dependabot
+    attributes:
+      label: Ecossistema do Dependabot
+      placeholder: cargo
+  - type: textarea
+    id: context
+    attributes:
+      label: Por que esta linguagem
+      description: Quem usaria e se você pode ajudar a testar

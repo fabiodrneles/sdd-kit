@@ -1,0 +1,35 @@
+# Cria a tag da próxima versão, calculada pelos Conventional Commits.
+# Copie para .github/workflows/release-tag.yml. Só o dono dispara (Actions → Run workflow).
+name: Release tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      pre-release:
+        description: Canal de pré-release (vazio para versão estável)
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: version
+        uses: fabiodrneles/go-release-manager@v1.0.0
+        with:
+          create: true
+          pre-release: ${{ inputs.pre-release }}
+          # A tag criada com o GITHUB_TOKEN padrão não dispara outros workflows.
+          # Para disparar o workflow de release do repositório, use um PAT ou token de app.
+          token: ${{ secrets.RELEASE_TOKEN || github.token }}
+      - name: Resumo
+        env:
+          NEXT: ${{ steps.version.outputs.next }}
+          PREVIOUS: ${{ steps.version.outputs.previous }}
+        run: echo "### Tag ${NEXT:-nenhuma} (anterior ${PREVIOUS:-nenhuma})" >> "$GITHUB_STEP_SUMMARY"

@@ -170,6 +170,17 @@ No Claude Code:
 /plugin install sdd-delivery@sdd-kit
 ```
 
+### Plugin `sdd-release` (opcional)
+
+Calcula a próxima versão SemVer pelos Conventional Commits, com o [go-release-manager](https://github.com/fabiodrneles/go-release-manager), e propõe o fechamento da fase com ela:
+
+```text
+/plugin install sdd-release@sdd-kit
+/sdd-release
+```
+
+A tag continua sendo do dono. Se quiser criá-la pelo GitHub, copie o modelo [`release-tag.yml`](plugins/sdd-release/templates/release-tag.yml) para `.github/workflows/` e dispare-o em *Actions → Release tag → Run workflow*.
+
 No claude.ai: baixe `sdd-delivery.zip` da [última release](https://github.com/fabiodrneles/sdd-kit/releases) e envie em *Configurações → Capacidades → Skills*.
 
 ## Script de adoção

@@ -68,5 +68,25 @@ for name in analyze specs epic next status close; do
   [ -f "plugins/sdd-delivery/commands/sdd-$name.md" ] || err "falta o comando /sdd-$name"
 done
 
+# Todos os plugins do marketplace (spec 008 FR-5): name igual ao diretório,
+# version X.Y.Z e comandos com description.
+for src in $(jq -r '.plugins[].source' "$market" 2>/dev/null); do
+  dir="${src#./}"
+  manifest="$dir/.claude-plugin/plugin.json"
+  [ -f "$manifest" ] || continue
+  jq -e --arg n "$(basename "$dir")" '(.name == $n) and (.version | test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))' \
+    "$manifest" >/dev/null 2>&1 || err "$manifest: name deve ser $(basename "$dir") e version X.Y.Z"
+  for cmd in "$dir"/commands/*.md; do
+    [ -f "$cmd" ] || continue
+    head -n1 "$cmd" | grep -qx -- '---' || err "$cmd: sem frontmatter"
+    awk 'NR > 1 && $0 == "---" { exit } NR > 1' "$cmd" | grep -Eq '^description: *[^ ]' ||
+      err "$cmd: frontmatter sem description"
+  done
+done
+
+# sdd-release (spec 008 AC-1): listado, com o comando /sdd-release.
+jq -e '.plugins | any(.name == "sdd-release")' "$market" >/dev/null 2>&1 || err "$market: falta o plugin sdd-release"
+[ -f plugins/sdd-release/commands/sdd-release.md ] || err "falta o comando /sdd-release"
+
 [ "$fail" -eq 0 ] && echo "plugin ok"
 exit "$fail"

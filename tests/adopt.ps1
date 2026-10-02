@@ -35,7 +35,9 @@ try {
     $bytes = [IO.File]::ReadAllBytes((Join-Path $d 'CLAUDE.md'))
     if ($bytes -contains 13) { Fail "${lang}: CLAUDE.md com CRLF" }
     $st = Get-Content -Raw (Join-Path $d '.sdd-kit.json') | ConvertFrom-Json
-    if ($st.lang -ne $lang -or @($st.files.PSObject.Properties).Count -ne ($want - 1)) { Fail "${lang}: .sdd-kit.json inválido" }
+    # 012 FR-1: os modelos do projeto (template/seed) ficam fora do estado.
+    $seeds = @(Get-ChildItem (Join-Path $root 'template/seed') -Recurse -File -Force).Count
+    if ($st.lang -ne $lang -or @($st.files.PSObject.Properties).Count -ne ($want - 1 - $seeds)) { Fail "${lang}: .sdd-kit.json inválido" }
     # 004 AC-3
     $before = Get-Snapshot $d
     $r = Invoke-Adopt (@('--lang', $lang) + $opts + @($d))

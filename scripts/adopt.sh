@@ -143,3 +143,26 @@ fi
 prefix=""
 [ "$dry" -eq 0 ] || prefix="(dry-run) "
 echo "${prefix}sdd-kit $lang em $dest: $created criados, $skipped ignorados, $overwritten sobrescritos"
+
+# Spec 011 FR-1: avisa o que faria o CI Node nascer vermelho, sem falhar.
+if [ "$lang" = node ] && [ -f "$dest/package.json" ]; then
+  if ! command -v node >/dev/null 2>&1; then
+    echo "aviso: node ausente: lockfile e script de teste não verificados"
+  else
+    (cd "$dest" && node -e '
+      const fs = require("fs");
+      const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
+      const test = (p.scripts || {}).test;
+      if (!test || /no test specified/.test(test))
+        console.log("aviso: package.json sem script \"test\": o make ci falha até o projeto ter testes");
+      if (!fs.existsSync("package-lock.json")) {
+        console.log("aviso: sem package-lock.json: o npm ci do CI falha; rode npm install e versione o lockfile");
+      } else {
+        const root = (JSON.parse(fs.readFileSync("package-lock.json", "utf8")).packages || {})[""];
+        const norm = (o) => JSON.stringify(Object.keys(o || {}).sort().map((k) => [k, o[k]]));
+        const fields = ["dependencies", "devDependencies", "optionalDependencies", "peerDependencies"];
+        if (root && fields.some((f) => norm(p[f]) !== norm(root[f])))
+          console.log("aviso: package-lock.json fora de sincronia com o package.json: o npm ci do CI falha; rode npm install");
+      }')
+  fi
+fi

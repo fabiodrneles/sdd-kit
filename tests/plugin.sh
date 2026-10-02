@@ -69,6 +69,21 @@ fi
 cp "$root/template/common/scripts/sdd-check.sh" "$tmp/template/common/scripts/"
 sh "$tmp/scripts/check-plugin.sh" >/dev/null
 
+# 007 AC-6: sem a regra de saída em arquivo ou do sdd-ci.sh, a checagem falha.
+sed 's/sdd-ci.sh/sdd-ci/' "$root/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md" > "$skill_md"
+if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
+  echo "FALHOU: check-plugin aceitou a skill sem o sdd-ci.sh na economia de uso" >&2
+  exit 1
+fi
+cp "$root/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md" "$skill_md"
+sed '/tail -n 3/d' "$root/template/common/CLAUDE.md" > "$tmp/template/common/CLAUDE.md"
+if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
+  echo "FALHOU: check-plugin aceitou o CLAUDE.md do template sem a saída em arquivo" >&2
+  exit 1
+fi
+cp "$root/template/common/CLAUDE.md" "$tmp/template/common/CLAUDE.md"
+sh "$tmp/scripts/check-plugin.sh" >/dev/null
+
 # 006 AC-3 (estrutura): comando sem description e comando ausente são recusados.
 cp "$root/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md" "$tmp/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md"
 sed '/^description:/d' "$root/plugins/sdd-delivery/commands/sdd-status.md" > "$tmp/plugins/sdd-delivery/commands/sdd-status.md"

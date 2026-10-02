@@ -31,6 +31,7 @@ A `v0.1.0` entregou o kit funcionando (Fases 1 e 2). A `v1.0.0` fecha o que um p
 - **AC-3** Dado o estudo de caso, quando o job de links roda, então todos os links resolvem.
 - **AC-4** Dada cada linguagem nova, quando o job "Template" roda, então a adoção num projeto mínimo e o `make ci` gerado passam.
 - **AC-5** Dado um repositório cujo `CLAUDE.md` está em português, quando a skill cria uma spec, então ela sai em português; em inglês, sai em inglês. Verificado pelas instruções da skill: ela está em inglês, manda achar o idioma no `CLAUDE.md`/`AGENTS.md` (ou perguntar uma vez) e tem o glossário dos termos que os scripts do template leem (`check-plugin.sh`).
+- **AC-6** Dada a skill e o `CLAUDE.md` do template, quando o `check-plugin.sh` roda, então a seção de economia de uso manda mandar saída longa para arquivo (só o código de saída e o fim) e acompanhar o CI pelo `sdd-ci.sh`, sem assinar os eventos do PR; sem essas regras, a checagem falha.
 
 ## Fora de escopo
 
@@ -44,5 +45,6 @@ Respondidas pelo dono em 2026-10-02: D10 (a) Rust e C#/.NET; D11 (b) `sdd-kit-de
 
 ### Não lançado
 
+- ADDED AC-6 — regras de economia de tokens na skill, no `CLAUDE.md` do template e no do kit (#78).
 - MODIFIED FR-4 — template Rust: `make ci` com fmt, clippy e `cargo llvm-cov`, CI, hook, dependabot, esqueleto e e2e (T9, #48).
 - ADDED AC-5 — a skill e os comandos dos plugins em inglês, escrevendo specs, issues e PRs no idioma do dono (T19, #50).

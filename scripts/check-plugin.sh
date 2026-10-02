@@ -110,5 +110,17 @@ for md in "$skill"/SKILL.md "$skill"/references/*.md plugins/*/commands/*.md; do
   [ -z "$pt" ] || err "$md: texto em português (a skill é em inglês): $pt"
 done
 
+# Economia de uso (spec 007 AC-6): a skill e o CLAUDE.md do template mandam
+# mandar saída longa para arquivo e acompanhar o CI pelo sdd-ci.sh.
+saving="$(awk '/^## Resuming and saving usage$/ { on = 1; next } /^## / { on = 0 } on' "$skill/SKILL.md")"
+for rule in 'echo "exit $?"; tail -n' 'sdd-ci.sh' 'unsubscribe' 'assert old in s' 'fields'; do
+  printf '%s\n' "$saving" | grep -qF -- "$rule" || err "SKILL.md: a economia de uso não cita: $rule"
+done
+if [ -f template/common/CLAUDE.md ]; then
+  for rule in 'echo "exit $?"; tail -n' 'scripts/sdd-ci.sh' 'cancele'; do
+    grep -qF -- "$rule" template/common/CLAUDE.md || err "template/common/CLAUDE.md: a economia de uso não cita: $rule"
+  done
+fi
+
 [ "$fail" -eq 0 ] && echo "plugin ok"
 exit "$fail"

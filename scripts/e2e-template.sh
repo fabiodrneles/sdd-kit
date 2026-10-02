@@ -50,4 +50,30 @@ if [ "$lang" = "$adopt_lang" ]; then
   done
   echo "e2e-template.sh $lang --skeleton ok"
 fi
+
+# 011 AC-2: com o go.mod pedindo outra versão, o hook de sessão deixa a toolchain
+# baixada pelo GOTOOLCHAIN com o covdata, e a cobertura roda num pacote sem testes.
+if [ "$lang" = go ]; then
+  want=1.25.1
+  if [ "$(printf '%s\n' "go$want" "$(GOTOOLCHAIN=local go env GOVERSION)" | sort -V | tail -n 1)" = "go$want" ] &&
+    [ "$(GOTOOLCHAIN=local go env GOVERSION)" != "go$want" ]; then
+    hk="$work/$lang-hook"
+    cp -R "$d" "$hk"
+    cd "$hk"
+    sed -i.bak "s/^go .*/go $want/" go.mod && rm go.mod.bak
+    mkdir -p notest && printf 'package notest\n\n// N has no test.\nfunc N() int { return 1 }\n' > notest/notest.go
+    gp="$work/gopath"; mkdir -p "$gp/bin"
+    # golangci-lint falso na versão do Makefile: o teste é só da toolchain.
+    v="$(sed -n 's/^GOLANGCI_LINT_VERSION *:= *v//p' Makefile)"
+    printf '#!/bin/sh\necho "golangci-lint has version %s built"\n' "$v" > "$gp/bin/golangci-lint"
+    chmod +x "$gp/bin/golangci-lint"
+    mc="$(go env GOMODCACHE)"
+    CLAUDE_CODE_REMOTE=true CLAUDE_PROJECT_DIR="$hk" GOPATH="$gp" GOMODCACHE="$mc" bash .claude/hooks/session-start.sh
+    GOPATH="$gp" GOMODCACHE="$mc" go test -coverprofile=coverage.out ./... > "$work/hook.log" 2>&1 ||
+      { cat "$work/hook.log" >&2; echo "FALHOU: cobertura com a toolchain do go.mod ($want)" >&2; exit 1; }
+    echo "e2e-template.sh go: hook com a toolchain go$want ok"
+  else
+    echo "e2e-template.sh go: Go instalado já é go$want ou mais novo; hook não verificado"
+  fi
+fi
 echo "e2e-template.sh $lang ok"

@@ -155,4 +155,8 @@ for f in scripts/adopt.sh scripts/adopt.ps1 README.md README.en.md; do
   line="$(grep -E 'SDD_KIT_REF|raw\.githubusercontent\.com/fabiodrneles/sdd-kit/' "$root/$f" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -u)"
   [ "$line" = "$v" ] || { echo "FALHOU: $f usa '$line', não a versão $v do plugin.json" >&2; exit 1; }
 done
+# 012 AC-3: a versão mais recente do CHANGELOG é a do plugin.json (o PR de
+# fechamento sobe as duas; a release v1.0.0 saiu com só uma).
+cl="$(grep -m 1 -oE '^## \[[0-9]+\.[0-9]+\.[0-9]+\]' "$root/CHANGELOG.md" | tr -d '#[] ')"
+[ "v$cl" = "$v" ] || { echo "FALHOU: CHANGELOG.md está na v$cl e o plugin.json na $v; o PR de fechamento sobe as duas" >&2; exit 1; }
 echo "tests/plugin.sh (versão) ok"

@@ -262,7 +262,8 @@ Each task references the spec and the acceptance criteria it closes. Suggested o
 - [ ] **Tn** <task> — <IDs>
 ```
 
-A task brought forward to an earlier phase: mark it `*(brought forward)*`. An abandoned task: strike it (`~~…~~`) and explain.
+In a repository with published tags, number the phases from the last tag (`git tag --sort=-v:refname`),
+not from `v0.1.0`. A task brought forward to an earlier phase: mark it `*(brought forward)*`. An abandoned task: strike it (`~~…~~`) and explain.
 The phase heading keeps the `` → `vX.Y.Z` `` form: the scripts and `/sdd-release` read it (with the template
 scripts, `` ## Fase N — <nome> → `vX.Y.Z` ``).
 

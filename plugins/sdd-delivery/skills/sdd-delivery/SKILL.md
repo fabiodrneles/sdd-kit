@@ -85,7 +85,9 @@ Goal: understand the real state before changing any line of code.
 
 1. Read **all** the code. Build it. Run **every** documented command and the relevant edge
    cases (invalid input, existing file, closed stdin, no TTY, `--help`).
-2. Check every README promise by running it (installation, examples, flags).
+2. Check every README promise by running it (installation, examples, flags). Run
+   `git tag --sort=-v:refname | head` too: with published tags, the ROADMAP continues from the
+   last one (after `v0.10.2`, Phase 1 is `v0.11.0`), never restarting at `v0.1.0`.
 3. Record everything in `specs/ANALYSIS.md` (template in templates.md):
    executive summary; "what was verified" table (command → result); findings
    **critical / high / medium / low**, each with evidence (`file:line` or command
@@ -227,7 +229,7 @@ Works with the GitHub MCP or with `gh`:
 | Operation | GitHub MCP | `gh` |
 |---|---|---|
 | Create issue / epic | `issue_write` (create) | `gh issue create` |
-| Attach sub-issue | `sub_issue_write` (add) | `gh api repos/O/R/issues/EPIC/sub_issues -F sub_issue_id=<id>` |
+| Attach sub-issue | `sub_issue_write` (add; its answer is the whole parent issue, so prefer `gh` when available) | `gh api repos/O/R/issues/EPIC/sub_issues -F sub_issue_id=<id> --jq .number` |
 | Create PR | `create_pull_request` (look for the repo's template first) | `gh pr create` |
 | Follow PR | `subscribe_pr_activity` | `gh pr checks --watch` |
 | Read CI | `pull_request_read` / `get_check_run` / `get_job_logs` | `gh run view --log-failed` |

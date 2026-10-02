@@ -109,4 +109,8 @@ Before the push, read `git diff origin/<base>...HEAD` as a hostile reviewer:
 | A PDF text extraction library truncated characters above U+00FF, hiding exactly the Unicode bugs | Validate the verification tool on hard cases (accents, non-Latin-1) before trusting it; prefer the reference tool (e.g. `pdftotext`). |
 | A Windows runner had one tool of the package but not the other (`pdftotext` without `pdfinfo`) | Detect each external dependency separately; in CI, require them explicitly. |
 | Bumping the language version broke the linter built with the previous version | Update the tool in the same PR (precondition for green), explaining it in "What changes". |
+| A Go toolchain downloaded by `GOTOOLCHAIN` lacked `covdata`, and `go test -cover` failed on packages without tests | Install the `go.mod` Go version in full in the session hook and in CI (`setup-go` with `go-version-file`). |
+| npm 10 crashed (`reading 'edgesOut'`) resolving a lockfile that came from Create React App | Regenerate the lockfile with `npx npm@11 install`; `npm ci` on npm 10 accepts it. |
+| Adoption in an existing repository turned CI red (old lint and README) | The first PR brings only the minimal fixes for green CI; the rest becomes findings and tickets. |
+| A PR was merged with the deploy red: CI only read check runs, the deploy posts a commit status | Read both check runs and commit statuses (`sdd-ci.sh` does). |
 | Base of a stacked PR merged and deleted | Check that the PR was retargeted to `main`, that the diff has only the ticket and that CI is green. |

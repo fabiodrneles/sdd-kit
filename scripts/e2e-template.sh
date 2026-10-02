@@ -53,6 +53,7 @@ fi
 
 # 011 AC-2: com o go.mod pedindo outra versão, o hook de sessão deixa a toolchain
 # baixada pelo GOTOOLCHAIN com o covdata, e a cobertura roda num pacote sem testes.
+# GOTOOLCHAIN=auto como numa sessão na web (o CI fixa local).
 if [ "$lang" = go ]; then
   want=1.25.1
   if [ "$(printf '%s\n' "go$want" "$(GOTOOLCHAIN=local go env GOVERSION)" | sort -V | tail -n 1)" = "go$want" ] &&
@@ -68,8 +69,8 @@ if [ "$lang" = go ]; then
     printf '#!/bin/sh\necho "golangci-lint has version %s built"\n' "$v" > "$gp/bin/golangci-lint"
     chmod +x "$gp/bin/golangci-lint"
     mc="$(go env GOMODCACHE)"
-    CLAUDE_CODE_REMOTE=true CLAUDE_PROJECT_DIR="$hk" GOPATH="$gp" GOMODCACHE="$mc" bash .claude/hooks/session-start.sh
-    GOPATH="$gp" GOMODCACHE="$mc" go test -coverprofile=coverage.out ./... > "$work/hook.log" 2>&1 ||
+    CLAUDE_CODE_REMOTE=true CLAUDE_PROJECT_DIR="$hk" GOTOOLCHAIN=auto GOPATH="$gp" GOMODCACHE="$mc" bash .claude/hooks/session-start.sh
+    GOTOOLCHAIN=auto GOPATH="$gp" GOMODCACHE="$mc" go test -coverprofile=coverage.out ./... > "$work/hook.log" 2>&1 ||
       { cat "$work/hook.log" >&2; echo "FALHOU: cobertura com a toolchain do go.mod ($want)" >&2; exit 1; }
     echo "e2e-template.sh go: hook com a toolchain go$want ok"
   else

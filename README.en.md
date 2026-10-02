@@ -51,7 +51,7 @@ flowchart LR
 2. Adopt the template with the project's language:
 
    ```text
-   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.1.0/scripts/adopt.sh | sh -s -- --lang go .
+   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.2.0/scripts/adopt.sh | sh -s -- --lang go .
    ```
 
 3. Commit what was created (`CLAUDE.md`, `.github/`, `specs/`, `Makefile`, CI) and open Claude Code in the repository.
@@ -122,6 +122,8 @@ In adopted repositories:
 - **`make ci`**: the same check as the language CI, with minimum coverage.
 - **Release tag workflow**: *Actions → Release tag → Run workflow* creates the tag (computed from Conventional Commits by [go-release-manager](https://github.com/fabiodrneles/go-release-manager), or the ROADMAP one in `release-as`) and publishes the release with generated notes.
 - **`make sdd-check`**: traceability. Every acceptance criterion of an `In Progress`/`Done` spec must be cited in a test as `NNN AC-n`, spec status must match the index and the ROADMAP may only cite existing IDs. CI and `make sdd-check` run it with `--strict`, so any warning blocks the merge.
+- **`make linkcheck`** (broken links in `.md` files, with lychee) and **`scripts/doc-commands.sh`**, which runs in CI the README `bash` blocks marked with `<!-- doc-commands -->`.
+- **Accessibility in the Node template:** with `A11Y_PAGES := dist/index.html`, `make ci` runs axe on those pages and fails on any violation.
 - Acceptance criteria in Given/When/Then or **EARS**, a **"Mudanças"** (changes) section per spec feeding the CHANGELOG, and **`AGENTS.md`** for Codex, Copilot, Cursor and other agents.
 
 ### Token-saving scripts
@@ -130,7 +132,7 @@ Adoption also brings scripts for the mechanical steps of the process. The agent 
 
 ## Automatic updates
 
-Adoption writes `.sdd-kit.json` (kit version and a hash per managed file). Every Monday the `sdd-kit sync` workflow compares it with the latest release and opens **one PR**: untouched files are updated, files the kit did not change stay as they are, files both you and the kit changed get the new version and are listed under **"Conflitos"** for you to decide in the PR, and files that are only yours are never touched. Enable *Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests"*.
+Adoption writes `.sdd-kit.json` (kit version and a hash per managed file). Every Monday the `sdd-kit sync` workflow compares it with the latest release and opens **one PR**: untouched files are updated, files the kit did not change stay as they are, files both you and the kit changed get the new version and are listed under **"Conflitos"** for you to decide in the PR, files that are only yours are never touched, and `specs/` and `CHANGELOG.md` belong to the project: the kit creates them on adoption if missing and never changes them again. Enable *Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests"*.
 
 ## Installing the skill
 

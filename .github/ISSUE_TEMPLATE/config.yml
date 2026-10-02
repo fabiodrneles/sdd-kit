@@ -1,5 +1,11 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Perguntas e ideias (Discussions)
+    url: https://github.com/fabiodrneles/sdd-kit/discussions/categories/q-a
+    about: Dúvidas sobre adoção, a skill ou o processo, e ideias de melhoria
+  - name: Mostre seu projeto
+    url: https://github.com/fabiodrneles/sdd-kit/discussions/categories/show-and-tell
+    about: Adotou o kit? Conte como foi; os relatos viram melhorias
   - name: Specs do projeto
     url: https://github.com/fabiodrneles/sdd-kit/blob/main/specs/README.md
     about: Antes de propor uma mudança, veja a spec correspondente

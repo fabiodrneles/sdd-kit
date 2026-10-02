@@ -26,4 +26,8 @@ for f in docs/case-study.md docs/case-study.en.md; do
 done
 grep -q "lychee-action" .github/workflows/ci.yml || fail "CI sem o job de links"
 grep -qF "'./**/*.md'" .github/workflows/ci.yml || fail "job de links não cobre todos os .md"
+
+# 013 AC-3: perguntas vão para as Discussions, não para issues.
+grep -q 'url: https://github.com/fabiodrneles/sdd-kit/discussions' .github/ISSUE_TEMPLATE/config.yml ||
+  fail "config.yml sem link de contato para as Discussions"
 echo "tests/community.sh ok"

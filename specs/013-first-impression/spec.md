@@ -27,3 +27,4 @@ Com a `v1.2.0` divulgada, a maior parte dos visitantes decide em segundos se tes
 
 - ADDED FR-1 — "Começar num repositório novo" explica pré-requisitos, o que a adoção copia, `--dry-run` e `--skeleton`; os comandos do guia rodam no CI (`tests/readme.sh`) (T35, #108).
 - ADDED FR-2 — demonstração animada no topo do README, gerada por `docs/demo/demo.sh` a partir da saída real da adoção e do `make ci` (T36, #109).
+- ADDED FR-3 — o formulário de nova issue leva perguntas e relatos de uso para as Discussions; issues `good first issue` para quem quer começar a contribuir (T37, #110).

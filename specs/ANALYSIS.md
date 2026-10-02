@@ -49,3 +49,13 @@ Pedido do dono em 2026-10-01: tornar o kit uma referência aproveitando o que a 
 | D7 | Comandos de barra no plugin (spec-kit, OpenSpec)? | (a) sim, os seis da spec 006 FR-3; (b) só `/sdd-status` e `/sdd-next`; (c) não | **(a)** — **respondida: (a)**: deixa o fluxo descobrível sem decorar frases |
 | D8 | Deltas de mudança (OpenSpec)? | (a) seção "Mudanças" com `ADDED`/`MODIFIED`/`REMOVED` dentro de cada spec, gerando o CHANGELOG; (b) pasta `specs/changes/` como no OpenSpec; (c) não | **(a)** — **respondida: (a)**: mesmo ganho de rastreio, sem um segundo lugar para procurar |
 | D9 | `AGENTS.md` para outros agentes? | (a) sim, no template, apontando para o `CLAUDE.md`; (b) não | **(a)** — **respondida: (a)**: custo baixo e amplia o público do kit |
+
+## 7. Decisões da Fase 3 (em aberto)
+
+Propostas na [spec 007](007-v1/spec.md).
+
+| ID | Pergunta | Opções | Recomendação |
+|---|---|---|---|
+| D10 | Quais linguagens entram no template na `v1.0.0`? | (a) Rust e C#/.NET; (b) Kotlin/Gradle (cobre o Java com Gradle, hoje fora); (c) nenhuma agora, só sob demanda via issue "Nova linguagem" | **(a)**: ecossistemas grandes e com público forte em ferramentas de agentes; Gradle pode entrar como ticket depois |
+| D11 | Onde usar a skill antes da revisão (T10)? | (a) dois repositórios seus, que você indica; (b) um repositório público de demonstração, criado do zero com o kit (`sdd-kit-demo`), mais um seu; (c) só repositórios de terceiros que adotarem | **(b)**: o repositório de demonstração vira prova pública e material do estudo de caso; o seu traz o caso "repositório existente" |
+| D12 | Skill para quem não lê português? | (a) skill em inglês, orientando o agente a escrever specs, issues e PRs no idioma do dono do repositório; (b) duas skills, pt e en, mantidas em paralelo; (c) manter só em português | **(a)**: uma fonte só, alcance internacional e o mesmo comportamento para quem fala português; exige ajustar o princípio 8 da constituição |

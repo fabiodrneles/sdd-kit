@@ -83,4 +83,29 @@ rc=0; sh "$s/sdd-phase-status.sh" --nao-existe >/dev/null 2>&1 || rc=$?
 rc=0; sh "$root/template/go/scripts/sdd-release-check.sh" >/dev/null 2>&1 || rc=$?
 [ "$rc" -eq 2 ] || fail "sdd-release-check sem argumentos saiu com $rc (quero 2)"
 
+
+# 009 AC-7: status de commit (ex.: Vercel) contam como checks, com um gh falso.
+mkdir -p "$tmp/bin" "$tmp/gh"
+cat > "$tmp/bin/gh" <<'SH'
+#!/bin/sh
+# gh falso: "gh api URL --jq EXPR" aplica EXPR ao JSON de $FAKE_GH/<recurso>.json.
+url="$2"; expr="$4"
+case "$url" in
+  */check-runs*) f=check-runs ;;
+  */status*) f=status ;;
+  */commits/*) echo "${url##*/}"; exit 0 ;;
+  *) echo "gh falso: $url" >&2; exit 1 ;;
+esac
+jq -r "$expr" "$FAKE_GH/$f.json"
+SH
+chmod +x "$tmp/bin/gh"
+echo '{"total_count":1,"check_runs":[{"id":1,"name":"make ci","status":"completed","conclusion":"success","app":{"slug":"github-actions"}}]}' > "$tmp/gh/check-runs.json"
+echo '{"statuses":[{"context":"Vercel","state":"failure","target_url":"https://vercel.example/dpl"}]}' > "$tmp/gh/status.json"
+rc=0; out="$(PATH="$tmp/bin:$PATH" FAKE_GH="$tmp/gh" sh "$s/sdd-ci.sh" --repo o/r --no-wait 0123456)" || rc=$?
+[ "$rc" -eq 1 ] || fail "sdd-ci com status vermelho saiu com $rc (quero 1): $out"
+printf '%s\n' "$out" | grep -qx 'FALHA Vercel (status)' || fail "sdd-ci não listou o status: $out"
+printf '%s\n' "$out" | grep -q 'https://vercel.example/dpl' || fail "sdd-ci não mostrou o link do status: $out"
+echo '{"statuses":[{"context":"Vercel","state":"success","target_url":""}]}' > "$tmp/gh/status.json"
+out="$(PATH="$tmp/bin:$PATH" FAKE_GH="$tmp/gh" sh "$s/sdd-ci.sh" --repo o/r --no-wait 0123456)" || fail "sdd-ci com tudo verde falhou: $out"
+printf '%s\n' "$out" | grep -qx 'ok Vercel (status)' || fail "sdd-ci não listou o status verde: $out"
 echo "tests/scripts.sh ok"

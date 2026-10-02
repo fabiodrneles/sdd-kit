@@ -3,7 +3,7 @@
 # template/common e template/<lang> sem sobrescrever o que já existe.
 #
 # Uso: adopt.sh --lang go|node|java|python [--project NOME] [--owner DONO]
-#               [--repo REPO] [--dry-run] [--force] [DESTINO]
+#               [--repo REPO] [--dry-run] [--force] [--skeleton] [DESTINO]
 #
 # Sem o template ao lado do script (ex.: curl … | sh -s -- …), baixa o da
 # versão SDD_KIT_REF do GitHub.
@@ -22,6 +22,8 @@ uso: adopt.sh --lang go|node|java|python [opções] [DESTINO]
   --repo REPO      repositório no GitHub (padrão: deduzido do remote origin)
   --dry-run        mostra o que seria feito, sem escrever nada
   --force          sobrescreve arquivos que já existem
+  --skeleton       num repositório vazio, cria um projeto mínimo com um teste para o CI
+                   nascer verde (nunca sobrescreve, nem com --force)
   DESTINO          diretório do repositório (padrão: diretório atual)
 USAGE
   exit 2
@@ -29,7 +31,7 @@ USAGE
 
 die() { echo "erro: $*" >&2; usage; }
 
-lang="" project="" owner="" repo="" dry=0 force=0 dest="."
+lang="" project="" owner="" repo="" dry=0 force=0 skeleton=0 dest="."
 while [ $# -gt 0 ]; do
   case "$1" in
     --lang) [ $# -ge 2 ] || die "--lang precisa de um valor"; lang="$2"; shift 2 ;;
@@ -38,6 +40,7 @@ while [ $# -gt 0 ]; do
     --repo) [ $# -ge 2 ] || die "--repo precisa de um valor"; repo="$2"; shift 2 ;;
     --dry-run) dry=1; shift ;;
     --force) force=1; shift ;;
+    --skeleton) skeleton=1; shift ;;
     -h | --help) usage ;;
     -*) die "opção desconhecida: $1" ;;
     *) dest="$1"; shift ;;
@@ -84,13 +87,16 @@ sha256() {
 
 created=0 skipped=0 overwritten=0
 : > "$tmp/state"
-for part in common "$lang"; do
+parts="common $lang"
+# Spec 010 FR-2: o esqueleto é código do projeto, não arquivo gerenciado pelo kit.
+[ "$skeleton" -eq 0 ] || parts="$parts skeleton/$lang"
+for part in $parts; do
   # Ordenado para o relatório ser estável entre execuções e sistemas.
   (cd "$template/$part" && find . -type f | sed 's#^\./##' | LC_ALL=C sort) > "$tmp/files"
   while IFS= read -r rel; do
     src="$template/$part/$rel"
     dst="$dest/$rel"
-    if [ -e "$dst" ] && [ "$force" -eq 0 ]; then
+    if [ -e "$dst" ] && { [ "$force" -eq 0 ] || [ "$part" != "${part#skeleton/}" ]; }; then
       echo "ignorado (já existe): $rel"
       skipped=$((skipped + 1))
       continue
@@ -105,7 +111,7 @@ for part in common "$lang"; do
     mkdir -p "$(dirname "$dst")"
     sed -e "s/{{PROJECT}}/$s_project/g" -e "s/{{OWNER}}/$s_owner/g" -e "s/{{REPO}}/$s_repo/g" "$src" > "$dst"
     if [ -x "$src" ]; then chmod +x "$dst"; fi
-    echo "$rel $(sha256 "$dst")" >> "$tmp/state"
+    [ "$part" != "${part#skeleton/}" ] || echo "$rel $(sha256 "$dst")" >> "$tmp/state"
   done < "$tmp/files"
 done
 

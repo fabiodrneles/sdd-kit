@@ -211,6 +211,7 @@ pwsh -File scripts/adopt.ps1 --lang go|node|java|python [opções] [DESTINO]
 | `--owner`, `--repo` | Dono e repositório no GitHub (padrão: deduzidos do `origin`) |
 | `--dry-run` | Mostra o que seria feito, sem escrever |
 | `--force` | Sobrescreve arquivos existentes |
+| `--skeleton` | Num repositório vazio, cria um projeto mínimo com um teste (`go.mod`, `package.json`, `pyproject.toml` ou `pom.xml`), para o primeiro push já ter o CI verde. Nunca sobrescreve, nem com `--force` |
 
 O que cada linguagem recebe:
 

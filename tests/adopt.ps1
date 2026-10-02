@@ -63,6 +63,15 @@ try {
   if (@(Get-ChildItem -Force $d).Count -ne 0) { Fail '--dry-run escreveu no destino' }
   if ($r.Out -notmatch '(?m)^\(dry-run\) ') { Fail '--dry-run sem resumo' }
 
+  # 010 FR-2, AC-2
+  $d = Join-Path $tmp 'skeleton'; New-Item -ItemType Directory -Path $d | Out-Null
+  $null = Invoke-Adopt (@('--lang', 'python', '--skeleton') + $opts + @($d))
+  if (-not (Test-Path -LiteralPath (Join-Path $d 'tests/test_greeting.py'))) { Fail '--skeleton não criou o teste' }
+  if ((Get-Content -Raw (Join-Path $d '.sdd-kit.json')) -match 'test_greeting') { Fail '--skeleton registrou o esqueleto no estado' }
+  Set-Content -LiteralPath (Join-Path $d 'app/__init__.py') -Value 'meu' -NoNewline
+  $null = Invoke-Adopt (@('--lang', 'python', '--skeleton', '--force') + $opts + @($d))
+  if ((Get-Content -Raw (Join-Path $d 'app/__init__.py')) -ne 'meu') { Fail '--skeleton --force sobrescreveu código do projeto' }
+
   Write-Output 'tests/adopt.ps1 ok'
 }
 finally {

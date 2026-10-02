@@ -4,7 +4,7 @@
 # Equivalente a scripts/adopt.sh, com as mesmas opções e a mesma saída.
 #
 # Uso: adopt.ps1 --lang go|node|java|python [--project NOME] [--owner DONO]
-#                [--repo REPO] [--dry-run] [--force] [DESTINO]
+#                [--repo REPO] [--dry-run] [--force] [--skeleton] [DESTINO]
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
@@ -21,6 +21,8 @@ uso: adopt.ps1 --lang go|node|java|python [opções] [DESTINO]
   --repo REPO      repositório no GitHub (padrão: deduzido do remote origin)
   --dry-run        mostra o que seria feito, sem escrever nada
   --force          sobrescreve arquivos que já existem
+  --skeleton       num repositório vazio, cria um projeto mínimo com um teste para o CI
+                   nascer verde (nunca sobrescreve, nem com --force)
   DESTINO          diretório do repositório (padrão: diretório atual)
 "@)
   exit 2
@@ -31,7 +33,7 @@ function Stop-WithUsage([string]$Message) {
   Show-Usage
 }
 
-$lang = ''; $project = ''; $owner = ''; $repo = ''; $dry = $false; $force = $false; $dest = '.'
+$lang = ''; $project = ''; $owner = ''; $repo = ''; $dry = $false; $force = $false; $skeleton = $false; $dest = '.'
 for ($i = 0; $i -lt $args.Count; $i++) {
   $a = [string]$args[$i]
   switch -CaseSensitive ($a) {
@@ -49,6 +51,7 @@ for ($i = 0; $i -lt $args.Count; $i++) {
     }
     '--dry-run' { $dry = $true; break }
     '--force' { $force = $true; break }
+    '--skeleton' { $skeleton = $true; break }
     { $_ -in '-h', '--help' } { Show-Usage }
     { $_.StartsWith('-') } { Stop-WithUsage "opção desconhecida: $a" }
     default { $dest = $a }
@@ -94,7 +97,11 @@ try {
   $utf8 = New-Object System.Text.UTF8Encoding($false)
   $created = 0; $skipped = 0; $overwritten = 0
   $state = [System.Collections.Generic.List[string]]::new()
-  foreach ($part in @('common', $lang)) {
+  $parts = @('common', $lang)
+  # Spec 010 FR-2: o esqueleto é código do projeto, não arquivo gerenciado pelo kit.
+  if ($skeleton) { $parts += "skeleton/$lang" }
+  foreach ($part in $parts) {
+    $isSkeleton = $part.StartsWith('skeleton/')
     $base = (Resolve-Path (Join-Path $template $part)).Path
     # Mesma ordem do sh (LC_ALL=C sort): ordinal.
     $files = [string[]]@(Get-ChildItem -LiteralPath $base -Recurse -File -Force |
@@ -104,7 +111,7 @@ try {
       $src = Join-Path $base $rel
       $dst = Join-Path $dest $rel
       $exists = Test-Path -LiteralPath $dst
-      if ($exists -and -not $force) {
+      if ($exists -and (-not $force -or $isSkeleton)) {
         Write-Output "ignorado (já existe): $rel"
         $skipped++
         continue
@@ -120,6 +127,7 @@ try {
         $mode = [IO.File]::GetUnixFileMode($src)
         if ($mode -band [IO.UnixFileMode]::UserExecute) { [IO.File]::SetUnixFileMode($dst, $mode) }
       }
+      if ($isSkeleton) { continue }
       $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $dst).Hash.ToLowerInvariant()
       $state.Add('    "' + $rel + '": "' + $hash + '"')
     }

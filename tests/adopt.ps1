@@ -22,7 +22,7 @@ function Get-Snapshot([string]$Dir) {
 }
 
 try {
-  foreach ($lang in 'go', 'node', 'java', 'python', 'rust') {
+  foreach ($lang in 'go', 'node', 'java', 'python', 'rust', 'dotnet') {
     # 004 AC-1
     $d = Join-Path $tmp "$lang-empty"; New-Item -ItemType Directory -Path $d | Out-Null
     $r = Invoke-Adopt (@('--lang', $lang) + $opts + @($d))

@@ -30,7 +30,7 @@ O kit nasceu do [cv-craft](https://github.com/fabiodrneles/cv-craft), que saiu d
 | Parte | Para quê | Spec |
 |---|---|---|
 | Skill `sdd-delivery` | Ensina o agente o processo inteiro: análise com evidências, specs, épicos, PRs, CI vermelho tratado pela causa raiz, revisão, fechamento de fase e release. Escrita em inglês, escreve specs, issues e PRs no idioma do dono | [002](specs/002-skill-plugin/spec.md) |
-| `template/` | `CLAUDE.md`, hook de sessão, templates de issue e PR, `CONTRIBUTING.md`, esqueleto de `specs/` e CI pronto para **Go, Node/TS, Java, Python e Rust** | [003](specs/003-template/spec.md) |
+| `template/` | `CLAUDE.md`, hook de sessão, templates de issue e PR, `CONTRIBUTING.md`, esqueleto de `specs/` e CI pronto para **Go, Node/TS, Java, Python, Rust e C#/.NET** | [003](specs/003-template/spec.md) |
 | Script de adoção | Copia o template para um repositório novo ou existente **sem sobrescrever nada**; sh e PowerShell | [004](specs/004-adoption-script/spec.md) |
 
 ## Como funciona
@@ -200,8 +200,8 @@ No claude.ai: baixe `sdd-delivery.zip` da [última release](https://github.com/f
 ## Script de adoção
 
 ```text
-sh scripts/adopt.sh --lang go|node|java|python [opções] [DESTINO]
-pwsh -File scripts/adopt.ps1 --lang go|node|java|python [opções] [DESTINO]
+sh scripts/adopt.sh --lang go|node|java|python|rust|dotnet [opções] [DESTINO]
+pwsh -File scripts/adopt.ps1 --lang go|node|java|python|rust|dotnet [opções] [DESTINO]
 ```
 
 | Opção | Efeito |
@@ -221,6 +221,7 @@ O que cada linguagem recebe:
 | Node/TS | `lint` e `build` (se existirem), `test` medido pelo [c8](https://github.com/bcoe/c8) | Node LTS, `npm ci` |
 | Java | Maven: `mvn verify` (ou `./mvnw`); Gradle: `gradle check` (ou `./gradlew`). JaCoCo nos dois, sem mudar o `pom.xml` nem o `build.gradle` | Temurin 21, cache do Maven ou do Gradle |
 | Python | `ruff check`, `ruff format --check`, `pytest` com `pytest-cov` (no extra `dev`) | Python 3.12, extra `dev` |
+| C#/.NET | `dotnet format --verify-no-changes`, `dotnet build -warnaserror`, `dotnet test` com o coverlet.collector | .NET 8 |
 | Rust | `cargo fmt --check`, `cargo clippy -D warnings`, `cargo llvm-cov` (o `make deps` instala) | Rust estável, `cargo-llvm-cov` |
 
 Em todas, o `make ci` **falha com cobertura de linhas abaixo de `COVERAGE_MIN`** (80 por padrão, configurável no `Makefile`) e mostra a cobertura medida. Arquivos que nenhum teste carrega também contam.

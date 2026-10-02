@@ -15,7 +15,7 @@ The kit comes from [cv-craft](https://github.com/fabiodrneles/cv-craft), which w
 | Part | Purpose | Spec |
 |---|---|---|
 | `sdd-delivery` skill | Teaches the agent the whole process: evidence-based analysis, specs, epics, PRs, root-causing red CI, review, phase closing and release. Written in English, it writes specs, issues and PRs in the owner's language | [002](specs/002-skill-plugin/spec.md) |
-| `template/` | `CLAUDE.md`, session hook, issue and PR templates, `CONTRIBUTING.md`, `specs/` skeleton and ready-made CI for **Go, Node/TS, Java, Python and Rust** | [003](specs/003-template/spec.md) |
+| `template/` | `CLAUDE.md`, session hook, issue and PR templates, `CONTRIBUTING.md`, `specs/` skeleton and ready-made CI for **Go, Node/TS, Java, Python, Rust and C#/.NET** | [003](specs/003-template/spec.md) |
 | Adoption script | Copies the template into a new or existing repository **without overwriting anything**; sh and PowerShell | [004](specs/004-adoption-script/spec.md) |
 
 ## How it works
@@ -157,11 +157,11 @@ On claude.ai: download `sdd-delivery.zip` from the [latest release](https://gith
 ## Adoption script
 
 ```text
-sh scripts/adopt.sh --lang go|node|java|python [options] [TARGET]
-pwsh -File scripts/adopt.ps1 --lang go|node|java|python [options] [TARGET]
+sh scripts/adopt.sh --lang go|node|java|python|rust|dotnet [options] [TARGET]
+pwsh -File scripts/adopt.ps1 --lang go|node|java|python|rust|dotnet [options] [TARGET]
 ```
 
-Options: `--lang` (required), `--project` (default: directory name), `--owner`/`--repo` (default: taken from `origin`), `--dry-run`, `--force`, `--skeleton` (in an empty repository, creates a minimal project with one test so the first push already has green CI; never overwrites, not even with `--force`). In every language, `make ci` **fails when line coverage is below `COVERAGE_MIN`** (80 by default, set in the `Makefile`): c8 for Node, JaCoCo for Java, Maven or Gradle (no `pom.xml` or `build.gradle` change), `pytest-cov` for Python (in the `dev` extra), `go test -coverprofile` for Go and `cargo llvm-cov` for Rust. Every language template is tested in the kit's CI: the script adopts it into a minimal project, runs the generated `make ci` and checks that an untested file makes it fail on coverage.
+Options: `--lang` (required), `--project` (default: directory name), `--owner`/`--repo` (default: taken from `origin`), `--dry-run`, `--force`, `--skeleton` (in an empty repository, creates a minimal project with one test so the first push already has green CI; never overwrites, not even with `--force`). In every language, `make ci` **fails when line coverage is below `COVERAGE_MIN`** (80 by default, set in the `Makefile`): c8 for Node, JaCoCo for Java, Maven or Gradle (no `pom.xml` or `build.gradle` change), `pytest-cov` for Python (in the `dev` extra), `go test -coverprofile` for Go `cargo llvm-cov` for Rust and coverlet (`coverlet.collector`, in the default `dotnet new` test templates) for C#/.NET. Every language template is tested in the kit's CI: the script adopts it into a minimal project, runs the generated `make ci` and checks that an untested file makes it fail on coverage.
 
 ## FAQ
 

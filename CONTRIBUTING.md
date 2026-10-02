@@ -4,6 +4,12 @@
 
 Obrigado pelo interesse! O sdd-kit é desenvolvido com o próprio processo que ele distribui: **nenhuma mudança entra sem uma spec com critérios de aceite, e todo critério de aceite tem teste**.
 
+## Primeira contribuição
+
+- As issues marcadas [`good first issue`](https://github.com/fabiodrneles/sdd-kit/labels/good%20first%20issue) são pequenas e trazem o passo a passo: os arquivos, o teste que precisa passar e como validar com `make ci`.
+- Dúvidas e ideias vão para as [Discussions](https://github.com/fabiodrneles/sdd-kit/discussions); bugs e pedidos concretos, para as [issues](https://github.com/fabiodrneles/sdd-kit/issues/new/choose).
+- Comente na issue antes de começar, para ninguém trabalhar em dobro.
+
 ## Como propor uma mudança
 
 1. **Abra uma issue** (modelos: tarefa, bug ou nova linguagem). Diga o problema, para quem e como verificar.
@@ -36,4 +42,4 @@ Bugs: issue com o modelo **Bug**. Vulnerabilidades: veja [SECURITY.md](SECURITY.
 
 ## English summary
 
-sdd-kit is built with the process it ships: open an issue, change or add a spec with acceptance criteria, cite each `AC-n` in a test as `NNN AC-n`, branch `<type>/<issue>-<desc>`, Conventional Commits in English, one PR per issue starting with `Closes #N`, and run `make ci` before every push. Specs, issues and PRs are written in Portuguese, but English issues are welcome. To add a template language, follow the checklist above (template folder, adoption scripts, fixture project and CI matrix).
+sdd-kit is built with the process it ships: open an issue, change or add a spec with acceptance criteria, cite each `AC-n` in a test as `NNN AC-n`, branch `<type>/<issue>-<desc>`, Conventional Commits in English, one PR per issue starting with `Closes #N`, and run `make ci` before every push. Specs, issues and PRs are written in Portuguese, but English issues are welcome. Good first issues are labeled [`good first issue`](https://github.com/fabiodrneles/sdd-kit/labels/good%20first%20issue); questions go to [Discussions](https://github.com/fabiodrneles/sdd-kit/discussions). To add a template language, follow the checklist above (template folder, adoption scripts, fixture project and CI matrix).

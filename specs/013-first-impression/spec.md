@@ -1,7 +1,7 @@
 # 013 — Primeira impressão
 
 - **Prioridade:** P1
-- **Status:** Approved — proposta do agente, delegada pelo dono em 2026-10-02
+- **Status:** Done — entregue na `v1.3.0`
 - **Código afetado:** `README.md`, `README.en.md`, `docs/`, `.github/ISSUE_TEMPLATE/config.yml`, `.github/workflows/ci.yml`, `tests/`
 - **Resolve:** atrito de quem chega pela divulgação (LinkedIn, 2026-10-02): o comando de adoção sem explicação, nenhuma demonstração visual, nenhum caminho para perguntas e contribuições
 
@@ -23,7 +23,7 @@ Com a `v1.2.0` divulgada, a maior parte dos visitantes decide em segundos se tes
 
 ## Mudanças
 
-### Não lançado
+### v1.3.0
 
 - ADDED FR-1 — "Começar num repositório novo" explica pré-requisitos, o que a adoção copia, `--dry-run` e `--skeleton`; os comandos do guia rodam no CI (`tests/readme.sh`) (T35, #108).
 - ADDED FR-2 — demonstração animada no topo do README, gerada por `docs/demo/demo.sh` a partir da saída real da adoção e do `make ci` (T36, #109).

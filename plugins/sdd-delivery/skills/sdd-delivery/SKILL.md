@@ -152,6 +152,19 @@ O contexto pode acabar a qualquer momento: compactação, sessão nova ou limite
   - subagentes só para buscas amplas;
   - chat curto, detalhes nos PRs.
 
+## Scripts que poupam passos (spec 009)
+
+Quando o repositório tem os scripts do template, chame-os em vez de fazer os passos à mão. A saída é curta: uma linha por resultado.
+
+| Passo | Script |
+|---|---|
+| Esperar o CI e ler só as falhas | `sh scripts/sdd-ci.sh [SHA\|#PR\|branch]` |
+| Registrar as decisões do dono | `sh scripts/sdd-mark.sh decide D1=a D2=b` |
+| Arquivos de status do fechamento | `sh scripts/sdd-mark.sh close vX.Y.Z` |
+| Comentário "Estado da fase" | `sh scripts/sdd-phase-status.sh [--post]` |
+| Épico e sub-issues de uma fase | `sh scripts/sdd-epic.sh [--dry-run] N` |
+| Release Go antes e depois da tag | `sh scripts/sdd-release-check.sh pre\|post vX.Y.Z` |
+
 ## Operações de GitHub usadas
 
 Funciona com o GitHub MCP ou com `gh`:

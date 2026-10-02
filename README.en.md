@@ -47,16 +47,35 @@ flowchart LR
 
 ## Starting a new repository
 
+In about 5 minutes the kit is installed and the agent is working on your project.
+
+**You need:** git, a GitHub repository and [Claude Code](https://claude.com/claude-code) installed. For CI to pass on your machine, also the project's language.
+
 1. Create the repository on GitHub and clone it.
-2. Adopt the template with the project's language:
+2. In the project folder, install the kit, replacing `go` with the project's language (`node`, `java`, `python`, `rust` or `dotnet`):
 
    ```text
    curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.2.0/scripts/adopt.sh | sh -s -- --lang go .
    ```
 
-3. Commit what was created (`CLAUDE.md`, `.github/`, `specs/`, `Makefile`, CI) and open Claude Code in the repository.
+   The command copies into the repository:
+
+   - the agent instructions (`CLAUDE.md` and `AGENTS.md`);
+   - the `specs/` folder, where planning and decisions live, and `CHANGELOG.md`;
+   - ready-made CI for the language (lint, tests with minimum coverage and build) and the `Makefile` with `make ci`;
+   - issue and PR templates and the hook that prepares Claude Code sessions on the web.
+
+   **It never overwrites a file you already have** and lists at the end what it created and what it skipped. To only see what it would do, without writing anything, add `--dry-run`:
+
+   ```text
+   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.2.0/scripts/adopt.sh | sh -s -- --lang go --dry-run .
+   ```
+
+   In an empty repository, `--skeleton` also creates a minimal project with one test, so the first CI run is already green.
+
+3. Commit what was created and open Claude Code in the project folder.
 4. Ask: *"use the sdd-delivery skill: create the constitution, specs and ROADMAP for my idea: …"*. The agent proposes the open decisions and **stops** until you answer.
-5. After answering: *"create the Phase 1 epic with its tickets and go ticket by ticket"*.
+5. After answering: *"create the Phase 1 epic with its tickets and go ticket by ticket"*. Every task becomes a small PR with green CI for you to review.
 
 ## Adopting in an existing repository
 

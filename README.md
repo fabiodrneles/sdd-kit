@@ -62,16 +62,35 @@ O **estado do trabalho vive no GitHub**, não na conversa: o épico guarda um co
 
 ## Começar num repositório novo
 
+Em uns 5 minutos o kit está instalado e o agente trabalhando no seu projeto.
+
+**Você precisa de:** git, um repositório no GitHub e o [Claude Code](https://claude.com/claude-code) instalado. Para o CI passar na sua máquina, também a linguagem do projeto.
+
 1. Crie o repositório no GitHub e clone.
-2. Adote o template com a linguagem do projeto:
+2. Na pasta do projeto, instale o kit, trocando `go` pela linguagem do projeto (`node`, `java`, `python`, `rust` ou `dotnet`):
 
    ```text
    curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.2.0/scripts/adopt.sh | sh -s -- --lang go .
    ```
 
-3. Faça o commit do que foi criado (`CLAUDE.md`, `.github/`, `specs/`, `Makefile`, CI) e abra o Claude Code no repositório. O `.claude/settings.json` gerado já carrega o hook de sessão.
+   O comando copia para o repositório:
+
+   - as instruções para o agente (`CLAUDE.md` e `AGENTS.md`);
+   - a pasta `specs/`, onde ficam o planejamento e as decisões, e o `CHANGELOG.md`;
+   - o CI pronto para a linguagem (lint, testes com cobertura mínima e build) e o `Makefile` com o `make ci`;
+   - os modelos de issue e de PR e o hook que prepara as sessões do Claude Code na web.
+
+   **Ele nunca sobrescreve um arquivo que você já tem** e mostra no final o que criou e o que deixou de lado. Para só ver o que ele faria, sem gravar nada, acrescente `--dry-run`:
+
+   ```text
+   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.2.0/scripts/adopt.sh | sh -s -- --lang go --dry-run .
+   ```
+
+   Num repositório vazio, `--skeleton` cria também um projeto mínimo com um teste, para o primeiro CI já nascer verde.
+
+3. Faça o commit do que foi criado e abra o Claude Code na pasta do projeto.
 4. Peça: *"use a skill sdd-delivery: crie a constituição, as specs e o ROADMAP para a minha ideia: …"*. O agente propõe as decisões em aberto e **para** até você responder.
-5. Depois das respostas: *"crie o épico da Fase 1 com os tickets e siga ticket a ticket"*.
+5. Depois das respostas: *"crie o épico da Fase 1 com os tickets e siga ticket a ticket"*. Cada tarefa vira um PR pequeno, com CI verde, para você revisar.
 
 ## Adotar num repositório existente
 

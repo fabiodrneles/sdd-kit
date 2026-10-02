@@ -11,7 +11,7 @@ Nos casos de uso (#51), o agente repetiu à mão passos mecânicos: esperar o CI
 
 ## Requisitos funcionais
 
-- **FR-1** `sdd-ci.sh [REF]` MUST esperar os checks de um commit, PR (`#N`) ou branch, imprimir uma linha por check e, só para os que falharam, o passo e o fim do log. Códigos: 0 verde, 1 falhou, 2 tempo esgotado, 3 uso.
+- **FR-1** `sdd-ci.sh [REF]` MUST esperar os checks e os status de commit (ex.: Vercel) de um commit, PR (`#N`) ou branch, imprimir uma linha por check e, só para os que falharam, o passo e o fim do log (ou o link do status). Códigos: 0 verde, 1 falhou, 2 tempo esgotado, 3 uso.
 - **FR-2** `sdd-mark.sh decide Dn=x ...` MUST marcar as decisões como respondidas em `specs/ANALYSIS.md`. Quando nenhuma ficar em aberto, MUST mover as specs `Draft` para `Approved` (cabeçalho e índice) e marcar a Fase 0 do ROADMAP.
 - **FR-3** `sdd-mark.sh close vX.Y.Z` MUST marcar as tarefas da fase, mover as specs citadas para `Done` (ou `In Progress`, se tiverem tarefa aberta em outra fase) e abrir `## [X.Y.Z] - data` no CHANGELOG.
 - **FR-4** `sdd-mark.sh` MUST preparar todas as edições antes de gravar e MUST NOT gravar nada se uma edição esvaziar um arquivo ou mudar o número de linhas além do esperado.
@@ -28,3 +28,8 @@ Nos casos de uso (#51), o agente repetiu à mão passos mecânicos: esperar o CI
 - **AC-4** Dado o ROADMAP, quando `sdd-epic.sh --dry-run 1` roda, então imprime o épico e uma linha por tarefa, sem chamar o GitHub.
 - **AC-5** Dado uso inválido, quando `sdd-ci.sh`, `sdd-phase-status.sh` ou `sdd-release-check.sh` rodam, então saem com o código de uso, sem chamar o GitHub.
 - **AC-6** Dados os scripts, quando o CI roda, então passam no `shellcheck -s sh` e são distribuídos pela adoção (template).
+- **AC-7** Dado um commit com os checks verdes e um status de commit vermelho, quando `sdd-ci.sh` roda, então lista `FALHA <contexto> (status)` com o link e sai com 1.
+
+## Mudanças
+
+- MODIFIED FR-1: status de commit também contam; ADDED AC-7 (#66).

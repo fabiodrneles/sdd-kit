@@ -1,7 +1,7 @@
 # 009 — Scripts para os passos mecânicos
 
 - **Prioridade:** P1
-- **Status:** Approved — pedido do dono em 2026-10-02 (#55)
+- **Status:** Done — entregue na `v1.0.0`
 - **Código afetado:** `template/common/scripts/`, `template/go/scripts/`, `plugins/sdd-delivery/`
 - **Resolve:** #55; achados 4 e 10 do #51
 

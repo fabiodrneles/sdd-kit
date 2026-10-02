@@ -108,4 +108,14 @@ printf '%s\n' "$out" | grep -q 'https://vercel.example/dpl' || fail "sdd-ci não
 echo '{"statuses":[{"context":"Vercel","state":"success","target_url":""}]}' > "$tmp/gh/status.json"
 out="$(PATH="$tmp/bin:$PATH" FAKE_GH="$tmp/gh" sh "$s/sdd-ci.sh" --repo o/r --no-wait 0123456)" || fail "sdd-ci com tudo verde falhou: $out"
 printf '%s\n' "$out" | grep -qx 'ok Vercel (status)' || fail "sdd-ci não listou o status verde: $out"
+
+# 009 AC-6: os scripts passam no shellcheck -s sh e a adoção os distribui.
+if command -v shellcheck >/dev/null; then
+  shellcheck -s sh "$s"/sdd-*.sh || fail "shellcheck -s sh reprovou os scripts"
+fi
+mkdir -p "$tmp/adopted"
+out="$(sh "$root/scripts/adopt.sh" --lang go --project p --owner o --repo r --dry-run "$tmp/adopted" 2>&1)" || fail "adopt --dry-run falhou: $out"
+for f in "$s"/sdd-*.sh; do
+  printf '%s\n' "$out" | grep -qx "criado: scripts/$(basename "$f")" || fail "a adoção não distribui $(basename "$f")"
+done
 echo "tests/scripts.sh ok"

@@ -1,7 +1,7 @@
 # 007 — Versão 1.0: profissional e pronto para a comunidade
 
 - **Prioridade:** P1
-- **Status:** Approved — decisões D10–D12 respondidas pelo dono em 2026-10-02
+- **Status:** Done — entregue na `v1.0.0`
 - **Código afetado:** `Makefile`, `template/`, `plugins/sdd-delivery/`, `docs/`, arquivos de comunidade
 - **Resolve:** #39, #40
 
@@ -43,7 +43,7 @@ Respondidas pelo dono em 2026-10-02: D10 (a) Rust e C#/.NET; D11 (b) `sdd-kit-de
 
 ## Mudanças
 
-### Não lançado
+### v1.0.0
 
 - MODIFIED FR-5 — skill revisada com os achados do uso real (#51): numeração pela última tag, CI verde primeiro em repositório existente, PRs do Dependabot, lições de toolchain e lockfile; o que exige código ficou no #80.
 - ADDED AC-6 — regras de economia de tokens na skill, no `CLAUDE.md` do template e no do kit (#78).

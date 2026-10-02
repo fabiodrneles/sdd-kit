@@ -1,7 +1,7 @@
 # 008 — Plugin sdd-release
 
 - **Prioridade:** P1
-- **Status:** Approved — decisão do dono em 2026-10-02 (o go-release-manager vira um plugin do kit)
+- **Status:** Done — entregue na `v1.0.0`
 - **Código afetado:** `plugins/sdd-release/`, `.claude-plugin/marketplace.json`, `scripts/check-plugin.sh`
 - **Resolve:** #53
 

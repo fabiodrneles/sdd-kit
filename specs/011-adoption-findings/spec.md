@@ -12,7 +12,7 @@ O uso do kit em outros repositórios (#51) gerou achados de processo, que entrar
 ## Requisitos funcionais
 
 - **FR-1** A adoção Node MUST avisar quando o lockfile está fora de sincronia com o `package.json` (o `npm ci` do CI falharia) e quando o projeto não tem testes.
-- **FR-2** O hook de sessão do template Go MUST instalar por completo a versão do Go do `go.mod`, com o `covdata`, em vez de depender da toolchain baixada pelo `GOTOOLCHAIN`.
+- **FR-2** O hook de sessão do template Go MUST deixar a toolchain da versão do `go.mod` completa para a cobertura: a que o `GOTOOLCHAIN` baixa não traz o `covdata`, e o hook o compila nela.
 - **FR-3** O template comum MUST trazer `doc-commands.sh` (os blocos `bash` do README rodam no CI), um `LICENSE` quando o repositório não tem um, e o alvo `make linkcheck`.
 - **FR-4** A adoção (`adopt.sh` e `adopt.ps1`) MUST detectar a última tag `vX.Y.Z` do repositório, e o ROADMAP do template MUST numerar as fases a partir dela.
 - **FR-5** A adoção MUST criar o `CHANGELOG.md` com a seção `[Unreleased]` quando ele não existe, sem mexer num existente.
@@ -32,3 +32,4 @@ O uso do kit em outros repositórios (#51) gerou achados de processo, que entrar
 ### Não lançado
 
 - ADDED FR-1 — a adoção Node avisa lockfile ausente ou fora de sincronia e projeto sem script de teste (T27, #86).
+- ADDED FR-2 — o hook de sessão Go compila o `covdata` que falta na toolchain baixada pelo `GOTOOLCHAIN` (o go.dev, de onde viria a distribuição completa, costuma ser bloqueado na sessão na web) (T28, #87).

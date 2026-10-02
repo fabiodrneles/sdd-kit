@@ -12,4 +12,5 @@ exclude = [
 ]
 
 max_retries = 3
-accept = ["200..=299", "429"]
+# 429 e 503 são recusas temporárias (limite de acesso, serviço fora); um 404 continua reprovando.
+accept = ["200..=299", "429", "503"]

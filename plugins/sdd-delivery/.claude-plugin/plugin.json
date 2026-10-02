@@ -1,6 +1,6 @@
 {
   "name": "sdd-delivery",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Processo de entrega Spec Driven Development (SDD): o dono decide, o agente executa",
   "author": {
     "name": "fabiodrneles",

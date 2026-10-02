@@ -19,6 +19,9 @@ jobs:
         run: npx --yes markdownlint-cli2@0.23.3
       - name: Rastreabilidade (sdd-check)
         run: sh scripts/sdd-check.sh --strict
+      # Os blocos ```bash do README marcados com <!-- doc-commands --> rodam aqui.
+      - name: Comandos da documentação
+        run: sh scripts/doc-commands.sh
       - name: Links
         uses: lycheeverse/lychee-action@v2
         with:

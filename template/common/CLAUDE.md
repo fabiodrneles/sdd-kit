@@ -23,6 +23,7 @@ O estado do trabalho vive no GitHub, e não na conversa. Abra o ticket e o PR as
 ```text
 make ci     # a mesma verificação do CI (rode antes de todo push)
 make docs   # markdownlint (os links são verificados no CI)
+make linkcheck  # links quebrados nos .md (precisa do lychee)
 make sdd-check  # cada AC de spec In Progress/Done citado num teste ("NNN AC-n")
 ```
 
@@ -36,6 +37,7 @@ Numa sessão na web, o hook `.claude/hooks/session-start.sh` instala as dependê
 - **PR:** começa com `Closes #N · Épico #M · Spec NNN` e segue o template.
 - **Arquivos de status** (status das specs, checkboxes do ROADMAP, CHANGELOG) só mudam no PR de fechamento da fase.
 - **Merge, tag e release** são do dono, salvo delegação explícita para uma rodada.
+- **Comandos do README:** um bloco ```` ```bash ```` com `<!-- doc-commands -->` na linha anterior roda no CI (`sh scripts/doc-commands.sh`); marque os exemplos que devem continuar funcionando.
 
 ## Armadilhas já conhecidas
 

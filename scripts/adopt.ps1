@@ -154,6 +154,11 @@ try {
   $prefix = if ($dry) { '(dry-run) ' } else { '' }
   Write-Output "${prefix}sdd-kit $lang em ${dest}: $created criados, $skipped ignorados, $overwritten sobrescritos"
 
+  # Spec 011 FR-3: a licença é decisão do dono; a adoção só avisa que falta.
+  if (-not (Get-ChildItem -LiteralPath $dest -File | Where-Object { $_.Name -cmatch '^(LICENSE|LICENCE|COPYING)' })) {
+    Write-Output 'aviso: sem LICENSE: escolha uma licença (https://choosealicense.com) e crie o arquivo'
+  }
+
   # Spec 011 FR-1: avisa o que faria o CI Node nascer vermelho, sem falhar.
   $pkgPath = Join-Path $dest 'package.json'
   if ($lang -eq 'node' -and (Test-Path -LiteralPath $pkgPath)) {

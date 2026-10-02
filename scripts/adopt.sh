@@ -144,6 +144,13 @@ prefix=""
 [ "$dry" -eq 0 ] || prefix="(dry-run) "
 echo "${prefix}sdd-kit $lang em $dest: $created criados, $skipped ignorados, $overwritten sobrescritos"
 
+# Spec 011 FR-3: a licença é decisão do dono; a adoção só avisa que falta.
+lic=""
+for f in "$dest"/LICENSE* "$dest"/LICENCE* "$dest"/COPYING*; do
+  [ ! -f "$f" ] || lic="$f"
+done
+[ -n "$lic" ] || echo "aviso: sem LICENSE: escolha uma licença (https://choosealicense.com) e crie o arquivo"
+
 # Spec 011 FR-1: avisa o que faria o CI Node nascer vermelho, sem falhar.
 if [ "$lang" = node ] && [ -f "$dest/package.json" ]; then
   if ! command -v node >/dev/null 2>&1; then

@@ -85,6 +85,17 @@ sha256() {
   if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1"; else shasum -a 256 "$1"; fi | cut -d' ' -f1
 }
 
+# Spec 011 FR-4: com uma tag vX.Y.Z no repositório, as fases do ROADMAP criado
+# começam na versão seguinte (Fase 1 e 2: próximas minors; Fase 3: v1.0.0 se
+# ainda for 0.x, senão a terceira minor). Sem tag, ficam v0.1.0, v0.2.0, v1.0.0.
+tag="$(git -C "$dest" tag --list 'v[0-9]*' --sort=-v:refname 2>/dev/null | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)"
+roadmap_sed=""
+if [ -n "$tag" ]; then
+  major="$(echo "${tag#v}" | cut -d. -f1)" minor="$(echo "${tag#v}" | cut -d. -f2)"
+  f3="v1.0.0"; [ "$major" -eq 0 ] || f3="v$major.$((minor + 3)).0"
+  roadmap_sed="/^## Fase 1 /s/\`v[0-9.]*\`/\`v$major.$((minor + 1)).0\`/;/^## Fase 2 /s/\`v[0-9.]*\`/\`v$major.$((minor + 2)).0\`/;/^## Fase 3 /s/\`v[0-9.]*\`/\`$f3\`/"
+fi
+
 created=0 skipped=0 overwritten=0
 : > "$tmp/state"
 parts="common $lang"
@@ -112,6 +123,11 @@ for part in $parts; do
     sed -e "s/{{PROJECT}}/$s_project/g" -e "s/{{OWNER}}/$s_owner/g" -e "s/{{REPO}}/$s_repo/g" "$src" > "$dst"
     if [ -x "$src" ]; then chmod +x "$dst"; fi
     [ "$part" != "${part#skeleton/}" ] || echo "$rel $(sha256 "$dst")" >> "$tmp/state"
+    # O estado guarda o hash do ROADMAP do kit, para a sincronização (que gera o
+    # template sem tags) não tomar a numeração ajustada por mudança do kit.
+    if [ "$rel" = specs/ROADMAP.md ] && [ -n "$roadmap_sed" ]; then
+      sed "$roadmap_sed" "$dst" > "$tmp/roadmap" && cat "$tmp/roadmap" > "$dst"
+    fi
   done < "$tmp/files"
 done
 

@@ -34,3 +34,4 @@ O uso do kit em outros repositórios (#51) gerou achados de processo, que entrar
 - ADDED FR-1 — a adoção Node avisa lockfile ausente ou fora de sincronia e projeto sem script de teste (T27, #86).
 - ADDED FR-2 — o hook de sessão Go compila o `covdata` que falta na toolchain baixada pelo `GOTOOLCHAIN` (o go.dev, de onde viria a distribuição completa, costuma ser bloqueado na sessão na web) (T28, #87).
 - ADDED FR-3 — `scripts/doc-commands.sh` no CI de docs, `make linkcheck` em toda linguagem e aviso de `LICENSE` ausente na adoção (T29, #88).
+- ADDED FR-4 — a adoção numera as fases do ROADMAP criado a partir da última tag `vX.Y.Z` (T30, #89).

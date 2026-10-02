@@ -151,9 +151,8 @@ fi
 # 002 FR-6: a versão do plugin.json é a que a adoção baixa e a que o README manda usar.
 v="v$(jq -r .version "$root/plugins/sdd-delivery/.claude-plugin/plugin.json")"
 for f in scripts/adopt.sh scripts/adopt.ps1 README.md README.en.md; do
-  grep -qF "$v" "$root/$f" || { echo "FALHOU: $f não usa a versão $v do plugin.json" >&2; exit 1; }
-  if grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' "$root/$f" | grep -qvxF "$v"; then
-    case "$f" in README*) ;; *) echo "FALHOU: $f cita outra versão além de $v" >&2; exit 1 ;; esac
-  fi
+  # A linha do KIT_REF nos scripts; a do curl nos READMEs.
+  line="$(grep -E 'SDD_KIT_REF|raw\.githubusercontent\.com/fabiodrneles/sdd-kit/' "$root/$f" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -u)"
+  [ "$line" = "$v" ] || { echo "FALHOU: $f usa '$line', não a versão $v do plugin.json" >&2; exit 1; }
 done
 echo "tests/plugin.sh (versão) ok"

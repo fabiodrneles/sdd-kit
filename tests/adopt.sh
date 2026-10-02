@@ -92,6 +92,27 @@ echo 'meu código' > "$sk/hello.go"
 sh "$root/scripts/adopt.sh" --lang go --project demo --owner acme --repo demo --skeleton --force "$sk" > /dev/null
 [ "$(cat "$sk/hello.go")" = 'meu código' ] || fail "--skeleton --force sobrescreveu código do projeto"
 
+# 011 AC-4: com a tag v1.4.0, o ROADMAP criado começa na v1.5.0; sem tag, na
+# v0.1.0. O estado guarda o hash do ROADMAP do kit (a sincronização não o toma
+# por alterado pelo kit).
+tg="$tmp/tagged"; mkdir "$tg"
+git -C "$tg" init -q
+git -C "$tg" -c user.email=t@t -c user.name=t commit -q --allow-empty -m init
+git -C "$tg" tag v1.4.0; git -C "$tg" tag v1.10.0-rc1
+cp -R "$tg" "$tmp/tagged-ps"
+# shellcheck disable=SC2086
+sh "$adopt" --lang go $opts "$tg" > /dev/null
+[ "$(grep -c '^## Fase [123] .*.v1\.[567]\.0.$' "$tg/specs/ROADMAP.md")" -eq 3 ] ||
+  fail "ROADMAP não começa na v1.5.0 depois da tag v1.4.0: $(grep '^## Fase' "$tg/specs/ROADMAP.md")"
+grep -q '^## Fase 1 .*.v1\.5\.0.$' "$tg/specs/ROADMAP.md" || fail "Fase 1 não é a v1.5.0"
+[ "$(jq -r '.files["specs/ROADMAP.md"]' "$tg/.sdd-kit.json")" = "$( (sha256sum "$root/template/common/specs/ROADMAP.md" 2>/dev/null || shasum -a 256 "$root/template/common/specs/ROADMAP.md") | cut -d' ' -f1)" ] ||
+  fail "o estado guardou o hash do ROADMAP ajustado, não o do kit"
+grep -q '^## Fase 1 .*.v0\.1\.0.$' "$tmp/go-empty/specs/ROADMAP.md" || fail "sem tag, a Fase 1 não é a v0.1.0"
+if command -v pwsh >/dev/null; then
+  pwsh -NoProfile -File "$root/scripts/adopt.ps1" --lang go --project Demo --owner acme --repo demo "$tmp/tagged-ps" > /dev/null
+  diff -r -x .git "$tg" "$tmp/tagged-ps" >&2 || fail "adopt.ps1 numerou o ROADMAP diferente"
+fi
+
 # 011 AC-3: sem LICENSE, a adoção avisa e não cria uma (a licença é do dono);
 # com LICENSE, não avisa nem mexe nela.
 nolic="$tmp/unlicensed"; mkdir "$nolic"

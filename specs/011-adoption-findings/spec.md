@@ -16,7 +16,7 @@ O uso do kit em outros repositórios (#51) gerou achados de processo, que entrar
 - **FR-3** O template comum MUST trazer `doc-commands.sh` (os blocos `bash` do README marcados com `<!-- doc-commands -->` rodam no CI de docs) e o alvo `make linkcheck`; a adoção MUST avisar quando o repositório não tem `LICENSE`, sem criar um (a licença é decisão do dono).
 - **FR-4** A adoção (`adopt.sh` e `adopt.ps1`) MUST detectar a última tag `vX.Y.Z` do repositório, e o ROADMAP do template MUST numerar as fases a partir dela.
 - **FR-5** A adoção MUST criar o `CHANGELOG.md` com a seção `[Unreleased]` quando ele não existe, sem mexer num existente.
-- **FR-6** O template Node MUST trazer uma checagem de acessibilidade com axe, que o projeto web liga no `make ci`.
+- **FR-6** O template Node MUST trazer uma checagem de acessibilidade com axe, que o projeto web liga no `make ci` com `A11Y_PAGES` (páginas HTML, verificadas num DOM do jsdom, sem medir contraste de cor).
 
 ## Critérios de aceite
 
@@ -36,3 +36,4 @@ O uso do kit em outros repositórios (#51) gerou achados de processo, que entrar
 - ADDED FR-3 — `scripts/doc-commands.sh` no CI de docs, `make linkcheck` em toda linguagem e aviso de `LICENSE` ausente na adoção (T29, #88).
 - ADDED FR-4 — a adoção numera as fases do ROADMAP criado a partir da última tag `vX.Y.Z` (T30, #89).
 - ADDED FR-5 — a adoção cria o `CHANGELOG.md` com `[Unreleased]`, que o `sdd-mark close` exige (T31, #90).
+- ADDED FR-6 — `make ci` do template Node roda o axe nas páginas de `A11Y_PAGES` (`scripts/a11y.mjs`, axe-core com jsdom) (T32, #91).

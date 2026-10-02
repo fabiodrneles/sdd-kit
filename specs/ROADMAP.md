@@ -29,14 +29,14 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 
 ## Fase 3 — Profissional → `v1.0.0` · épico #39
 
-- [ ] **T9** Linguagens adicionais (um ticket por linguagem) — 003, 007 FR-4, AC-4 *(depende de D10)*
-- [ ] **T10** Revisão da skill com o uso em pelo menos dois repositórios além do cv-craft — 007 FR-5 *(depende de D11)*
-- [ ] **T16** `sdd-check --strict` no CI do kit e do template — 007 FR-1, AC-1 — #41
-- [ ] **T17** Arquivos de comunidade — 007 FR-2, AC-2 — #42
-- [ ] **T18** Estudo de caso do cv-craft — 007 FR-3, AC-3 — #43
-- [ ] **T19** Skill para quem não lê português — 007 FR-6 *(depende de D12)*
-- [ ] **T20** Plugin `sdd-release`: próxima versão pelo go-release-manager — 008 FR-1 a FR-5, AC-1 a AC-3 — #53
-- [ ] **T21** Scripts para os passos mecânicos (`sdd-ci`, `sdd-mark`, `sdd-phase-status`, `sdd-epic`, `sdd-release-check`) — 009 FR-1 a FR-8, AC-1 a AC-6 — #55
+- [x] **T9** Linguagens adicionais (um ticket por linguagem) — 003, 007 FR-4, AC-4 *(depende de D10)*
+- [x] **T10** Revisão da skill com o uso em pelo menos dois repositórios além do cv-craft — 007 FR-5 *(depende de D11)*
+- [x] **T16** `sdd-check --strict` no CI do kit e do template — 007 FR-1, AC-1 — #41
+- [x] **T17** Arquivos de comunidade — 007 FR-2, AC-2 — #42
+- [x] **T18** Estudo de caso do cv-craft — 007 FR-3, AC-3 — #43
+- [x] **T19** Skill para quem não lê português — 007 FR-6 *(depende de D12)*
+- [x] **T20** Plugin `sdd-release`: próxima versão pelo go-release-manager — 008 FR-1 a FR-5, AC-1 a AC-3 — #53
+- [x] **T21** Scripts para os passos mecânicos (`sdd-ci`, `sdd-mark`, `sdd-phase-status`, `sdd-epic`, `sdd-release-check`) — 009 FR-1 a FR-8, AC-1 a AC-6 — #55
 
 ## Fase 4 — Esteira de qualidade → `v0.2.0` · épico #59 *(antes da v1.0.0: a Fase 3 continua aberta)*
 

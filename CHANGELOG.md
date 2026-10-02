@@ -4,6 +4,25 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-02
+
+Fim da Fase 3 do [ROADMAP](specs/ROADMAP.md) (profissional e pronto para a comunidade). O `sdd-check --strict`, os arquivos de comunidade, o estudo de caso, o plugin `sdd-release` e os scripts dos passos mecânicos já saíram na 0.2.0.
+
+### Adicionado
+
+- **Template Rust**: `make ci` com `cargo fmt`, clippy e cobertura do `cargo llvm-cov`, CI, hook, dependabot, esqueleto e e2e (spec 007 FR-4, #48).
+- **Template C#/.NET**: `make ci` com `dotnet format`, build sem avisos e cobertura do coverlet, CI, hook, dependabot, esqueleto e e2e (spec 007 FR-4, #49).
+- **Regras de economia de uso** na skill, no `CLAUDE.md` do template e no do kit (spec 007 AC-6, #78).
+
+### Mudado
+
+- A skill e os comandos dos plugins estão em inglês; specs, issues e PRs continuam escritos no idioma do dono (spec 007 AC-5, D12, #50).
+- Skill revisada com o uso em outros repositórios: numeração pela última tag, CI verde primeiro em repositório existente, PRs do Dependabot, lições de toolchain e lockfile (spec 007 FR-5, #51).
+
+### Corrigido
+
+- O esqueleto e a fixture .NET saem sem BOM UTF-8 (#49).
+
 ## [0.2.0] - 2026-10-02
 
 Fase 4 do [ROADMAP](specs/ROADMAP.md) (esteira de qualidade) e as entregas da Fase 3 já mergeadas; a v1.0.0 fica para o fim da Fase 3.
@@ -42,6 +61,7 @@ Primeira versão pública: Fases 1 e 2 do [ROADMAP](specs/ROADMAP.md).
 - Critérios de aceite em EARS e seção "Mudanças" por spec, que alimenta o CHANGELOG (spec 006 FR-1, FR-4).
 - CI do kit em Linux, macOS e Windows, com e2e dos templates nas quatro linguagens.
 
-[Unreleased]: https://github.com/fabiodrneles/sdd-kit/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/fabiodrneles/sdd-kit/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/fabiodrneles/sdd-kit/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/fabiodrneles/sdd-kit/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/fabiodrneles/sdd-kit/releases/tag/v0.1.0

@@ -31,4 +31,19 @@ if make ci > coverage-gate.log 2>&1; then
   exit 1
 fi
 grep -qiE 'cobertura|coverage' coverage-gate.log || { echo "FALHOU: make ci não mostrou a cobertura" >&2; tail -20 coverage-gate.log >&2; exit 1; }
+
+# Spec 010 AC-2: num diretório vazio, --skeleton cria um projeto cujo make ci passa
+# sem edição; rodar de novo não sobrescreve nada (nem com --force).
+if [ "$lang" = "$adopt_lang" ]; then
+  sk="$work/$lang-skeleton"
+  rm -rf "$sk"
+  mkdir -p "$sk"
+  sh "$root/scripts/adopt.sh" --lang "$lang" --project demo --owner acme --repo demo --skeleton "$sk" > /dev/null
+  (cd "$sk" && { if grep -q '^deps:' Makefile; then make deps; fi; } && make ci)
+  again="$(sh "$root/scripts/adopt.sh" --lang "$lang" --project demo --owner acme --repo demo --skeleton --force "$sk")"
+  for f in $(cd "$root/template/skeleton/$lang" && find . -type f | sed 's#^\./##'); do
+    printf '%s\n' "$again" | grep -qx "ignorado (já existe): $f" || { echo "FALHOU: --skeleton sobrescreveu $f" >&2; exit 1; }
+  done
+  echo "e2e-template.sh $lang --skeleton ok"
+fi
 echo "e2e-template.sh $lang ok"

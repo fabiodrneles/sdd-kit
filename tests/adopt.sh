@@ -81,12 +81,29 @@ sh "$adopt" --lang node "$d" > /dev/null
 grep -q '@octo' "$d/.github/CODEOWNERS" || fail "owner não deduzido do remote ssh"
 grep -q 'octo/widget' "$d/.github/ISSUE_TEMPLATE/config.yml" || fail "repo não deduzido do remote ssh"
 
+# 010 FR-2, AC-2: --skeleton cria o projeto mínimo fora do estado gerenciado e
+# nunca sobrescreve código do projeto, nem com --force.
+sk="$tmp/skel"; mkdir "$sk"
+sh "$root/scripts/adopt.sh" --lang go --project demo --owner acme --repo demo --skeleton "$sk" > /dev/null
+[ -f "$sk/hello_test.go" ] || fail "--skeleton não criou o teste"
+grep -q 'github.com/acme/demo' "$sk/go.mod" || fail "--skeleton não aplicou dono e repositório"
+if grep -q 'hello.go' "$sk/.sdd-kit.json"; then fail "--skeleton registrou o esqueleto no estado"; fi
+echo 'meu código' > "$sk/hello.go"
+sh "$root/scripts/adopt.sh" --lang go --project demo --owner acme --repo demo --skeleton --force "$sk" > /dev/null
+[ "$(cat "$sk/hello.go")" = 'meu código' ] || fail "--skeleton --force sobrescreveu código do projeto"
+
 # 004 AC-6: a versão PowerShell gera a mesma árvore.
 if command -v pwsh >/dev/null; then
   for lang in go node java python; do
     a="$tmp/$lang-empty" b="$tmp/$lang-ps"; mkdir "$b"
     pwsh -NoProfile -File "$root/scripts/adopt.ps1" --lang "$lang" --project Demo --owner acme --repo demo "$b" > /dev/null
     [ "$(snapshot "$a")" = "$(snapshot "$b")" ] || { diff -r "$a" "$b" >&2 || true; fail "$lang: adopt.ps1 gerou árvore diferente"; }
+  done
+  for lang in go node java python; do
+    a="$tmp/$lang-skel-sh" b="$tmp/$lang-skel-ps"; mkdir "$a" "$b"
+    sh "$root/scripts/adopt.sh" --lang "$lang" --project demo --owner acme --repo demo --skeleton "$a" > /dev/null
+    pwsh -NoProfile -File "$root/scripts/adopt.ps1" --lang "$lang" --project demo --owner acme --repo demo --skeleton "$b" > /dev/null
+    [ "$(snapshot "$a")" = "$(snapshot "$b")" ] || { diff -r "$a" "$b" >&2 || true; fail "$lang: adopt.ps1 --skeleton gerou árvore diferente"; }
   done
   echo "tests/adopt.sh: adopt.ps1 equivalente"
 else

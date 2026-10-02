@@ -1,7 +1,7 @@
 # 011 — Adoção ajustada pelo uso real
 
 - **Prioridade:** P2
-- **Status:** Approved — escopo do #80, pedido do dono em 2026-10-02
+- **Status:** Done — entregue na `v1.1.0`
 - **Código afetado:** `scripts/adopt.sh`, `scripts/adopt.ps1`, `template/common/`, `template/go/`, `template/node/`
 - **Resolve:** achados 2, 5, 8, 12, 13 e 16 do #51 (#80)
 
@@ -29,11 +29,11 @@ O uso do kit em outros repositórios (#51) gerou achados de processo, que entrar
 
 ## Mudanças
 
-### Não lançado
+### v1.1.0
 
 - ADDED FR-1 — a adoção Node avisa lockfile ausente ou fora de sincronia e projeto sem script de teste (T27, #86).
 - ADDED FR-2 — o hook de sessão Go compila o `covdata` que falta na toolchain baixada pelo `GOTOOLCHAIN` (o go.dev, de onde viria a distribuição completa, costuma ser bloqueado na sessão na web) (T28, #87).
 - ADDED FR-3 — `scripts/doc-commands.sh` no CI de docs, `make linkcheck` em toda linguagem e aviso de `LICENSE` ausente na adoção (T29, #88).
 - ADDED FR-4 — a adoção numera as fases do ROADMAP criado a partir da última tag `vX.Y.Z` (T30, #89).
 - ADDED FR-5 — a adoção cria o `CHANGELOG.md` com `[Unreleased]`, que o `sdd-mark close` exige (T31, #90).
-- ADDED FR-6 — `make ci` do template Node roda o axe nas páginas de `A11Y_PAGES` (`scripts/a11y.mjs`, axe-core com jsdom) (T32, #91).
+- ADDED FR-6 — `make ci` do template Node roda o axe nas páginas de `A11Y_PAGES` (`scripts/a11y`, axe-core com jsdom) (T32, #91).

@@ -38,6 +38,6 @@ Convenções: `MUST`/`SHOULD`/`MAY` seguem a RFC 2119. Prioridades: **P0** (bloq
 | 008 | [Plugin sdd-release](008-sdd-release/spec.md) | P1 | Done |
 | 009 | [Scripts para os passos mecânicos](009-mechanical-scripts/spec.md) | P1 | Done |
 | 010 | [Esteira de qualidade criada pela adoção](010-quality-pipeline/spec.md) | P1 | Done |
-| 011 | [Adoção ajustada pelo uso real](011-adoption-findings/spec.md) | P2 | Approved |
+| 011 | [Adoção ajustada pelo uso real](011-adoption-findings/spec.md) | P2 | Done |
 
 Status possíveis: `Draft` → `Approved` → `In Progress` → `Done`.

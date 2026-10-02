@@ -48,9 +48,9 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 
 ## Fase 5 — Adoção ajustada pelo uso real (P2) → `v1.1.0` · épico #85
 
-- [ ] **T27** Avisos da adoção Node: lockfile fora de sincronia e projeto sem testes — 011 FR-1, AC-1 — #86
-- [ ] **T28** Hook de sessão Go com a toolchain completa do `go.mod` — 011 FR-2, AC-2 — #87
-- [ ] **T29** `doc-commands.sh`, `LICENSE` e `make linkcheck` no template comum — 011 FR-3, AC-3 — #88
-- [ ] **T30** Fases do ROADMAP numeradas a partir da última tag — 011 FR-4, AC-4 — #89
-- [ ] **T31** `CHANGELOG.md` com `[Unreleased]` criado pela adoção — 011 FR-5, AC-5 — #90
-- [ ] **T32** Checagem de acessibilidade com axe no template Node — 011 FR-6, AC-6 — #91
+- [x] **T27** Avisos da adoção Node: lockfile fora de sincronia e projeto sem testes — 011 FR-1, AC-1 — #86
+- [x] **T28** Hook de sessão Go com a toolchain completa do `go.mod` — 011 FR-2, AC-2 — #87
+- [x] **T29** `doc-commands.sh`, `LICENSE` e `make linkcheck` no template comum — 011 FR-3, AC-3 — #88
+- [x] **T30** Fases do ROADMAP numeradas a partir da última tag — 011 FR-4, AC-4 — #89
+- [x] **T31** `CHANGELOG.md` com `[Unreleased]` criado pela adoção — 011 FR-5, AC-5 — #90
+- [x] **T32** Checagem de acessibilidade com axe no template Node — 011 FR-6, AC-6 — #91

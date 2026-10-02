@@ -144,7 +144,8 @@ Com o plugin instalado, cada etapa do fluxo tem um comando:
 
 Nos repositórios adotados:
 
-- **`make ci`**: a mesma verificação do CI da linguagem.
+- **`make ci`**: a mesma verificação do CI da linguagem, com cobertura mínima.
+- **Workflow Release tag**: *Actions → Release tag → Run workflow* cria a tag (calculada pelos Conventional Commits com o [go-release-manager](https://github.com/fabiodrneles/go-release-manager), ou a do ROADMAP em `release-as`) e publica a release com as notas geradas.
 - **`make sdd-check`**: rastreabilidade. Todo critério de aceite de spec `In Progress`/`Done` precisa ser citado num teste como `NNN AC-n` (ex.: `// 003 AC-2`), o status das specs bate com o índice e o ROADMAP só cita IDs que existem. No CI e no `make sdd-check`, roda com `--strict`: um aviso bloqueia o merge.
 - **Critérios de aceite** em Dado/Quando/Então ou em **EARS** (`QUANDO <gatilho>, O SISTEMA DEVE <resposta>`).
 - **Seção "Mudanças"** em cada spec (`ADDED`/`MODIFIED`/`REMOVED` + ID), que vira o CHANGELOG no fechamento da fase.
@@ -192,7 +193,7 @@ Calcula a próxima versão SemVer pelos Conventional Commits, com o [go-release-
 /sdd-release
 ```
 
-A tag continua sendo do dono. Se quiser criá-la pelo GitHub, copie o modelo [`release-tag.yml`](plugins/sdd-release/templates/release-tag.yml) para `.github/workflows/` e dispare-o em *Actions → Release tag → Run workflow*.
+A tag continua sendo do dono. Se quiser criá-la pelo GitHub, copie o modelo [`release-tag.yml`](plugins/sdd-release/templates/release-tag.yml) para `.github/workflows/` e dispare-o em *Actions → Release tag → Run workflow*. Ele chama o `release.yml` do GoReleaser; projetos sem binários usam o `release-tag.yml` que a adoção já instala.
 
 No claude.ai: baixe `sdd-delivery.zip` da [última release](https://github.com/fabiodrneles/sdd-kit/releases) e envie em *Configurações → Capacidades → Skills*.
 

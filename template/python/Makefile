@@ -1,14 +1,16 @@
 # Verificação local igual à do CI: rode `make ci` antes de todo push.
 # Convenção: o pyproject.toml declara ruff e pytest no extra "dev".
 PYTHON ?= python3
+# Cobertura mínima de linhas exigida pelo make ci (spec 010 do sdd-kit).
+COVERAGE_MIN ?= 80
 
 .DEFAULT_GOAL := ci
 
 .PHONY: ci
-ci: ## Lint, formatação e testes
+ci: ## Lint, formatação e testes com cobertura mínima (precisa de pytest-cov no extra dev)
 	$(PYTHON) -m ruff check .
 	$(PYTHON) -m ruff format --check .
-	$(PYTHON) -m pytest
+	$(PYTHON) -m pytest --cov=. --cov-report=term --cov-fail-under=$(COVERAGE_MIN)
 
 .PHONY: deps
 deps: ## Instala o projeto com as dependências de desenvolvimento

@@ -27,7 +27,7 @@ try {
     $d = Join-Path $tmp "$lang-empty"; New-Item -ItemType Directory -Path $d | Out-Null
     $r = Invoke-Adopt (@('--lang', $lang) + $opts + @($d))
     if ($r.Code -ne 0) { Fail "$lang saiu com $($r.Code): $($r.Out)" }
-    $want = @(Get-ChildItem (Join-Path $root 'template/common'), (Join-Path $root "template/$lang") -Recurse -File -Force).Count
+    $want = @(Get-ChildItem (Join-Path $root 'template/common'), (Join-Path $root "template/$lang"), (Join-Path $root 'template/seed') -Recurse -File -Force).Count
     $want++ # .sdd-kit.json
     $got = @(Get-ChildItem $d -Recurse -File -Force).Count
     if ($want -ne $got) { Fail "${lang}: esperava $want arquivos, gerou $got" }

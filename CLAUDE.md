@@ -15,7 +15,8 @@ Guia rápido para agentes (Claude Code) trabalharem neste repositório. O proces
 | `specs/` | Constituição, specs `NNN-nome/spec.md`, `ROADMAP.md`, `ANALYSIS.md` (decisões D1–D4) |
 | `plugins/sdd-delivery/` | A skill, empacotada como plugin do Claude Code (spec 002) |
 | `.claude-plugin/marketplace.json` | O repositório como marketplace de plugins |
-| `template/common/`, `template/<lang>/` | O que a adoção copia para outros repositórios (spec 003) |
+| `template/common/`, `template/<lang>/` | O que a adoção copia para outros repositórios e a sincronização mantém (spec 003) |
+| `template/seed/` | Modelos que o projeto preenche (`specs/`, `CHANGELOG.md`): criados uma vez, fora da sincronização (spec 012) |
 | `scripts/` | Adoção (`adopt.sh`, `adopt.ps1`), empacotamento e checagens da skill, `e2e-template.sh` (spec 003 AC-4) |
 | `tests/` | Testes dos scripts (`make ci`), `adopt.ps1` (Windows no CI) e `fixtures/` (projetos mínimos por linguagem) |
 

@@ -14,6 +14,8 @@
 #     para revisão no PR (nunca em silêncio);
 #   - arquivo novo no template → criado; arquivo que o repositório já tinha e não é
 #     gerenciado → intocado;
+#   - modelos do projeto (specs/*.md, CHANGELOG.md; spec 012) → criados se faltam,
+#     nunca alterados, e fora do estado;
 #   - já na versão alvo → nada muda.
 # Requer jq e curl (ou --kit).
 set -eu
@@ -67,6 +69,16 @@ hash() { if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1"; else shas
 (cd "$tmp/new" && find . -type f ! -name .sdd-kit.json | sed 's#^\./##' | LC_ALL=C sort) > "$tmp/list"
 while IFS= read -r rel; do
   new="$tmp/new/$rel"
+  # Spec 012 FR-2: gerenciado é só o que a adoção da versão alvo registra; os
+  # modelos do projeto (specs, CHANGELOG) são criados se faltam e nunca mudam.
+  if ! jq -e --arg f "$rel" '.files | has($f)' "$tmp/new/.sdd-kit.json" > /dev/null; then
+    if [ ! -e "$rel" ]; then
+      mkdir -p "$(dirname "$rel")"
+      cp -p "$new" "$rel"
+      echo "$rel" >> "$tmp/created"
+    fi
+    continue
+  fi
   old_hash="$(jq -r --arg f "$rel" '.files[$f] // empty' "$state")"
   if [ ! -e "$rel" ]; then
     mkdir -p "$(dirname "$rel")"

@@ -50,8 +50,24 @@ grep -q 'kit novo' CLAUDE.md || fail "CLAUDE.md não recebeu a versão nova"
 grep -qxF -e "- \`CLAUDE.md\`" "$tmp/s.md" || fail "CLAUDE.md não listado como conflito"
 if grep -qxF -e "- \`CONTRIBUTING.md\`" "$tmp/s.md"; then fail "CONTRIBUTING.md listado como conflito por engano"; fi
 
+# 012 AC-2: num repositório adotado por uma versão que registrava os modelos do
+# projeto no estado, o kit muda o modelo do ROADMAP: o ROADMAP do projeto fica,
+# não vira conflito e sai do estado.
+h="$( (sha256sum specs/ROADMAP.md 2>/dev/null || shasum -a 256 specs/ROADMAP.md) | cut -d' ' -f1)"
+jq --arg h "$h" '.files["specs/ROADMAP.md"] = $h' .sdd-kit.json > "$tmp/state" && cp "$tmp/state" .sdd-kit.json
+echo '- [ ] **T9** tarefa do projeto' >> specs/ROADMAP.md
+roadmap="$(cat specs/ROADMAP.md)"
+printf 'modelo novo\n' >> "$kit/template/seed/specs/ROADMAP.md"
+rm CHANGELOG.md
+sh scripts/sdd-sync.sh --kit "$kit" --version v0.0.3 --summary "$tmp/s3.md"
+[ "$(cat specs/ROADMAP.md)" = "$roadmap" ] || fail "a sincronização mudou o ROADMAP do projeto"
+if grep -qF 'specs/ROADMAP.md' "$tmp/s3.md"; then fail "ROADMAP do projeto listado na sincronização: $(cat "$tmp/s3.md")"; fi
+jq -e '.files | has("specs/ROADMAP.md") | not' .sdd-kit.json > /dev/null || fail "ROADMAP continuou no estado"
+grep -q '^## \[Unreleased\]' CHANGELOG.md || fail "a sincronização não recriou o CHANGELOG.md que faltava"
+jq -e '.files | has("CHANGELOG.md") | not' .sdd-kit.json > /dev/null || fail "CHANGELOG.md recriado entrou no estado"
+
 # 005 AC-2 de novo: repetir com a mesma versão não muda nada.
 before="$(snapshot .)"
-sh scripts/sdd-sync.sh --kit "$kit" --version v0.0.2 > /dev/null
+sh scripts/sdd-sync.sh --kit "$kit" --version v0.0.3 > /dev/null
 [ "$before" = "$(snapshot .)" ] || fail "segunda sincronização mudou arquivos"
 echo "tests/sync.sh ok"

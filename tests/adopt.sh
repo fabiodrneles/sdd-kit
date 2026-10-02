@@ -16,12 +16,13 @@ for lang in go node java python rust dotnet; do
   d="$tmp/$lang-empty"; mkdir "$d"
   # shellcheck disable=SC2086 # opts são palavras separadas de propósito
   sh "$adopt" --lang "$lang" $opts "$d" > "$tmp/out"
-  want="$( (cd "$root/template/common" && find . -type f; cd "$root/template/$lang" && find . -type f) | wc -l)"
+  want="$( (cd "$root/template/common" && find . -type f; cd "$root/template/$lang" && find . -type f; cd "$root/template/seed" && find . -type f) | wc -l)"
   got="$(cd "$d" && find . -type f | wc -l)"
   want=$((want + 1)) # .sdd-kit.json
   [ "$want" -eq "$got" ] || fail "$lang: esperava $want arquivos, gerou $got"
   # 005 FR-2: estado com versão, linguagem e um hash por arquivo gerenciado.
-  jq -e --arg l "$lang" '.kit == "sdd-kit" and .lang == $l and (.files | length) == '"$((want - 1))" "$d/.sdd-kit.json" >/dev/null ||
+  seeds="$(cd "$root/template/seed" && find . -type f | wc -l)"
+  jq -e --arg l "$lang" '.kit == "sdd-kit" and .lang == $l and (.files | length) == '"$((want - 1 - seeds))" "$d/.sdd-kit.json" >/dev/null ||
     fail "$lang: .sdd-kit.json inválido"
   h="$(jq -r '.files["CLAUDE.md"]' "$d/.sdd-kit.json")"
   [ "$h" = "$( (sha256sum "$d/CLAUDE.md" 2>/dev/null || shasum -a 256 "$d/CLAUDE.md") | cut -d' ' -f1)" ] ||
@@ -54,6 +55,18 @@ jq -e '.files | has("CLAUDE.md") | not' "$d/.sdd-kit.json" >/dev/null || fail "a
 # shellcheck disable=SC2086
 sh "$adopt" --lang go $opts --force "$d" > "$tmp/out"
 grep -q 'Demo' "$d/CLAUDE.md" || fail "--force não sobrescreveu CLAUDE.md"
+
+# 012 AC-1: specs e CHANGELOG são do projeto: criados quando faltam, intactos
+# mesmo com --force e fora do estado.
+for f in specs/ROADMAP.md CHANGELOG.md; do [ -f "$d/$f" ] || fail "a adoção não criou $f"; done
+echo '- [ ] **T1** minha tarefa' >> "$d/specs/ROADMAP.md"; echo '- minha entrada' >> "$d/CHANGELOG.md"
+roadmap="$(cat "$d/specs/ROADMAP.md")" changelog="$(cat "$d/CHANGELOG.md")"
+# shellcheck disable=SC2086
+sh "$adopt" --lang go $opts --force "$d" > "$tmp/out"
+[ "$(cat "$d/specs/ROADMAP.md")" = "$roadmap" ] || fail "--force sobrescreveu o ROADMAP do projeto"
+[ "$(cat "$d/CHANGELOG.md")" = "$changelog" ] || fail "--force sobrescreveu o CHANGELOG do projeto"
+jq -e '.files | (has("specs/ROADMAP.md") or has("CHANGELOG.md") or has("specs/README.md")) | not' "$d/.sdd-kit.json" >/dev/null ||
+  fail "modelos do projeto entraram no estado"
 
 # 004 AC-4: linguagem inválida e argumento ausente saem com 2 sem escrever nada.
 d="$tmp/invalid"; mkdir "$d"
@@ -93,8 +106,7 @@ sh "$root/scripts/adopt.sh" --lang go --project demo --owner acme --repo demo --
 [ "$(cat "$sk/hello.go")" = 'meu código' ] || fail "--skeleton --force sobrescreveu código do projeto"
 
 # 011 AC-4: com a tag v1.4.0, o ROADMAP criado começa na v1.5.0; sem tag, na
-# v0.1.0. O estado guarda o hash do ROADMAP do kit (a sincronização não o toma
-# por alterado pelo kit).
+# v0.1.0.
 tg="$tmp/tagged"; mkdir "$tg"
 git -C "$tg" init -q
 git -C "$tg" -c user.email=t@t -c user.name=t commit -q --allow-empty -m init
@@ -105,8 +117,6 @@ sh "$adopt" --lang go $opts "$tg" > /dev/null
 [ "$(grep -c '^## Fase [123] .*.v1\.[567]\.0.$' "$tg/specs/ROADMAP.md")" -eq 3 ] ||
   fail "ROADMAP não começa na v1.5.0 depois da tag v1.4.0: $(grep '^## Fase' "$tg/specs/ROADMAP.md")"
 grep -q '^## Fase 1 .*.v1\.5\.0.$' "$tg/specs/ROADMAP.md" || fail "Fase 1 não é a v1.5.0"
-[ "$(jq -r '.files["specs/ROADMAP.md"]' "$tg/.sdd-kit.json")" = "$( (sha256sum "$root/template/common/specs/ROADMAP.md" 2>/dev/null || shasum -a 256 "$root/template/common/specs/ROADMAP.md") | cut -d' ' -f1)" ] ||
-  fail "o estado guardou o hash do ROADMAP ajustado, não o do kit"
 grep -q '^## Fase 1 .*.v0\.1\.0.$' "$tmp/go-empty/specs/ROADMAP.md" || fail "sem tag, a Fase 1 não é a v0.1.0"
 if command -v pwsh >/dev/null; then
   pwsh -NoProfile -File "$root/scripts/adopt.ps1" --lang go --project Demo --owner acme --repo demo "$tmp/tagged-ps" > /dev/null

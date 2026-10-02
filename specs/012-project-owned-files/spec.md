@@ -26,3 +26,6 @@ No kit, a release `v1.0.0` falhou porque o PR de fechamento abriu `[1.0.0]` no C
 ## Mudanças
 
 ### Não lançado
+
+- ADDED FR-1 — `specs/*.md` e `CHANGELOG.md` vão para `template/seed/`: criados quando faltam, nunca sobrescritos (nem com `--force`) e fora do `.sdd-kit.json` (T33, #100).
+- ADDED FR-2 — o `sdd-sync` gerencia só o que a adoção da versão alvo registra; modelos do projeto são criados se faltam e saem do estado (T33, #100).

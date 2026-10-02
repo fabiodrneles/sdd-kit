@@ -1,6 +1,7 @@
 #!/bin/sh
 # Adota o sdd-kit num repositório novo ou existente (spec 004): copia
-# template/common e template/<lang> sem sobrescrever o que já existe.
+# template/common e template/<lang> sem sobrescrever o que já existe, e os
+# modelos do projeto (template/seed) só quando faltam.
 #
 # Uso: adopt.sh --lang go|node|java|python|rust|dotnet [--project NOME] [--owner DONO]
 #               [--repo REPO] [--dry-run] [--force] [--skeleton] [DESTINO]
@@ -98,16 +99,19 @@ fi
 
 created=0 skipped=0 overwritten=0
 : > "$tmp/state"
-parts="common $lang"
-# Spec 010 FR-2: o esqueleto é código do projeto, não arquivo gerenciado pelo kit.
+# Spec 012 FR-1: template/seed (specs e CHANGELOG) e o esqueleto (spec 010 FR-2)
+# são do projeto: criados quando faltam, nunca sobrescritos nem registrados no estado.
+parts="common $lang seed"
 [ "$skeleton" -eq 0 ] || parts="$parts skeleton/$lang"
 for part in $parts; do
+  owned=0
+  case "$part" in seed | skeleton/*) owned=1 ;; esac
   # Ordenado para o relatório ser estável entre execuções e sistemas.
   (cd "$template/$part" && find . -type f | sed 's#^\./##' | LC_ALL=C sort) > "$tmp/files"
   while IFS= read -r rel; do
     src="$template/$part/$rel"
     dst="$dest/$rel"
-    if [ -e "$dst" ] && { [ "$force" -eq 0 ] || [ "$part" != "${part#skeleton/}" ]; }; then
+    if [ -e "$dst" ] && { [ "$force" -eq 0 ] || [ "$owned" -eq 1 ]; }; then
       echo "ignorado (já existe): $rel"
       skipped=$((skipped + 1))
       continue
@@ -122,12 +126,10 @@ for part in $parts; do
     mkdir -p "$(dirname "$dst")"
     sed -e "s/{{PROJECT}}/$s_project/g" -e "s/{{OWNER}}/$s_owner/g" -e "s/{{REPO}}/$s_repo/g" "$src" > "$dst"
     if [ -x "$src" ]; then chmod +x "$dst"; fi
-    [ "$part" != "${part#skeleton/}" ] || echo "$rel $(sha256 "$dst")" >> "$tmp/state"
-    # O estado guarda o hash do ROADMAP do kit, para a sincronização (que gera o
-    # template sem tags) não tomar a numeração ajustada por mudança do kit.
     if [ "$rel" = specs/ROADMAP.md ] && [ -n "$roadmap_sed" ]; then
       sed "$roadmap_sed" "$dst" > "$tmp/roadmap" && cat "$tmp/roadmap" > "$dst"
     fi
+    [ "$owned" -eq 1 ] || echo "$rel $(sha256 "$dst")" >> "$tmp/state"
   done < "$tmp/files"
 done
 

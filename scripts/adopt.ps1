@@ -1,6 +1,7 @@
 #!/usr/bin/env pwsh
 # Adota o sdd-kit num repositório novo ou existente (spec 004): copia
-# template/common e template/<lang> sem sobrescrever o que já existe.
+# template/common e template/<lang> sem sobrescrever o que já existe, e os
+# modelos do projeto (template/seed) só quando faltam.
 # Equivalente a scripts/adopt.sh, com as mesmas opções e a mesma saída.
 #
 # Uso: adopt.ps1 --lang go|node|java|python|rust|dotnet [--project NOME] [--owner DONO]
@@ -111,11 +112,13 @@ try {
 
   $created = 0; $skipped = 0; $overwritten = 0
   $state = [System.Collections.Generic.List[string]]::new()
-  $parts = @('common', $lang)
+  $parts = @('common', $lang, 'seed')
   # Spec 010 FR-2: o esqueleto é código do projeto, não arquivo gerenciado pelo kit.
   if ($skeleton) { $parts += "skeleton/$lang" }
   foreach ($part in $parts) {
-    $isSkeleton = $part.StartsWith('skeleton/')
+    # Spec 012 FR-1: template/seed (specs e CHANGELOG) e o esqueleto (spec 010 FR-2)
+    # são do projeto: criados quando faltam, nunca sobrescritos nem registrados no estado.
+    $isOwned = $part.StartsWith('skeleton/') -or $part -ceq 'seed'
     $base = (Resolve-Path (Join-Path $template $part)).Path
     # Mesma ordem do sh (LC_ALL=C sort): ordinal.
     $files = [string[]]@(Get-ChildItem -LiteralPath $base -Recurse -File -Force |
@@ -125,7 +128,7 @@ try {
       $src = Join-Path $base $rel
       $dst = Join-Path $dest $rel
       $exists = Test-Path -LiteralPath $dst
-      if ($exists -and (-not $force -or $isSkeleton)) {
+      if ($exists -and (-not $force -or $isOwned)) {
         Write-Output "ignorado (já existe): $rel"
         $skipped++
         continue
@@ -141,11 +144,6 @@ try {
         $mode = [IO.File]::GetUnixFileMode($src)
         if ($mode -band [IO.UnixFileMode]::UserExecute) { [IO.File]::SetUnixFileMode($dst, $mode) }
       }
-      if ($isSkeleton) { continue }
-      $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $dst).Hash.ToLowerInvariant()
-      $state.Add('    "' + $rel + '": "' + $hash + '"')
-      # O estado guarda o hash do ROADMAP do kit, para a sincronização (que gera o
-      # template sem tags) não tomar a numeração ajustada por mudança do kit.
       if ($rel -ceq 'specs/ROADMAP.md' -and $phaseVersions) {
         $lines = [IO.File]::ReadAllText($dst, $utf8).Split("`n")
         for ($j = 0; $j -lt $lines.Count; $j++) {
@@ -155,6 +153,9 @@ try {
         }
         [IO.File]::WriteAllText($dst, ($lines -join "`n"), $utf8)
       }
+      if ($isOwned) { continue }
+      $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $dst).Hash.ToLowerInvariant()
+      $state.Add('    "' + $rel + '": "' + $hash + '"')
     }
   }
 

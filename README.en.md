@@ -8,6 +8,10 @@
 
 > **The owner decides, the agent executes.** You answer the decisions and review the PRs; the agent analyzes, specifies, opens the tickets, writes code and tests and keeps CI green.
 
+![sdd-kit adoption in an empty Go repository and the first green make ci](docs/demo/demo.gif)
+
+*Adoption in an empty repository and the first `make ci`, with real output ([how it was generated](docs/demo/demo.sh)).*
+
 The kit comes from [cv-craft](https://github.com/fabiodrneles/cv-craft), which went from prototype to `v1.x` with this process ([case study](docs/case-study.en.md)), and sdd-kit itself is built with it ([specs](specs/README.md), [epic #1](https://github.com/fabiodrneles/sdd-kit/issues/1)). This repository's specs, issues and pull requests are written in Portuguese; code and commits are in English. The skill itself is in English and writes specs, issues and PRs in the owner's language, read from `CLAUDE.md`/`AGENTS.md` or asked once.
 
 ## What is in the kit

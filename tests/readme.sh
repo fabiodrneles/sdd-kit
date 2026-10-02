@@ -27,4 +27,16 @@ for readme in README.md README.en.md; do
     esac
   done < "$tmp/args"
 done
-echo "tests/readme.sh ok ($n comandos)"
+
+# 013 AC-2: a demonstração existe, os dois READMEs a mostram e ela vem da saída
+# real (a transcrição tem a adoção e o make ci verde, e o demo.sh a gera).
+demo="$root/docs/demo"
+[ -s "$demo/demo.gif" ] || fail "docs/demo/demo.gif não existe"
+[ "$(wc -c < "$demo/demo.gif")" -lt 2000000 ] || fail "docs/demo/demo.gif passa de 2 MB"
+for readme in README.md README.en.md; do
+  grep -qF '](docs/demo/demo.gif)' "$root/$readme" || fail "$readme não mostra a demonstração"
+done
+grep -q '^criado: CLAUDE.md$' "$demo/transcript.txt" || fail "a transcrição não tem a adoção"
+grep -q '^cobertura: ' "$demo/transcript.txt" || fail "a transcrição não tem o make ci"
+grep -q 'transcript.txt' "$demo/demo.sh" || fail "o demo.sh não gera a transcrição"
+echo "tests/readme.sh ok ($n comandos, demonstração)"

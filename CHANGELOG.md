@@ -4,6 +4,29 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-02
+
+Fase 4 do [ROADMAP](specs/ROADMAP.md) (esteira de qualidade) e as entregas da Fase 3 já mergeadas; a v1.0.0 fica para o fim da Fase 3.
+
+### Adicionado
+
+- **Cobertura mínima no `make ci`** de todos os templates: falha abaixo de `COVERAGE_MIN` (80 por padrão), com Go `coverprofile`, c8 no Node, JaCoCo no Java e pytest-cov no Python (spec 010 FR-1, #68).
+- **Workflow Release tag** em todos os templates: cria a tag (go-release-manager ou `release-as`, no commit `ref`) e publica a release com notas geradas (spec 010 FR-4, #70).
+- **Gradle** no template Java, além de Maven, com JaCoCo por init script (spec 010 FR-3, #71).
+- **`adopt --skeleton`** (sh e PowerShell): projeto mínimo com um teste num repositório vazio, para o CI nascer verde (spec 010 FR-2, #72).
+- **Plugin `sdd-release`**: próxima versão pelo go-release-manager, comparada com a versão do ROADMAP (spec 008, #54, #58).
+- **Scripts dos passos mecânicos**: `sdd-ci`, `sdd-mark`, `sdd-phase-status`, `sdd-epic` e `sdd-release-check` (spec 009, #56).
+- `sdd-check --strict` no CI do kit e do template, arquivos de comunidade e estudo de caso do cv-craft (spec 007, #45, #46, #47).
+
+### Mudado
+
+- **Incompatível:** adotantes abaixo de 80% de cobertura passam a ter o `make ci` vermelho depois da sincronização; baixe `COVERAGE_MIN` no `Makefile` para manter o comportamento anterior (#68).
+- O check de links publica cada link quebrado como anotação e aceita 503 como recusa temporária, como o 429 (#69).
+
+### Corrigido
+
+- `sdd-ci.sh` espera e reporta também os status de commit (ex.: Vercel) (spec 009 AC-7, #67).
+
 ## [0.1.0] - 2026-10-01
 
 Primeira versão pública: Fases 1 e 2 do [ROADMAP](specs/ROADMAP.md).
@@ -19,5 +42,6 @@ Primeira versão pública: Fases 1 e 2 do [ROADMAP](specs/ROADMAP.md).
 - Critérios de aceite em EARS e seção "Mudanças" por spec, que alimenta o CHANGELOG (spec 006 FR-1, FR-4).
 - CI do kit em Linux, macOS e Windows, com e2e dos templates nas quatro linguagens.
 
-[Unreleased]: https://github.com/fabiodrneles/sdd-kit/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/fabiodrneles/sdd-kit/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/fabiodrneles/sdd-kit/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/fabiodrneles/sdd-kit/releases/tag/v0.1.0

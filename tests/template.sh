@@ -31,6 +31,13 @@ else
   err "$rt não existe"
 fi
 
+# 010 AC-5: o CI de um projeto Node adotado (validado no qa-portfolio) roda lint,
+# testes com cobertura mínima e build.
+# shellcheck disable=SC2016 # o $(COVERAGE_MIN) é literal, como no Makefile
+for step in 'npm run lint' 'check-coverage --lines $(COVERAGE_MIN)' 'npm test' 'npm run build'; do
+  grep -qF "$step" node/Makefile || err "template/node/Makefile: o make ci não roda '$step'"
+done
+
 [ -f common/AGENTS.md ] || err "template/common/AGENTS.md não existe"
 grep -q 'make ci' common/AGENTS.md || err "template/common/AGENTS.md não cita make ci"
 

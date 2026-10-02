@@ -16,6 +16,17 @@ for lang in go node java python; do
 done
 
 # Outros agentes leem AGENTS.md (spec 006 FR-5).
+# 010 AC-4: o workflow de release vai para toda linguagem e aceita release-as e ref.
+rt=common/.github/workflows/release-tag.yml
+if [ -f "$rt" ]; then
+  for input in release-as ref; do
+    grep -q "^      $input:" "$rt" || err "$rt sem o input $input"
+  done
+  grep -q 'gh release create' "$rt" || err "$rt não publica a release"
+else
+  err "$rt não existe"
+fi
+
 [ -f common/AGENTS.md ] || err "template/common/AGENTS.md não existe"
 grep -q 'make ci' common/AGENTS.md || err "template/common/AGENTS.md não cita make ci"
 

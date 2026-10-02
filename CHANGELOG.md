@@ -4,6 +4,19 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-02
+
+Fase 7 do [ROADMAP](specs/ROADMAP.md): primeira impressão para quem chega pela divulgação (spec 013).
+
+### Adicionado
+
+- **Demonstração animada no topo do README**, gerada da saída real da adoção e do `make ci` por `docs/demo/demo.sh` (spec 013 FR-2, #109).
+- **Perguntas e relatos de uso nas Discussions**, pelo formulário de nova issue; seção "Primeira contribuição" no CONTRIBUTING e issues `good first issue` (spec 013 FR-3, #110).
+
+### Mudado
+
+- "Começar num repositório novo" (pt e en) explica pré-requisitos, o que a adoção copia, a garantia de não sobrescrever, `--dry-run` e `--skeleton`; os comandos do guia rodam no CI do kit (spec 013 FR-1, #108).
+
 ## [1.2.0] - 2026-10-02
 
 Fase 6 do [ROADMAP](specs/ROADMAP.md): arquivos do projeto fora da sincronização (spec 012).
@@ -95,7 +108,8 @@ Primeira versão pública: Fases 1 e 2 do [ROADMAP](specs/ROADMAP.md).
 - Critérios de aceite em EARS e seção "Mudanças" por spec, que alimenta o CHANGELOG (spec 006 FR-1, FR-4).
 - CI do kit em Linux, macOS e Windows, com e2e dos templates nas quatro linguagens.
 
-[Unreleased]: https://github.com/fabiodrneles/sdd-kit/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/fabiodrneles/sdd-kit/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/fabiodrneles/sdd-kit/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/fabiodrneles/sdd-kit/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/fabiodrneles/sdd-kit/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/fabiodrneles/sdd-kit/compare/v0.2.0...v1.0.0

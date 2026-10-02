@@ -4,6 +4,18 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-02
+
+Fase 6 do [ROADMAP](specs/ROADMAP.md): arquivos do projeto fora da sincronização (spec 012).
+
+### Mudado
+
+- **`specs/` e `CHANGELOG.md` são do projeto:** passam a `template/seed/`, e a adoção os cria quando faltam, nunca os sobrescreve (nem com `--force`) e não os registra no `.sdd-kit.json`. O `sdd-sync` gerencia só o que a adoção da versão alvo registra, então uma mudança do kit nesses modelos não substitui mais o ROADMAP ou o CHANGELOG preenchido. Quem adotou antes tem esses arquivos retirados do estado na segunda sincronização (spec 012 FR-1, FR-2, #100).
+
+### Adicionado
+
+- O CI do kit falha quando a versão mais recente do CHANGELOG não é a do `plugin.json`, o que teria barrado no PR o incidente da `v1.0.0` (spec 012 FR-3, #101).
+
 ## [1.1.0] - 2026-10-02
 
 Fase 5 do [ROADMAP](specs/ROADMAP.md): a adoção ajustada pelo uso real (achados do #51, spec 011).
@@ -83,7 +95,8 @@ Primeira versão pública: Fases 1 e 2 do [ROADMAP](specs/ROADMAP.md).
 - Critérios de aceite em EARS e seção "Mudanças" por spec, que alimenta o CHANGELOG (spec 006 FR-1, FR-4).
 - CI do kit em Linux, macOS e Windows, com e2e dos templates nas quatro linguagens.
 
-[Unreleased]: https://github.com/fabiodrneles/sdd-kit/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/fabiodrneles/sdd-kit/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/fabiodrneles/sdd-kit/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/fabiodrneles/sdd-kit/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/fabiodrneles/sdd-kit/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/fabiodrneles/sdd-kit/compare/v0.1.0...v0.2.0

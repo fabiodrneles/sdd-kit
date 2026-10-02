@@ -66,7 +66,7 @@ O **estado do trabalho vive no GitHub**, não na conversa: o épico guarda um co
 2. Adote o template com a linguagem do projeto:
 
    ```text
-   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.1.0/scripts/adopt.sh | sh -s -- --lang go .
+   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.2.0/scripts/adopt.sh | sh -s -- --lang go .
    ```
 
 3. Faça o commit do que foi criado (`CLAUDE.md`, `.github/`, `specs/`, `Makefile`, CI) e abra o Claude Code no repositório. O `.claude/settings.json` gerado já carrega o hook de sessão.
@@ -149,6 +149,8 @@ Nos repositórios adotados:
 - **`make sdd-check`**: rastreabilidade. Todo critério de aceite de spec `In Progress`/`Done` precisa ser citado num teste como `NNN AC-n` (ex.: `// 003 AC-2`), o status das specs bate com o índice e o ROADMAP só cita IDs que existem. No CI e no `make sdd-check`, roda com `--strict`: um aviso bloqueia o merge.
 - **Critérios de aceite** em Dado/Quando/Então ou em **EARS** (`QUANDO <gatilho>, O SISTEMA DEVE <resposta>`).
 - **Seção "Mudanças"** em cada spec (`ADDED`/`MODIFIED`/`REMOVED` + ID), que vira o CHANGELOG no fechamento da fase.
+- **`make linkcheck`** (links quebrados nos `.md`, com o lychee) e **`scripts/doc-commands.sh`**, que roda no CI os blocos `bash` do README marcados com `<!-- doc-commands -->`.
+- **Acessibilidade no template Node:** com `A11Y_PAGES := dist/index.html`, o `make ci` roda o axe nas páginas e falha em qualquer violação.
 - **`AGENTS.md`**, para Codex, Copilot, Cursor e outros agentes seguirem o mesmo processo.
 
 ### Scripts que poupam tokens
@@ -171,7 +173,8 @@ A adoção grava `.sdd-kit.json` (versão do kit e o hash de cada arquivo gerenc
 - arquivos que você não alterou são atualizados;
 - arquivos que o kit não mudou ficam como estão, mesmo se você os alterou;
 - se você e o kit mudaram o mesmo arquivo, o PR traz a versão nova e lista o arquivo em **"Conflitos"**, para você decidir no próprio PR;
-- arquivos que são só do seu repositório nunca são tocados.
+- arquivos que são só do seu repositório nunca são tocados;
+- `specs/` e `CHANGELOG.md` são do projeto: o kit os cria na adoção, se faltarem, e nunca mais os altera.
 
 Para o workflow abrir PRs, ative em *Settings → Actions → General* a opção **"Allow GitHub Actions to create and approve pull requests"**.
 

@@ -8,4 +8,4 @@ Use a skill `sdd-delivery` para executar o **próximo ticket**. Ticket específi
 1. Leia o comentário "Estado da fase" mais recente do épico aberto e escolha o próximo ticket na ordem do épico.
 2. Crie a branch `<tipo>/<nº>-<descrição>`, escreva os testes a partir dos critérios de aceite (citando `NNN AC-n`) e depois o código.
 3. Rode a verificação local completa (`make ci`), faça a checagem de mutação dos testes novos e releia o diff.
-4. Abra o PR (`Closes #N · Épico #M · Spec NNN`), acompanhe o CI até ficar verde e atualize o "Estado da fase".
+4. Abra o PR (`Closes #N · Épico #M · Spec NNN`), acompanhe o CI com `sh scripts/sdd-ci.sh "#PR"` (uma linha por check e só o fim do log das falhas) até ficar verde, e atualize o "Estado da fase".

@@ -150,6 +150,19 @@ Nos repositórios adotados:
 - **Seção "Mudanças"** em cada spec (`ADDED`/`MODIFIED`/`REMOVED` + ID), que vira o CHANGELOG no fechamento da fase.
 - **`AGENTS.md`**, para Codex, Copilot, Cursor e outros agentes seguirem o mesmo processo.
 
+### Scripts que poupam tokens
+
+A adoção também traz scripts para os passos mecânicos do processo. O agente chama o script e lê uma linha por resultado, em vez de executar dezenas de passos e ler saídas longas:
+
+| Script | Faz |
+|---|---|
+| `scripts/sdd-ci.sh [#PR\|SHA]` | Espera o CI e mostra só o fim do log dos checks que falharam |
+| `scripts/sdd-mark.sh decide D1=a` | Registra as decisões do dono e aprova as specs |
+| `scripts/sdd-mark.sh close vX.Y.Z` | Arquivos de status do fechamento da fase (specs, ROADMAP, CHANGELOG) |
+| `scripts/sdd-phase-status.sh [--post]` | Comentário "Estado da fase" do épico |
+| `scripts/sdd-epic.sh [--dry-run] N` | Épico da fase N e os tickets como sub-issues |
+| `scripts/sdd-release-check.sh pre\|post vX.Y.Z` | Go: simula o release antes da tag e confere a release publicada |
+
 ## Atualização automática
 
 A adoção grava `.sdd-kit.json` (versão do kit e o hash de cada arquivo gerenciado). Toda segunda-feira, o workflow `sdd-kit sync` compara com a última release e abre **um PR** com as atualizações:

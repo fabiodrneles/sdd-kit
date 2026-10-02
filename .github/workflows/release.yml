@@ -1,9 +1,16 @@
 name: Release
 
-# Publica a skill empacotada quando o dono cria uma tag vX.Y.Z (spec 002 FR-4).
+# Publica a skill empacotada para uma tag vX.Y.Z (spec 002 FR-4): no push da tag
+# ou chamado pelo workflow Release tag (uma tag criada com o GITHUB_TOKEN não
+# dispara outros workflows, por isso a chamada direta).
 on:
   push:
     tags: ["v*"]
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
 
 permissions:
   contents: read
@@ -19,8 +26,12 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
       - name: Versão da tag = plugin.json
-        run: scripts/check-version.sh "$GITHUB_REF_NAME"
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: scripts/check-version.sh "$TAG"
       - name: Empacotar a skill
         run: |
           scripts/package-skill.sh dist/sdd-delivery.zip
@@ -28,4 +39,5 @@ jobs:
       - name: Publicar a release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/sdd-delivery.zip dist/sdd-delivery.zip.sha256 --verify-tag --generate-notes
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: gh release create "$TAG" dist/sdd-delivery.zip dist/sdd-delivery.zip.sha256 --verify-tag --generate-notes

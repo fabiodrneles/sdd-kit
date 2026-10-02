@@ -37,3 +37,11 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 - [ ] **T19** Skill para quem não lê português — 007 FR-6 *(depende de D12)*
 - [ ] **T20** Plugin `sdd-release`: próxima versão pelo go-release-manager — 008 FR-1 a FR-5, AC-1 a AC-3 — #53
 - [ ] **T21** Scripts para os passos mecânicos (`sdd-ci`, `sdd-mark`, `sdd-phase-status`, `sdd-epic`, `sdd-release-check`) — 009 FR-1 a FR-8, AC-1 a AC-6 — #55
+
+## Fase 4 — Esteira de qualidade → `v1.1.0` · épico #59
+
+- [ ] **T22** Cobertura mínima no `make ci` de cada linguagem — 010 FR-1, AC-1 — #60
+- [ ] **T23** `--skeleton` na adoção: CI verde num repositório vazio — 010 FR-2, AC-2 — #61
+- [ ] **T24** Gradle no template Java — 010 FR-3, AC-3 — #62
+- [ ] **T25** `release-tag.yml` em todos os templates — 010 FR-4, AC-4 — #63
+- [ ] **T26** Validação no qa-portfolio (Node, sem CI) — 010 FR-5, AC-5 — #64

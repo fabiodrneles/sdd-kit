@@ -12,7 +12,7 @@ Os arquivos de processo do cv-craft citam Go, `make ci` e golden files. O templa
 ## Requisitos funcionais
 
 - **FR-1** `template/common/` MUST conter: `CLAUDE.md`, `AGENTS.md` (spec 006 FR-5), `CONTRIBUTING.md`, `.github/ISSUE_TEMPLATE/` (tarefa, bug, config), `.github/pull_request_template.md`, `.github/CODEOWNERS`, `.claude/settings.json` (hook de sessão e o plugin `sdd-delivery@sdd-kit` habilitado), `specs/` (`README.md`, `constitution.md`, `ROADMAP.md`, `ANALYSIS.md`), `.markdownlint-cli2.yaml`, `lychee.toml` e o workflow de documentação.
-- **FR-2** `template/<lang>/` MUST existir para `go`, `node`, `java`, `python` (D2) e `rust` (D10), cada um com: workflow `ci.yml` que roda `make ci`, `.github/dependabot.yml`, `.claude/hooks/session-start.sh` e um `Makefile` com `make ci` (o mesmo que o CI roda) e `make docs` (markdownlint).
+- **FR-2** `template/<lang>/` MUST existir para `go`, `node`, `java`, `python` (D2), `rust` e `dotnet` (D10), cada um com: workflow `ci.yml` que roda `make ci`, `.github/dependabot.yml`, `.claude/hooks/session-start.sh` e um `Makefile` com `make ci` (o mesmo que o CI roda) e `make docs` (markdownlint).
 - **FR-3** Os arquivos MUST usar os marcadores `{{PROJECT}}`, `{{OWNER}}` e `{{REPO}}`, substituídos pelo script de adoção (spec 004).
 - **FR-4** Nenhum arquivo do template MAY citar "cv-craft".
 - **FR-5** O `dependabot.yml` de cada linguagem MUST cobrir GitHub Actions e o gerenciador de pacotes da linguagem (gomod, npm, maven/gradle, pip).

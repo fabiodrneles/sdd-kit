@@ -81,7 +81,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lang: [go, node, java, java-gradle, python, rust]
+        lang: [go, node, java, java-gradle, python, rust, dotnet]
     steps:
       - uses: actions/checkout@v7
       - if: matrix.lang == 'go'
@@ -119,5 +119,9 @@ jobs:
         uses: taiki-e/install-action@v2
         with:
           tool: cargo-llvm-cov
+      - if: matrix.lang == 'dotnet'
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
       - name: Adotar o template e rodar o make ci gerado (spec 003 AC-4)
         run: sh scripts/e2e-template.sh ${{ matrix.lang }}

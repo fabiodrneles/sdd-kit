@@ -113,6 +113,18 @@ if command -v pwsh >/dev/null; then
   diff -r -x .git "$tg" "$tmp/tagged-ps" >&2 || fail "adopt.ps1 numerou o ROADMAP diferente"
 fi
 
+# 011 AC-5: a adoção cria o CHANGELOG.md com [Unreleased], e o sdd-mark close
+# fecha a primeira versão nele sem edição manual; um CHANGELOG existente fica.
+grep -qx '## \[Unreleased\]' "$tmp/go-empty/CHANGELOG.md" || fail "a adoção não criou o CHANGELOG.md com [Unreleased]"
+cl="$tmp/changelog"; cp -R "$tmp/go-empty" "$cl"
+(cd "$cl" && sh scripts/sdd-mark.sh close --date 2026-01-02 v0.1.0 > "$tmp/out-mark" 2>&1) || fail "sdd-mark close falhou: $(cat "$tmp/out-mark")"
+grep -qx '## \[0\.1\.0\] - 2026-01-02' "$cl/CHANGELOG.md" || fail "sdd-mark close não abriu a versão no CHANGELOG"
+! grep -q 'CHANGELOG.md não existe' "$tmp/out-mark" || fail "sdd-mark close não achou o CHANGELOG.md"
+ex="$tmp/own-changelog"; mkdir "$ex"; echo '# Meu changelog' > "$ex/CHANGELOG.md"
+# shellcheck disable=SC2086
+sh "$adopt" --lang go $opts "$ex" > /dev/null
+[ "$(cat "$ex/CHANGELOG.md")" = '# Meu changelog' ] || fail "a adoção mexeu num CHANGELOG.md existente"
+
 # 011 AC-3: sem LICENSE, a adoção avisa e não cria uma (a licença é do dono);
 # com LICENSE, não avisa nem mexe nela.
 nolic="$tmp/unlicensed"; mkdir "$nolic"

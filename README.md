@@ -30,7 +30,7 @@ O kit nasceu do [cv-craft](https://github.com/fabiodrneles/cv-craft), que saiu d
 | Parte | Para quê | Spec |
 |---|---|---|
 | Skill `sdd-delivery` | Ensina o agente o processo inteiro: análise com evidências, specs, épicos, PRs, CI vermelho tratado pela causa raiz, revisão, fechamento de fase e release. Escrita em inglês, escreve specs, issues e PRs no idioma do dono | [002](specs/002-skill-plugin/spec.md) |
-| `template/` | `CLAUDE.md`, hook de sessão, templates de issue e PR, `CONTRIBUTING.md`, esqueleto de `specs/` e CI pronto para **Go, Node/TS, Java, Python, Rust e C#/.NET** | [003](specs/003-template/spec.md) |
+| `template/` | `CLAUDE.md`, hook de sessão, templates de issue e PR, `CONTRIBUTING.md`, `CHANGELOG.md`, esqueleto de `specs/` e CI pronto para **Go, Node/TS, Java, Python, Rust e C#/.NET** | [003](specs/003-template/spec.md) |
 | Script de adoção | Copia o template para um repositório novo ou existente **sem sobrescrever nada**; sh e PowerShell | [004](specs/004-adoption-script/spec.md) |
 
 ## Como funciona

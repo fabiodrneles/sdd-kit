@@ -59,3 +59,9 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 
 - [x] **T33** Modelos do projeto em `template/seed/`: criados uma vez, fora do estado e da sincronização — 012 FR-1, FR-2, AC-1, AC-2 — #100
 - [x] **T34** CI do kit compara a versão do CHANGELOG com a do `plugin.json` — 012 FR-3, AC-3 — #101
+
+## Fase 7 — Primeira impressão (P1) → `v1.3.0` · épico #107
+
+- [ ] **T35** "Comece em 5 minutos" no README, com o comando rodando no CI — 013 FR-1, AC-1 — #108
+- [ ] **T36** Demonstração animada no topo do README, gerada da saída real — 013 FR-2, AC-2 — #109
+- [ ] **T37** Perguntas nas Discussions e issues `good first issue` — 013 FR-3, AC-3 — #110

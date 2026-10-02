@@ -16,6 +16,10 @@ for lang in go node java python; do
 done
 
 # Outros agentes leem AGENTS.md (spec 006 FR-5).
+# 010 AC-3: o template Java também atende projetos Gradle.
+[ -f java/scripts/jacoco.init.gradle ] || err "template/java/scripts/jacoco.init.gradle não existe"
+grep -q 'build.gradle' java/Makefile || err "template/java/Makefile não detecta Gradle"
+
 [ -f common/AGENTS.md ] || err "template/common/AGENTS.md não existe"
 grep -q 'make ci' common/AGENTS.md || err "template/common/AGENTS.md não cita make ci"
 

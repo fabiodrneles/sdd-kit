@@ -81,7 +81,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lang: [go, node, java, python]
+        lang: [go, node, java, java-gradle, python]
     steps:
       - uses: actions/checkout@v7
       - if: matrix.lang == 'go'
@@ -100,11 +100,13 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: lts/*
-      - if: matrix.lang == 'java'
+      - if: startsWith(matrix.lang, 'java')
         uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "21"
+      - if: matrix.lang == 'java-gradle'
+        uses: gradle/actions/setup-gradle@v6
       - if: matrix.lang == 'python'
         uses: actions/setup-python@v7
         with:

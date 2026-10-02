@@ -160,7 +160,7 @@ sh scripts/adopt.sh --lang go|node|java|python [options] [TARGET]
 pwsh -File scripts/adopt.ps1 --lang go|node|java|python [options] [TARGET]
 ```
 
-Options: `--lang` (required), `--project` (default: directory name), `--owner`/`--repo` (default: taken from `origin`), `--dry-run`, `--force`. In every language, `make ci` **fails when line coverage is below `COVERAGE_MIN`** (80 by default, set in the `Makefile`): c8 for Node, JaCoCo for Java (no `pom.xml` change), `pytest-cov` for Python (in the `dev` extra) and `go test -coverprofile` for Go. Every language template is tested in the kit's CI: the script adopts it into a minimal project, runs the generated `make ci` and checks that an untested file makes it fail on coverage.
+Options: `--lang` (required), `--project` (default: directory name), `--owner`/`--repo` (default: taken from `origin`), `--dry-run`, `--force`. In every language, `make ci` **fails when line coverage is below `COVERAGE_MIN`** (80 by default, set in the `Makefile`): c8 for Node, JaCoCo for Java, Maven or Gradle (no `pom.xml` or `build.gradle` change), `pytest-cov` for Python (in the `dev` extra) and `go test -coverprofile` for Go. Every language template is tested in the kit's CI: the script adopts it into a minimal project, runs the generated `make ci` and checks that an untested file makes it fail on coverage.
 
 ## FAQ
 

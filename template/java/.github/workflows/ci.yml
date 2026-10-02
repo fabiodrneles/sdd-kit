@@ -23,5 +23,8 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-          cache: maven
+          cache: ${{ hashFiles('build.gradle.kts', 'build.gradle') != '' && 'gradle' || 'maven' }}
+      # Gradle sem wrapper (./gradlew) precisa do gradle instalado.
+      - if: hashFiles('build.gradle.kts', 'build.gradle') != ''
+        uses: gradle/actions/setup-gradle@v6
       - run: make ci

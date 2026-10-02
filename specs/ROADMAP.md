@@ -54,3 +54,8 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 - [x] **T30** Fases do ROADMAP numeradas a partir da última tag — 011 FR-4, AC-4 — #89
 - [x] **T31** `CHANGELOG.md` com `[Unreleased]` criado pela adoção — 011 FR-5, AC-5 — #90
 - [x] **T32** Checagem de acessibilidade com axe no template Node — 011 FR-6, AC-6 — #91
+
+## Fase 6 — Arquivos do projeto fora da sincronização (P1) → `v1.2.0` · épico #99
+
+- [ ] **T33** Modelos do projeto em `template/seed/`: criados uma vez, fora do estado e da sincronização — 012 FR-1, FR-2, AC-1, AC-2 — #100
+- [ ] **T34** CI do kit compara a versão do CHANGELOG com a do `plugin.json` — 012 FR-3, AC-3 — #101

@@ -20,6 +20,17 @@ done
 [ -f java/scripts/jacoco.init.gradle ] || err "template/java/scripts/jacoco.init.gradle não existe"
 grep -q 'build.gradle' java/Makefile || err "template/java/Makefile não detecta Gradle"
 
+# 010 AC-4: o workflow de release vai para toda linguagem e aceita release-as e ref.
+rt=common/.github/workflows/release-tag.yml
+if [ -f "$rt" ]; then
+  for input in release-as ref; do
+    grep -q "^      $input:" "$rt" || err "$rt sem o input $input"
+  done
+  grep -q 'gh release create' "$rt" || err "$rt não publica a release"
+else
+  err "$rt não existe"
+fi
+
 [ -f common/AGENTS.md ] || err "template/common/AGENTS.md não existe"
 grep -q 'make ci' common/AGENTS.md || err "template/common/AGENTS.md não cita make ci"
 

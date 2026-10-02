@@ -218,7 +218,7 @@ O que cada linguagem recebe:
 |---|---|---|
 | Go | golangci-lint, `go test -race` com cobertura, `go build` | `setup-go` pelo `go.mod` |
 | Node/TS | `lint` e `build` (se existirem), `test` medido pelo [c8](https://github.com/bcoe/c8) | Node LTS, `npm ci` |
-| Java | `mvn verify` (ou `./mvnw`) com JaCoCo, sem mudar o `pom.xml` | Temurin 21, cache Maven |
+| Java | Maven: `mvn verify` (ou `./mvnw`); Gradle: `gradle check` (ou `./gradlew`). JaCoCo nos dois, sem mudar o `pom.xml` nem o `build.gradle` | Temurin 21, cache do Maven ou do Gradle |
 | Python | `ruff check`, `ruff format --check`, `pytest` com `pytest-cov` (no extra `dev`) | Python 3.12, extra `dev` |
 
 Em todas, o `make ci` **falha com cobertura de linhas abaixo de `COVERAGE_MIN`** (80 por padrão, configurável no `Makefile`) e mostra a cobertura medida. Arquivos que nenhum teste carrega também contam.

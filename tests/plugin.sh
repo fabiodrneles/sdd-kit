@@ -39,6 +39,36 @@ if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
   exit 1
 fi
 
+# 007 AC-5: a skill manda escrever no idioma do dono (CLAUDE.md/AGENTS.md ou
+# perguntar uma vez) e está em inglês; o glossário acompanha os scripts.
+mkdir -p "$tmp/template/common"
+cp -R "$root/template/common/scripts" "$tmp/template/common/"
+sed 's/ask the owner once/ask the owner/' "$root/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md" > "$skill_md"
+if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
+  echo "FALHOU: check-plugin aceitou a skill sem perguntar o idioma uma vez" >&2
+  exit 1
+fi
+sed '/AGENTS.md/d' "$root/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md" > "$skill_md"
+if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
+  echo "FALHOU: check-plugin aceitou a skill sem o AGENTS.md na regra de idioma" >&2
+  exit 1
+fi
+cp "$root/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md" "$skill_md"
+ref="$tmp/plugins/sdd-delivery/skills/sdd-delivery/references/process.md"
+echo 'Escreva as specs no idioma do dono.' >> "$ref"
+if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
+  echo "FALHOU: check-plugin aceitou texto em português na skill" >&2
+  exit 1
+fi
+cp "$root/plugins/sdd-delivery/skills/sdd-delivery/references/process.md" "$ref"
+sed 's/## Mudanças/## Changes/' "$root/template/common/scripts/sdd-check.sh" > "$tmp/template/common/scripts/sdd-check.sh"
+if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
+  echo "FALHOU: check-plugin aceitou o glossário fora de sincronia com os scripts" >&2
+  exit 1
+fi
+cp "$root/template/common/scripts/sdd-check.sh" "$tmp/template/common/scripts/"
+sh "$tmp/scripts/check-plugin.sh" >/dev/null
+
 # 006 AC-3 (estrutura): comando sem description e comando ausente são recusados.
 cp "$root/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md" "$tmp/plugins/sdd-delivery/skills/sdd-delivery/SKILL.md"
 sed '/^description:/d' "$root/plugins/sdd-delivery/commands/sdd-status.md" > "$tmp/plugins/sdd-delivery/commands/sdd-status.md"

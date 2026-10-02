@@ -1,11 +1,11 @@
 ---
-description: Pega o próximo ticket do épico aberto e o leva até um PR com CI verde
-argument-hint: "[número do ticket]"
+description: Takes the next ticket of the open epic and carries it to a PR with green CI
+argument-hint: "[ticket number]"
 ---
 
-Use a skill `sdd-delivery` para executar o **próximo ticket**. Ticket específico, se informado: $ARGUMENTS
+Use the `sdd-delivery` skill to work on the **next ticket**. Specific ticket, if given: $ARGUMENTS
 
-1. Leia o comentário "Estado da fase" mais recente do épico aberto e escolha o próximo ticket na ordem do épico.
-2. Crie a branch `<tipo>/<nº>-<descrição>`, escreva os testes a partir dos critérios de aceite (citando `NNN AC-n`) e depois o código.
-3. Rode a verificação local completa (`make ci`), faça a checagem de mutação dos testes novos e releia o diff.
-4. Abra o PR (`Closes #N · Épico #M · Spec NNN`), acompanhe o CI com `sh scripts/sdd-ci.sh "#PR"` (uma linha por check e só o fim do log das falhas) até ficar verde, e atualize o "Estado da fase".
+1. Read the most recent "Phase status" comment of the open epic and pick the next ticket in the epic's order.
+2. Create the branch `<type>/<number>-<description>`, write the tests from the acceptance criteria (citing `NNN AC-n`) and then the code. Commits and code in English.
+3. Run the full local check (`make ci`), do the mutation check of the new tests and reread the diff.
+4. Open the PR in the owner's language (`Closes #N · Epic #M · Spec NNN`), follow CI with `sh scripts/sdd-ci.sh "#PR"` (one line per check and only the end of the failing logs) until it is green, and update the "Phase status".

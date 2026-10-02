@@ -1,7 +1,7 @@
 {
   "name": "sdd-release",
   "version": "0.1.0",
-  "description": "Calcula a próxima versão SemVer pelos Conventional Commits (go-release-manager) e prepara o fechamento de fase do sdd-kit",
+  "description": "Computes the next SemVer version from Conventional Commits (go-release-manager) and prepares the sdd-kit phase closing",
   "author": {
     "name": "fabiodrneles",
     "url": "https://github.com/fabiodrneles"

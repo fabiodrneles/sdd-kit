@@ -1,11 +1,11 @@
 ---
-description: Abre o PR de fechamento da fase (status das specs, ROADMAP e CHANGELOG) para o dono criar a tag
-argument-hint: "<versão, ex.: v0.2.0>"
+description: Opens the phase closing PR (spec status, ROADMAP and CHANGELOG) for the owner to create the tag
+argument-hint: "<version, e.g. v0.2.0>"
 ---
 
-Use a skill `sdd-delivery` para **fechar a fase** da versão $ARGUMENTS.
+Use the `sdd-delivery` skill to **close the phase** of version $ARGUMENTS. Write the PR in the owner's language.
 
-1. Confirme que todos os PRs dos tickets do épico foram mergeados; se faltar algum, liste-os e **pare**.
-2. Abra o PR de fechamento. Use `sh scripts/sdd-mark.sh close $ARGUMENTS` (se existir): ele marca o ROADMAP, move as specs para `Done` ou `In Progress` e abre `[X.Y.Z] - AAAA-MM-DD` no CHANGELOG, sem risco de esvaziar arquivos. Revise os avisos e o texto do CHANGELOG. Rode `sh scripts/sdd-check.sh --strict` se a fase exigir rastreabilidade completa.
-3. Em projetos Go com GoReleaser, rode `sh scripts/sdd-release-check.sh pre $ARGUMENTS` antes de pedir a tag: ele simula o release num clone descartável.
-4. **Pare**: merge e tag são do dono. Depois da tag, `sh scripts/sdd-release-check.sh post $ARGUMENTS` confere a release publicada.
+1. Confirm that all of the epic's ticket PRs were merged; if any is missing, list them and **stop**.
+2. Open the closing PR. Use `sh scripts/sdd-mark.sh close $ARGUMENTS` (if it exists): it checks the ROADMAP boxes, moves the specs to `Done` or `In Progress` and opens `[X.Y.Z] - YYYY-MM-DD` in the CHANGELOG, with no risk of emptying files. Review the warnings and the CHANGELOG text. Run `sh scripts/sdd-check.sh --strict` if the phase requires full traceability.
+3. In Go projects with GoReleaser, run `sh scripts/sdd-release-check.sh pre $ARGUMENTS` before asking for the tag: it simulates the release in a throwaway clone.
+4. **Stop**: merge and tag are the owner's. After the tag, `sh scripts/sdd-release-check.sh post $ARGUMENTS` checks the published release.

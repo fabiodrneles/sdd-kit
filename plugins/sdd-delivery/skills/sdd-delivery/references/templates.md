@@ -1,283 +1,292 @@
-# Modelos
+# Templates
 
-Esqueletos para copiar e preencher. Substitua `<…>`. Escreva no idioma do dono.
+Skeletons to copy and fill in. Replace `<…>`. **Write in the owner's language**: translate the headings
+and text, keep the machine-read tokens (`Status:` values, IDs, `ADDED`/`MODIFIED`/`REMOVED`,
+`[Unreleased]`, `Closes #N`). In repositories that use the template scripts, use the Portuguese headings
+marked *(read by scripts)* in the "Language" section of SKILL.md.
 
-## Sumário
+## Contents
 
 - [specs/ANALYSIS.md](#specsanalysismd)
 - [specs/constitution.md](#specsconstitutionmd)
 - [specs/README.md](#specsreadmemd)
-- [specs/NNN-nome/spec.md](#specsnnn-nomespecmd)
-- [Formatos de critério de aceite](#formatos-de-critério-de-aceite)
+- [specs/NNN-name/spec.md](#specsnnn-namespecmd)
+- [Acceptance criteria formats](#acceptance-criteria-formats)
 - [specs/ROADMAP.md](#specsroadmapmd)
-- [Épico](#épico)
+- [Epic](#epic)
 - [Ticket](#ticket)
-- [Pull request de ticket](#pull-request-de-ticket)
-- [Comentário de conflitos (fase de revisão)](#comentário-de-conflitos-fase-de-revisão)
-- [PR de fechamento de fase](#pr-de-fechamento-de-fase)
+- [Ticket pull request](#ticket-pull-request)
+- [Conflicts comment (review phase)](#conflicts-comment-review-phase)
+- [Phase closing PR](#phase-closing-pr)
 - [CHANGELOG.md](#changelogmd)
-- [Mensagem ao dono ao fim da descoberta](#mensagem-ao-dono-ao-fim-da-descoberta)
+- [Message to the owner at the end of discovery](#message-to-the-owner-at-the-end-of-discovery)
 
 ## specs/ANALYSIS.md
 
 ````markdown
-# Análise e verificação do <projeto>
+# Analysis and verification of <project>
 
-> Data: <AAAA-MM-DD> · Base: commit `<sha>` (branch `<main>`)
-> Método: leitura completa do código + build, lint e execução real de todos os comandos e casos de borda.
+> Date: <YYYY-MM-DD> · Base: commit `<sha>` (branch `<main>`)
+> Method: full code reading + build, lint and real execution of every command and edge case.
 
-## 1. Resumo executivo
+## 1. Executive summary
 
-<2–3 frases: está pronto para uso real? Por quê?>
+<2–3 sentences: is it ready for real use? Why?>
 
-- <problema mais grave, em linguagem de usuário>
+- <most serious problem, in user language>
 - <…>
 
-<Uma frase sobre a base: reescrever ou corrigir/consolidar/testar?>
+<One sentence about the base: rewrite, or fix/consolidate/test?>
 
-## 2. O que foi verificado
+## 2. What was verified
 
-| Verificação | Resultado |
+| Check | Result |
 |---|---|
-| `<comando de build>` | ✅ OK |
-| `<comando documentado>` | ⚠️ <funciona com ressalva> |
-| `<caso de borda: stdin fechado / arquivo existente / entrada inválida>` | ❌ <o que aconteceu> |
-| Testes automatizados | <existem? passam?> |
+| `<build command>` | ✅ OK |
+| `<documented command>` | ⚠️ <works with a caveat> |
+| `<edge case: closed stdin / existing file / invalid input>` | ❌ <what happened> |
+| Automated tests | <do they exist? do they pass?> |
 
-## 3. Observações por severidade
+## 3. Findings by severity
 
-### Críticas (bloqueiam o "funciona de verdade")
+### Critical (block "actually works")
 
-| # | Observação | Evidência | Spec |
+| # | Finding | Evidence | Spec |
 |---|---|---|---|
-| C1 | <o quê> | `<arquivo:linha>` ou saída de comando | <NNN> |
+| C1 | <what> | `<file:line>` or command output | <NNN> |
 
-### Altas
+### High
 
-| # | Observação | Evidência | Spec |
+| # | Finding | Evidence | Spec |
 |---|---|---|---|
-| A1 | | | |
+| H1 | | | |
 
-### Médias
+### Medium
 
-| # | Observação | Spec |
+| # | Finding | Spec |
 |---|---|---|
 | M1 | | |
 
-### Baixas / higiene
+### Low / hygiene
 
 - <…>
 
-## 4. Pontos positivos (manter)
+## 4. Strengths (keep)
 
 - <…>
 
-## 5. Avaliação do README
+## 5. README assessment
 
-<Cada promessa verificada: funciona? falta o quê? promete o que não entrega?>
+<Each promise verified: does it work? what is missing? does it promise what it does not deliver?>
 
-## 6. Melhorias recomendadas (priorizadas)
+## 6. Recommended improvements (prioritized)
 
-**Fase 1 — Funcionar de verdade (P0)**
+**Phase 1 — Actually works (P0)**
 1. <…> (C1)
 
-**Fase 2 — Confiável (P1)**
+**Phase 2 — Reliable (P1)**
 1. <…>
 
-**Fase 3 — Profissional (P2)**
+**Phase 3 — Professional (P2)**
 1. <…>
 
-## 7. Decisões em aberto
+## 7. Open decisions
 
-| # | Pergunta | Opções | Recomendação |
+| # | Question | Options | Recommendation |
 |---|---|---|---|
-| D1 | <…> | <a / b / c> | <b, porque …> |
+| D1 | <…> | <a / b / c> | <b, because …> |
 ````
 
-Depois das respostas, troque o título da seção 7 para "Decisões", troque a coluna
-"Recomendação" por "Decisão" e registre a data da aprovação.
+After the answers, rename section 7 to "Decisions", replace the
+"Recommendation" column with "Decision" and record the approval date.
 
 ## specs/constitution.md
 
 ```markdown
-# Constituição do <projeto>
+# <project> constitution
 
-Princípios que toda spec e todo PR devem respeitar. Mudá-los exige uma spec própria.
+Principles every spec and every PR must respect. Changing them requires a spec of its own.
 
-1. **<Nome curto>.** <Regra verificável. Ex.: "Fonte única da verdade: todos os formatos derivam do mesmo modelo e não omitem campos em silêncio.">
-2. **Falhar alto, falhar cedo.** <Ex.: erros reportados todos de uma vez, com caminho do campo e exit code ≠ 0.>
-3. **Determinismo.** <Mesma entrada + mesma versão ⇒ mesma saída.>
-4. **Scriptável.** <Funciona sem TTY; flags para tudo; exit codes documentados.>
-5. **Uma implementação por comportamento.** <Sem lógica duplicada entre interfaces.>
-6. **Testado.** Todo critério de aceite tem teste automatizado; CI bloqueia merge vermelho.
-7. **Dependências mínimas.** <Só as justificadas em spec.>
+1. **<Short name>.** <Verifiable rule. E.g. "Single source of truth: every format derives from the same model and drops no field silently.">
+2. **Fail loud, fail early.** <E.g. errors reported all at once, with the field path and exit code ≠ 0.>
+3. **Determinism.** <Same input + same version ⇒ same output.>
+4. **Scriptable.** <Works without a TTY; flags for everything; documented exit codes.>
+5. **One implementation per behavior.** <No logic duplicated across interfaces.>
+6. **Tested.** Every acceptance criterion has an automated test; CI blocks a red merge.
+7. **Minimal dependencies.** <Only those justified in a spec.>
+8. **Language.** <Specs, issues and PRs in <owner's language>; code and commits in English.>
 ```
 
-5–10 princípios, cada um verificável por teste ou revisão.
+5–10 principles, each verifiable by a test or a review.
 
 ## specs/README.md
 
 ````markdown
-# Specs — <projeto>
+# Specs — <project>
 
-Este diretório organiza o desenvolvimento em **Spec Driven Development (SDD)**: nenhuma mudança
-de comportamento entra no código sem uma spec que a descreva e critérios de aceite que a verifiquem.
+This directory organizes development with **Spec Driven Development (SDD)**: no behavior change
+enters the code without a spec that describes it and acceptance criteria that verify it.
 
-## Fluxo
+## Flow
 
 ```text
-spec.md (O QUÊ / POR QUÊ) → revisão → testes a partir dos AC → implementação → status: Done
+spec.md (WHAT / WHY) → review → tests from the AC → implementation → status: Done
 ```
 
-1. **Especificar** — `FR-*`, `NFR-*` e `AC-*` (Dado/Quando/Então ou EARS).
-2. **Resolver decisões** — antes de implementar.
-3. **Testar primeiro** — cada `AC-*` vira ao menos um teste.
-4. **Implementar** — o PR referencia os IDs (`003 FR-1, AC-2`).
-5. **Fechar** — status atualizado no PR de fechamento da fase.
+1. **Specify** — `FR-*`, `NFR-*` and `AC-*` (Given/When/Then or EARS).
+2. **Resolve decisions** — before implementing.
+3. **Test first** — each `AC-*` becomes at least one test.
+4. **Implement** — the PR references the IDs (`003 FR-1, AC-2`).
+5. **Close** — status updated in the phase's closing PR.
 
-Convenções: MUST/SHOULD/MAY (RFC 2119). Prioridades: **P0** (bloqueia uso real), **P1** (confiabilidade), **P2** (polimento).
+Conventions: MUST/SHOULD/MAY (RFC 2119). Priorities: **P0** (blocks real use), **P1** (reliability), **P2** (polish).
 
-## Documentos
+## Documents
 
-| Documento | Conteúdo |
+| Document | Content |
 |---|---|
-| [ANALYSIS.md](ANALYSIS.md) | Relatório da verificação |
-| [constitution.md](constitution.md) | Princípios inegociáveis |
-| [ROADMAP.md](ROADMAP.md) | Tarefas por fase |
+| [ANALYSIS.md](ANALYSIS.md) | Verification report |
+| [constitution.md](constitution.md) | Non-negotiable principles |
+| [ROADMAP.md](ROADMAP.md) | Tasks by phase |
 
 ## Specs
 
-| ID | Spec | Prioridade | Status |
+| ID | Spec | Priority | Status |
 |---|---|---|---|
-| 001 | [<Área>](001-<area>/spec.md) | P0 | Draft |
+| 001 | [<Area>](001-<area>/spec.md) | P0 | Draft |
 
-Status possíveis: `Draft` → `Approved` → `In Progress` → `Done`.
+Possible statuses: `Draft` → `Approved` → `In Progress` → `Done`.
 ````
 
-## specs/NNN-nome/spec.md
+## specs/NNN-name/spec.md
 
 ```markdown
-# NNN — <Área>
+# NNN — <Area>
 
-- **Prioridade:** P0 | P1 | P2
+- **Priority:** P0 | P1 | P2
 - **Status:** Draft
-- **Código afetado:** `<caminhos>`
-- **Resolve:** <C1, A3, M2 — IDs do ANALYSIS.md, ou #issue>
+- **Affected code:** `<paths>`
+- **Resolves:** <C1, H3, M2 — IDs from ANALYSIS.md, or #issue>
 
-## Contexto
+## Context
 
-<Por que esta área importa e o que está errado hoje.>
+<Why this area matters and what is wrong today.>
 
-## Estado atual (verificado)
+## Current state (verified)
 
-- <fato observado executando, com o comando ou arquivo>
+- <fact observed by running something, with the command or file>
 
-## Requisitos funcionais
+## Functional requirements
 
-- **FR-1** <O sistema> MUST <comportamento verificável>.
+- **FR-1** <The system> MUST <verifiable behavior>.
 - **FR-2** <…> SHOULD <…>.
 
-## Requisitos não funcionais
+## Non-functional requirements
 
-- **NFR-1** <desempenho, tamanho, portabilidade, acessibilidade — com número>.
+- **NFR-1** <performance, size, portability, accessibility — with a number>.
 
-## Critérios de aceite
+## Acceptance criteria
 
-- **AC-1** Dado <contexto>, quando <ação>, então <resultado observável>.
-- **AC-2** Golden test: <saída de exemplo> é igual a `<testdata/arquivo>`.
-- **AC-3** QUANDO <gatilho>, O SISTEMA DEVE <resposta observável>.   ← EARS
+- **AC-1** Given <context>, when <action>, then <observable result>.
+- **AC-2** Golden test: <sample output> equals `<testdata/file>`.
+- **AC-3** WHEN <trigger>, THE SYSTEM SHALL <observable response>.   ← EARS
 
-## Fora de escopo
+## Out of scope
 
-- <o que não será feito, e por quê>
+- <what will not be done, and why>
 
-## Decisões
+## Decisions
 
-- D<n> — <decisão do dono e o porquê>.
-- <Revisado na implementação: o que mudou em relação ao requisito original e por quê.>
+- D<n> — <the owner's decision and why>.
+- <Revised during implementation: what changed from the original requirement and why.>
 
-## Mudanças
+## Changes
 
-### Não lançado
+### Unreleased
 
-- ADDED FR-3 — <o que passou a existir>
-- MODIFIED AC-2 — <o que mudou no comportamento>
-- REMOVED FR-1 — <o que saiu e por quê>
+- ADDED FR-3 — <what now exists>
+- MODIFIED AC-2 — <what changed in the behavior>
+- REMOVED FR-1 — <what was removed and why>
 ```
 
-A seção "Mudanças" é o delta da spec por versão, no estilo do OpenSpec: cada PR de ticket acrescenta
-suas linhas sob `### Não lançado`, e o PR de fechamento renomeia para a versão e gera o CHANGELOG
-a partir dela. `ADDED` e `MODIFIED` apontam para IDs que existem na spec (o `sdd-check` confere).
+The "Changes" section is the spec's per-version delta, in the OpenSpec style: each ticket PR adds
+its lines under `### Unreleased`, and the closing PR renames it to the version and generates the CHANGELOG
+from it. `ADDED` and `MODIFIED` point to IDs that exist in the spec (`sdd-check` checks it). With the
+template scripts, the headings are `## Mudanças` and `### Não lançado`, and "Current state (verified)"
+is `## Estado atual (verificado)`.
 
-## Formatos de critério de aceite
+## Acceptance criteria formats
 
-Os dois formatos são aceitos; escolha pelo tipo de requisito e mantenha um só por spec quando possível.
+Both formats are accepted; choose by the kind of requirement and keep one per spec when possible.
 
-| Formato | Use para | Exemplo |
+| Format | Use for | Example |
 |---|---|---|
-| Dado/Quando/Então | Comportamento visto pelo usuário, cenários com contexto | Dado um YAML sem `name`, quando `build` roda, então sai com código 2 e cita `name` |
-| EARS | Requisitos de sistema: eventos, estados, erros, opções | QUANDO o arquivo de saída já existe, O SISTEMA DEVE perguntar antes de sobrescrever |
+| Given/When/Then | User-visible behavior, scenarios with context | Given a YAML without `name`, when `build` runs, then it exits with code 2 and mentions `name` |
+| EARS | System requirements: events, states, errors, options | WHEN the output file already exists, THE SYSTEM SHALL ask before overwriting |
 
-Padrões EARS (Easy Approach to Requirements Syntax), em português:
+EARS patterns (Easy Approach to Requirements Syntax); in Portuguese, `O SISTEMA DEVE`, `QUANDO`,
+`ENQUANTO`, `SE … ENTÃO`, `ONDE`:
 
-| Padrão | Forma |
+| Pattern | Form |
 |---|---|
-| Ubíquo | `O SISTEMA DEVE <resposta>` |
-| Evento | `QUANDO <gatilho>, O SISTEMA DEVE <resposta>` |
-| Estado | `ENQUANTO <estado>, O SISTEMA DEVE <resposta>` |
-| Indesejado | `SE <condição indesejada>, ENTÃO O SISTEMA DEVE <resposta>` |
-| Opcional | `ONDE <recurso presente>, O SISTEMA DEVE <resposta>` |
+| Ubiquitous | `THE SYSTEM SHALL <response>` |
+| Event | `WHEN <trigger>, THE SYSTEM SHALL <response>` |
+| State | `WHILE <state>, THE SYSTEM SHALL <response>` |
+| Unwanted | `IF <unwanted condition>, THEN THE SYSTEM SHALL <response>` |
+| Optional | `WHERE <feature present>, THE SYSTEM SHALL <response>` |
 
-Em ambos, o resultado precisa ser **observável** por um teste automatizado.
+In both, the result must be **observable** by an automated test.
 
 ## specs/ROADMAP.md
 
 ```markdown
-# Roadmap e tarefas
+# Roadmap and tasks
 
-Cada tarefa referencia a spec e os critérios de aceite que ela fecha. Ordem sugerida = ordem da lista.
+Each task references the spec and the acceptance criteria it closes. Suggested order = list order.
 
-## Fase 0 — Decisões (antes de codar)
+## Phase 0 — Decisions (before coding)
 
-- [ ] Responder D1–Dn em [ANALYSIS.md §7](ANALYSIS.md#7-decisões-em-aberto) e mover specs para `Approved`.
+- [ ] Answer D1–Dn in [ANALYSIS.md §7](ANALYSIS.md#7-open-decisions) and move the specs to `Approved`.
 
-## Fase 1 — Funcionar de verdade (P0) → `v0.1.0`
+## Phase 1 — Actually works (P0) → `v0.1.0`
 
-- [ ] **T1** <tarefa> — 007 FR-1..5
-- [ ] **T2** <tarefa> — 003 FR-1, AC-1/2
+- [ ] **T1** <task> — 007 FR-1..5
+- [ ] **T2** <task> — 003 FR-1, AC-1/2
 
-## Fase 2 — Confiável (P1) → `v0.2.0`
+## Phase 2 — Reliable (P1) → `v0.2.0`
 
-- [ ] **Tn** <tarefa> — <IDs>
+- [ ] **Tn** <task> — <IDs>
 
-## Fase 3 — Profissional (P2) → `v1.0.0`
+## Phase 3 — Professional (P2) → `v1.0.0`
 
-- [ ] **Tn** <tarefa> — <IDs>
+- [ ] **Tn** <task> — <IDs>
 ```
 
-Tarefa antecipada para uma fase anterior: marque `*(antecipada)*`. Tarefa abandonada: risque (`~~…~~`) e explique.
+A task brought forward to an earlier phase: mark it `*(brought forward)*`. An abandoned task: strike it (`~~…~~`) and explain.
+The phase heading keeps the `` → `vX.Y.Z` `` form: the scripts and `/sdd-release` read it (with the template
+scripts, `` ## Fase N — <nome> → `vX.Y.Z` ``).
 
-## Épico
+## Epic
 
-Título: `Fase N — <nome> (vX.Y.Z)` · Labels: `épico`, `fase-N`
+Title: `Phase N — <name> (vX.Y.Z)` · Labels: epic, `phase-N` (with the template scripts: `épico`, `fase-N`)
 
 ```markdown
-## Objetivo
+## Goal
 
-<O que esta fase entrega, em uma ou duas frases.> Versão: `vX.Y.Z`.
+<What this phase delivers, in one or two sentences.> Version: `vX.Y.Z`.
 
-## Tarefas (ordem sugerida de revisão e merge)
+## Tasks (suggested review and merge order)
 
-As tarefas são as sub-issues deste épico. Ordem sugerida:
+The tasks are this epic's sub-issues. Suggested order:
 
-1. #<n> <título> — <por que primeiro: base de outros, desbloqueia CI…>
-2. #<n> <título>
+1. #<n> <title> — <why first: base for others, unblocks CI…>
+2. #<n> <title>
 
-## Critério de pronto
+## Definition of done
 
-- Todos os PRs mergeados com CI verde.
-- PR de fechamento mergeado (specs, ROADMAP, CHANGELOG).
-- Tag `vX.Y.Z` publicada pelo dono.
+- All PRs merged with green CI.
+- Closing PR merged (specs, ROADMAP, CHANGELOG).
+- Tag `vX.Y.Z` published by the owner.
 
 Specs: <NNN, NNN> · Roadmap: <T11–T16>
 
@@ -287,163 +296,165 @@ _Generated by [Claude Code](https://claude.ai/code)_
 
 ## Ticket
 
-Título em Conventional Commits (`feat: add --format all`) · Labels: `fase-N`, `tipo:<…>`, `P<1-3>`
+Title in Conventional Commits (`feat: add --format all`) · Labels: `phase-N`, `type:<…>`, `P<1-3>`
 
 ```markdown
-## Contexto
+## Context
 
-<O problema e para quem. Achado de origem: C2 em specs/ANALYSIS.md.>
+<The problem and for whom. Source finding: C2 in specs/ANALYSIS.md.>
 
-## O que fazer
+## What to do
 
 - <item>
 - <item>
 
-## Critérios de aceite
+## Acceptance criteria
 
-- [ ] Dado <…>, quando <…>, então <…> (teste automatizado).
-- [ ] <verificação no CI / documentação atualizada>.
+- [ ] Given <…>, when <…>, then <…> (automated test).
+- [ ] <check in CI / documentation updated>.
 
-## Decisão para a revisão (opcional)
+## Decision for the review (optional)
 
-<Escolha embutida no ticket que o dono precisa ver, com a recomendação.>
+<A choice embedded in the ticket that the owner needs to see, with the recommendation.>
 
-**Spec(s):** <NNN FR-x, AC-y> · **Épico:** #<M>
+**Spec(s):** <NNN FR-x, AC-y> · **Epic:** #<M>
 
 ---
 _Generated by [Claude Code](https://claude.ai/code)_
 ```
 
-Ordem das chamadas: criar a issue (com labels) → obter o `id` → anexar como sub-issue do épico.
+Call order: create the issue (with labels) → get its `id` → attach it as a sub-issue of the epic.
 
-## Pull request de ticket
+## Ticket pull request
 
-Branch: `<tipo>/<nº>-<descrição>` · Título em Conventional Commits.
+Branch: `<type>/<number>-<description>` · Title in Conventional Commits.
 
 ```markdown
-Closes #<N> · Épico #<M> · Spec <NNN>
+Closes #<N> · Epic #<M> · Spec <NNN>
 
-> PR empilhado sobre #<NN>.   ← só se for empilhado
+> Stacked PR on #<NN>.   ← only if stacked
 
-## O que muda
+## What changes
 
-<Problema e solução do ponto de vista de quem usa. Mudanças fora do escopo que eram
-pré-condição para o CI ficar verde, explicadas aqui.>
+<Problem and solution from the user's point of view. Out-of-scope changes that were a
+precondition for green CI, explained here.>
 
-## Specs e critérios de aceite
+## Specs and acceptance criteria
 
-<003 FR-8, AC-6. Spec atualizada neste PR? Por quê?>
+<003 FR-8, AC-6. Spec updated in this PR? Why?>
 
-## Como foi testado
+## How it was tested
 
-- <testes novos/alterados; cada um passou pela checagem de mutação: o que foi quebrado>
-- `<make ci>` verde localmente em <SO>.
-- <o que NÃO foi verificado localmente (ex.: Windows só no CI)>
+- <new/changed tests; each one went through the mutation check: what was broken>
+- `<make ci>` green locally on <OS>.
+- <what was NOT verified locally (e.g. Windows only in CI)>
 
-## Notas para a revisão
+## Review notes
 
-- <decisões tomadas, alternativas, conflitos esperados com outros PRs da fase>
+- <decisions taken, alternatives, expected conflicts with other PRs of the phase>
 
 ## Checklist
 
-- [ ] Verificação local completa passa
-- [ ] Testes cobrem os critérios de aceite
-- [ ] Golden files regravados **e revisados** (se as saídas mudaram)
-- [ ] Spec atualizada (se o comportamento mudou)
-- [ ] README/docs atualizados (se a interface mudou)
-- [ ] Mudança incompatível sinalizada com `!` e explicada
-- [ ] Não altera status de specs, checkboxes do ROADMAP nem entradas do CHANGELOG
+- [ ] Full local check passes
+- [ ] Tests cover the acceptance criteria
+- [ ] Golden files rewritten **and reviewed** (if the outputs changed)
+- [ ] Spec updated (if the behavior changed)
+- [ ] README/docs updated (if the interface changed)
+- [ ] Breaking change flagged with `!` and explained
+- [ ] Does not change spec status, ROADMAP checkboxes or CHANGELOG entries
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
-<link da sessão>
+<session link>
 ```
 
-Se o repositório tiver `pull_request_template.md`, use-o e mantenha a primeira linha normativa.
+If the repository has a `pull_request_template.md`, use it and keep the normative first line.
 
-## Comentário de conflitos (fase de revisão)
+## Conflicts comment (review phase)
 
 ```markdown
-### Conflitos com outros PRs da fase
+### Conflicts with other PRs of the phase
 
-Simulado com `git merge-tree --write-tree origin/<esta> origin/<outra>` em <data> (commits `<sha>`/`<sha>`):
+Simulated with `git merge-tree --write-tree origin/<this> origin/<other>` on <date> (commits `<sha>`/`<sha>`):
 
-| Com | Arquivos | Resolução |
+| With | Files | Resolution |
 |---|---|---|
-| #<n> | `Makefile`, `.github/workflows/ci.yml` | manter os dois alvos; ordem: … |
-| #<n> | — | sem conflito |
+| #<n> | `Makefile`, `.github/workflows/ci.yml` | keep both targets; order: … |
+| #<n> | — | no conflict |
 
-Ordem de merge sugerida: #a → #b → #c.
+Suggested merge order: #a → #b → #c.
 
 ---
 _Generated by [Claude Code](https://claude.ai/code)_
 ```
 
-## PR de fechamento de fase
+## Phase closing PR
 
-Branch: `chore/<épico>-close-phase-N` · Título: `chore: close phase N (vX.Y.Z)`
+Branch: `chore/<epic>-close-phase-N` · Title: `chore: close phase N (vX.Y.Z)`
 
 ```markdown
-Closes #<épico> · Épico #<épico> · Spec —
+Closes #<epic> · Epic #<epic> · Spec —
 
-## O que muda
+## What changes
 
-Fecha a Fase N → `vX.Y.Z`.
+Closes Phase N → `vX.Y.Z`.
 
-## Checklist de fechamento
+## Closing checklist
 
-- [ ] Todos os PRs da fase mergeados (lista: #a, #b, #c)
-- [ ] `specs/README.md`: status atualizado de cada spec tocada
-- [ ] Cabeçalho `Status:` de cada spec igual ao do índice
-- [ ] Seção "Estado atual" das specs que a tiverem, refletindo o que foi entregue
-- [ ] `specs/ROADMAP.md`: checkboxes das tarefas concluídas; antecipadas/riscadas explicadas
-- [ ] Seção "Mudanças" das specs: `### Não lançado` → `### vX.Y.Z`
-- [ ] `CHANGELOG.md` gerado das seções "Mudanças": `[Unreleased]` → `[X.Y.Z] - AAAA-MM-DD`; nova `[Unreleased]` vazia; links de comparação
-- [ ] `specs/ANALYSIS.md`: achados resolvidos marcados (se o projeto mantiver esse controle)
-- [ ] Verificação local completa verde; CI verde
-- [ ] Próximo passo do dono: após o merge, `git tag vX.Y.Z && git push origin vX.Y.Z`
+- [ ] All of the phase's PRs merged (list: #a, #b, #c)
+- [ ] `specs/README.md`: status updated for each spec touched
+- [ ] Each spec's `Status:` header equal to the index
+- [ ] "Current state" section of the specs that have one, reflecting what was delivered
+- [ ] `specs/ROADMAP.md`: checkboxes of the finished tasks; brought-forward/struck ones explained
+- [ ] Specs' "Changes" section: `### Unreleased` → `### vX.Y.Z`
+- [ ] `CHANGELOG.md` generated from the "Changes" sections: `[Unreleased]` → `[X.Y.Z] - YYYY-MM-DD`; new empty `[Unreleased]`; comparison links
+- [ ] `specs/ANALYSIS.md`: resolved findings marked (if the project keeps that record)
+- [ ] Full local check green; CI green
+- [ ] Owner's next step: after the merge, `git tag vX.Y.Z && git push origin vX.Y.Z` (or the release workflow)
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
 
 ## CHANGELOG.md
 
+Section names in the owner's language (Portuguese: Adicionado, Alterado, Corrigido, Removido).
+
 ```markdown
 # Changelog
 
-Formato: [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) · Versionamento: [SemVer](https://semver.org/lang/pt-BR/).
+Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
-## [0.1.0] - AAAA-MM-DD
+## [0.1.0] - YYYY-MM-DD
 
-### Adicionado
+### Added
 
 - <…>
 
-### Alterado
+### Changed
 
-### Corrigido
+### Fixed
 
-### Removido
+### Removed
 
 [Unreleased]: https://github.com/<o>/<r>/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/<o>/<r>/releases/tag/v0.1.0
 ```
 
-## Mensagem ao dono ao fim da descoberta
+## Message to the owner at the end of discovery
 
 ```markdown
-Análise concluída e registrada em `specs/ANALYSIS.md` (commit `<sha>`).
+Analysis finished and recorded in `specs/ANALYSIS.md` (commit `<sha>`).
 
-**Principais observações**
+**Main findings**
 - 🔴 C1 <…>
 - 🔴 C2 <…>
-- 🟠 A1 <…>
+- 🟠 H1 <…>
 
-**Decisões que preciso de você** (minha recomendação entre parênteses)
-- D1 <pergunta> (<recomendação>)
+**Decisions I need from you** (my recommendation in parentheses)
+- D1 <question> (<recommendation>)
 - D2 <…>
 
-Verificado: <build, comandos X/Y, casos de borda>. Não verificado: <Windows, release>.
-Nada de código foi alterado; aguardo as decisões para começar a Fase 1.
+Verified: <build, commands X/Y, edge cases>. Not verified: <Windows, release>.
+No code was changed; I am waiting for the decisions to start Phase 1.
 ```

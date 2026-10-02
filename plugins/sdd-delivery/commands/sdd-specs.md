@@ -1,10 +1,10 @@
 ---
-description: Cria ou atualiza a constituição, as specs e o ROADMAP a partir da análise e das decisões do dono
-argument-hint: "[área ou ideia]"
+description: Creates or updates the constitution, the specs and the ROADMAP from the analysis and the owner's decisions
+argument-hint: "[area or idea]"
 ---
 
-Use a skill `sdd-delivery` para escrever a base de specs. Contexto adicional: $ARGUMENTS
+Use the `sdd-delivery` skill to write the spec base, in the owner's language. Additional context: $ARGUMENTS
 
-1. Confirme que as decisões em aberto de `specs/ANALYSIS.md` foram respondidas; se não, liste-as e **pare**.
-2. Escreva ou atualize `specs/constitution.md`, uma spec por área (`specs/NNN-nome/spec.md`, com `FR-*`, `NFR-*` e `AC-*` em Dado/Quando/Então ou EARS), `specs/README.md` e `specs/ROADMAP.md` por fases.
-3. Abra um ticket e um PR para essa mudança, como qualquer outra.
+1. Confirm that the open decisions in `specs/ANALYSIS.md` were answered; if not, list them and **stop**.
+2. Write or update `specs/constitution.md`, one spec per area (`specs/NNN-name/spec.md`, with `FR-*`, `NFR-*` and `AC-*` in Given/When/Then or EARS), `specs/README.md` and `specs/ROADMAP.md` by phases.
+3. Open a ticket and a PR for this change, like any other.

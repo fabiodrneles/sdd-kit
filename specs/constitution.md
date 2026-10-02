@@ -9,4 +9,4 @@ Princípios que toda spec e todo PR devem respeitar. Mudá-los exige uma spec pr
 5. **Portável.** Todo script roda em Linux, macOS e Windows (sh e PowerShell), sem dependências além do que vem no sistema e do `git`.
 6. **Testado no CI.** Todo critério de aceite tem verificação automatizada; o CI bloqueia merge vermelho; shell passa no shellcheck e Markdown no markdownlint.
 7. **O processo se aplica a si mesmo.** O sdd-kit é desenvolvido com o processo que ele distribui: specs, épicos, um PR por ticket, CI verde.
-8. **Português primeiro.** Specs, issues, PRs e documentação em português; um `README.en.md` para quem não lê português; código e commits em inglês.
+8. **Português primeiro, skill para todos.** Specs, issues, PRs e documentação do kit em português; um `README.en.md` para quem não lê português; código e commits em inglês. A skill e os comandos dos plugins são escritos em inglês e escrevem specs, issues e PRs no idioma do dono do repositório que os usa (D12).

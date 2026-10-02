@@ -1,111 +1,112 @@
-# Gates de qualidade, testes e lições aprendidas
+# Quality gates, tests and lessons learned
 
-## Sumário
+## Contents
 
-- [Gates de CI](#gates-de-ci)
-- [Alvo local equivalente](#alvo-local-equivalente)
-- [Testes a partir dos critérios de aceite](#testes-a-partir-dos-critérios-de-aceite)
-- [Checagem de mutação](#checagem-de-mutação)
-- [Testes de consistência documentação × código](#testes-de-consistência-documentação--código)
-- [Releitura adversarial do diff](#releitura-adversarial-do-diff)
+- [CI gates](#ci-gates)
+- [Equivalent local target](#equivalent-local-target)
+- [Tests from the acceptance criteria](#tests-from-the-acceptance-criteria)
+- [Mutation check](#mutation-check)
+- [Documentation × code consistency tests](#documentation--code-consistency-tests)
+- [Adversarial reread of the diff](#adversarial-reread-of-the-diff)
 - [Release](#release)
-- [Lições aprendidas (viraram checagens)](#lições-aprendidas-viraram-checagens)
+- [Lessons learned (they became checks)](#lessons-learned-they-became-checks)
 
-## Gates de CI
+## CI gates
 
-Rode em todo PR e em todo push para `main`. Adapte as ferramentas à linguagem; mantenha os gates.
+Run them on every PR and every push to `main`. Adapt the tools to the language; keep the gates.
 
-| Gate | O que garante | Exemplo (Go) |
+| Gate | What it guarantees | Example (Go) |
 |---|---|---|
-| Dependências limpas | manifesto sem diff após normalizar | `go mod tidy && git diff --exit-code go.mod go.sum` |
-| Formatação + lint | estilo e erros estáticos | `go vet`, `golangci-lint` |
-| Testes em todos os SOs suportados | portabilidade real | matriz `ubuntu/macos/windows`, `fail-fast: false` |
-| Versão mínima e última estável | não quebra quem usa a mínima declarada | matriz `go: [mínima, stable]` |
-| Race detector | concorrência | `go test -race` (onde houver suporte) |
-| Gate de cobertura | testes não regridem | script que falha abaixo de N% (ex.: 80% no código interno) |
-| Smoke test do artefato real | o binário/pacote funciona como o usuário usa | script que compila e roda comandos checando exit codes e saídas |
-| Cross-build | todos os alvos de release compilam | matriz `GOOS × GOARCH` |
-| Vulnerabilidades | dependências sem CVEs conhecidas | `govulncheck`, `npm audit`, `pip-audit` |
-| Ensaio de release | a release funciona sem publicar | `goreleaser release --snapshot` + script que confere os artefatos |
-| Docs: markdownlint | Markdown válido (inclusive saídas geradas em Markdown) | `markdownlint-cli2` |
-| Docs: links | nenhum link quebrado | `lychee` |
-| Docs: comandos | todo comando de exemplo do README roda com exit 0 | script que extrai blocos `bash` e executa |
+| Clean dependencies | manifest without a diff after normalizing | `go mod tidy && git diff --exit-code go.mod go.sum` |
+| Formatting + lint | style and static errors | `go vet`, `golangci-lint` |
+| Tests on every supported OS | real portability | `ubuntu/macos/windows` matrix, `fail-fast: false` |
+| Minimum and latest stable version | does not break whoever uses the declared minimum | `go: [minimum, stable]` matrix |
+| Race detector | concurrency | `go test -race` (where supported) |
+| Coverage gate | tests do not regress | script that fails below N% (e.g. 80% of internal code) |
+| Smoke test of the real artifact | the binary/package works the way the user uses it | script that builds and runs commands checking exit codes and outputs |
+| Cross-build | every release target builds | `GOOS × GOARCH` matrix |
+| Vulnerabilities | dependencies without known CVEs | `govulncheck`, `npm audit`, `pip-audit` |
+| Release rehearsal | the release works without publishing | `goreleaser release --snapshot` + script that checks the artifacts |
+| Docs: markdownlint | valid Markdown (generated Markdown outputs included) | `markdownlint-cli2` |
+| Docs: links | no broken link | `lychee` |
+| Docs: commands | every README example command runs with exit 0 | script that extracts `bash` blocks and runs them |
 
-Boas práticas do workflow: `permissions: contents: read`; `concurrency` cancelando execuções
-antigas do mesmo ref; ferramentas obrigatórias no CI mesmo quando opcionais localmente
-(ex.: variável `REQUIRE_X=1` faz o teste falhar em vez de pular); fixar versões das ferramentas.
+Workflow good practices: `permissions: contents: read`; `concurrency` cancelling old runs
+of the same ref; tools required in CI even when optional locally
+(e.g. a `REQUIRE_X=1` variable makes the test fail instead of skipping); pin the tools' versions.
 
-## Alvo local equivalente
+## Equivalent local target
 
-Um alvo (`make ci`, `npm run ci`, `just ci`, `tox`) roda o subconjunto viável do CI **com os
-mesmos comandos e limites** (mesmo script de cobertura, mesmo limiar, mesmo smoke). Ele é rodado
-antes de **todo** push. Comente no topo do arquivo que ele espelha o workflow.
+A target (`make ci`, `npm run ci`, `just ci`, `tox`) runs the feasible subset of CI **with the
+same commands and limits** (same coverage script, same threshold, same smoke). It runs
+before **every** push. Note at the top of the file that it mirrors the workflow.
 
-Smoke test típico (`scripts/smoke.sh`): compila o artefato real num diretório temporário,
-define `check <descrição> <exit esperado> <comando…>` e `contains <arquivo> <texto>`, roda com
-`</dev/null` (sem TTY), cobre caminho feliz, cada exit code documentado, sobrescrita,
-entrada inválida e saída de cada formato; acumula falhas e termina com exit ≠ 0 se houver alguma.
+Typical smoke test (`scripts/smoke.sh`): builds the real artifact in a temporary directory,
+defines `check <description> <expected exit> <command…>` and `contains <file> <text>`, runs with
+`</dev/null` (no TTY), covers the happy path, each documented exit code, overwriting,
+invalid input and the output of each format; accumulates failures and ends with exit ≠ 0 if there is any.
 
-## Testes a partir dos critérios de aceite
+## Tests from the acceptance criteria
 
-- Cada `AC-*` vira ao menos um teste automatizado; cite o ID no nome ou comentário do teste.
-- **Golden files** para saídas geradas: comparação exata com `testdata/`; uma flag (`-update`)
-  ou alvo (`make golden`) regrava após mudança **intencional**; o diff dos goldens é revisado no PR.
-- Teste de paridade quando várias saídas derivam do mesmo modelo (nenhum campo omitido).
-- Testes de CLI com exit codes e stdin fechado.
-- Determinismo: datas e aleatoriedade injetáveis (ex.: `SOURCE_DATE_EPOCH`).
+- Each `AC-*` becomes at least one automated test; cite the ID in the test's name or comment.
+- **Golden files** for generated outputs: exact comparison with `testdata/`; a flag (`-update`)
+  or target (`make golden`) rewrites them after an **intentional** change; the goldens' diff is reviewed in the PR.
+- Parity test when several outputs derive from the same model (no field dropped).
+- CLI tests with exit codes and closed stdin.
+- Determinism: injectable dates and randomness (e.g. `SOURCE_DATE_EPOCH`).
 
-## Checagem de mutação
+## Mutation check
 
-Para **cada** teste novo, antes do push:
+For **each** new test, before the push:
 
-1. Quebre temporariamente o código coberto (inverta uma condição, remova uma linha, troque o valor).
-2. Rode só aquele teste: ele **tem** de falhar, pelo motivo esperado.
-3. Desfaça a quebra (`git diff` deve mostrar só o que era para mostrar).
-4. Registre em "Como foi testado" o que foi quebrado.
+1. Temporarily break the covered code (invert a condition, remove a line, change the value).
+2. Run only that test: it **has** to fail, for the expected reason.
+3. Undo the break (`git diff` must show only what it should).
+4. Record what was broken under "How it was tested".
 
-Isso já revelou um teste de quebra de página que não testava nada e um teste de alvo de
-`Makefile` que passava com o alvo quebrado.
+This has already exposed a page-break test that tested nothing and a `Makefile`
+target test that passed with the target broken.
 
-## Testes de consistência documentação × código
+## Documentation × code consistency tests
 
-Quando a documentação e o código precisam concordar, escreva um teste que **force** isso:
+When the documentation and the code must agree, write a test that **enforces** it:
 
-- Todo campo do modelo/schema aparece na documentação do schema (reflexão sobre a struct × doc).
-- Todo alvo `make <x>` citado em README/CONTRIBUTING existe no `Makefile`.
-- Todo comando de exemplo do README é executado no CI (`scripts/doc-commands.sh`).
-- Todo exemplo em `examples/` é validado pelo próprio programa.
-- `CONTRIBUTING.md` não contradiz a spec de processo (revisão no PR que tocar algum dos dois).
+- Every model/schema field appears in the schema documentation (reflection on the struct × doc).
+- Every `make <x>` target cited in README/CONTRIBUTING exists in the `Makefile`.
+- Every README example command runs in CI (`scripts/doc-commands.sh`).
+- Every example in `examples/` is validated by the program itself.
+- `CONTRIBUTING.md` does not contradict the process spec (review in the PR that touches either).
 
-## Releitura adversarial do diff
+## Adversarial reread of the diff
 
-Antes do push, leia `git diff origin/<base>...HEAD` como revisor hostil:
+Before the push, read `git diff origin/<base>...HEAD` as a hostile reviewer:
 
-- Escopo: só o ticket? Algo que deveria ser outro ticket?
-- Esquecidos: arquivo novo sem `git add`? Spec, README, CHANGELOG (se for o PR que cria)?
-- Arquivos de status compartilhados alterados num PR de ticket? (não pode)
-- Segredos, caminhos locais, saídas geradas, binários.
-- Afirmações na descrição do PR: cada uma foi verificada? (ex.: conflitos → simulados com
-  `git merge-tree`, não presumidos.)
-- README × specs × código dizem a mesma coisa?
+- Scope: only the ticket? Anything that should be another ticket?
+- Forgotten: a new file without `git add`? Spec, README, CHANGELOG (if it is the PR that creates it)?
+- Shared status files changed in a ticket PR? (not allowed)
+- Secrets, local paths, generated outputs, binaries.
+- Claims in the PR description: was each one verified? (e.g. conflicts → simulated with
+  `git merge-tree`, not assumed.)
+- Do README × specs × code say the same thing?
+- Are the specs, issues and PR in the owner's language, and the commits in English?
 
 ## Release
 
-- Disparada por tag `v*` criada **pelo dono**.
-- O workflow de release **chama o CI completo** (`uses: ./.github/workflows/ci.yml`) e só
-  depois publica binários + checksums (ex.: GoReleaser), com `contents: write` só nesse job.
-- Script de verificação dos artefatos (quantidade, alvos, checksums, arquivos incluídos,
-  versão embutida) roda também no ensaio de release do CI.
-- Changelog agrupado pelos prefixos Conventional Commits.
+- Triggered by a `v*` tag created **by the owner** (or by a release workflow the owner runs or asks for).
+- The release workflow **calls the full CI** (`uses: ./.github/workflows/ci.yml`) and only
+  then publishes binaries + checksums (e.g. GoReleaser), with `contents: write` only in that job.
+- An artifact verification script (count, targets, checksums, included files,
+  embedded version) also runs in CI's release rehearsal.
+- Changelog grouped by Conventional Commits prefix.
 
-## Lições aprendidas (viraram checagens)
+## Lessons learned (they became checks)
 
-| Situação | Checagem |
+| Situation | Check |
 |---|---|
-| Um glob na raiz do `.gitignore` (ex.: `cv-craft*`) escondeu arquivos de configuração de ferramentas | `git check-ignore -v <arquivo>` para cada arquivo novo de config; `git status` depois de criar. O `.gitignore` **não aceita comentário no fim da linha** — comentário só em linha própria. |
-| Conflitos entre PRs foram descritos de cabeça | Simule: `git merge-tree --write-tree origin/a origin/b`; só escreva o que a simulação mostrou. |
-| Proxy do ambiente bloqueou um host (download de ferramenta, link check) | Diga que não foi verificado e por quê; nunca relate sucesso. Deixe o CI verificar e confira o resultado. |
-| Biblioteca de extração de texto de PDF truncava caracteres acima de U+00FF, escondendo justamente os bugs de Unicode | Valide a ferramenta de verificação em casos difíceis (acentos, não Latin-1) antes de confiar nela; prefira a ferramenta de referência (ex.: `pdftotext`). |
-| Runner Windows tinha uma ferramenta do pacote mas não a outra (`pdftotext` sem `pdfinfo`) | Detecte cada dependência externa separadamente; no CI, exija-as explicitamente. |
-| Subir a versão da linguagem quebrou o linter compilado com a versão anterior | Atualize a ferramenta no mesmo PR (pré-condição para o verde), explicando em "O que muda". |
-| Base de PR empilhado mergeada e apagada | Confira que o PR foi redirecionado à `main`, que o diff tem só o ticket e que o CI está verde. |
+| A glob at the root of `.gitignore` (e.g. `cv-craft*`) hid tool configuration files | `git check-ignore -v <file>` for each new config file; `git status` after creating it. `.gitignore` **does not accept end-of-line comments** — comments only on their own line. |
+| Conflicts between PRs were described from memory | Simulate: `git merge-tree --write-tree origin/a origin/b`; write only what the simulation showed. |
+| The environment's proxy blocked a host (tool download, link check) | Say it was not verified and why; never report success. Let CI verify and check the result. |
+| A PDF text extraction library truncated characters above U+00FF, hiding exactly the Unicode bugs | Validate the verification tool on hard cases (accents, non-Latin-1) before trusting it; prefer the reference tool (e.g. `pdftotext`). |
+| A Windows runner had one tool of the package but not the other (`pdftotext` without `pdfinfo`) | Detect each external dependency separately; in CI, require them explicitly. |
+| Bumping the language version broke the linter built with the previous version | Update the tool in the same PR (precondition for green), explaining it in "What changes". |
+| Base of a stacked PR merged and deleted | Check that the PR was retargeted to `main`, that the diff has only the ticket and that CI is green. |

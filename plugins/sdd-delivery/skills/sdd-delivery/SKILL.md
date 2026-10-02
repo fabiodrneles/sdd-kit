@@ -1,188 +1,232 @@
 ---
 name: sdd-delivery
 description: >-
-  Processo de entrega Spec Driven Development (SDD) ponta a ponta para qualquer repositório, com o dono decidindo e o agente executando: auditoria do repo com evidências (specs/ANALYSIS.md e decisões D1..Dn), constituição, uma spec por área (FR/NFR/AC), ROADMAP por fases e versões, épico por fase com tickets como sub-issues, uma branch e um PR por ticket, CI com gates fortes, CI vermelho tratado pela causa raiz, fase de revisão, PR de fechamento, CHANGELOG e tag. Use sempre que o usuário pedir para analisar, verificar, terminar, organizar ou profissionalizar um repositório, mesmo sem citar SDD. Gatilhos: "análise e verificação do repo", "organize as specs", "crie as specs", "gere os tickets", "crie os épicos", "um PR por issue", "uma branch por ticket", "fase de revisão", "feche a fase", "prepare a release", "trabalhe como no cv-craft", "spec driven development", "SDD", "phase plan", "ticket per branch", "one PR per issue", "audit this repo", "make this repo production ready".
+  End-to-end Spec Driven Development (SDD) delivery process for any repository, with the owner deciding and the agent executing: evidence-based repo audit (specs/ANALYSIS.md and decisions D1..Dn), constitution, one spec per area (FR/NFR/AC), ROADMAP by phases and versions, one epic per phase with tickets as sub-issues, one branch and one PR per ticket, CI with strong gates, red CI fixed at the root cause, review phase, closing PR, CHANGELOG and tag. Writes specs, issues and PRs in the repository owner's language. Use whenever the user asks to analyze, verify, finish, organize or professionalize a repository, even without mentioning SDD. Triggers: "audit this repo", "make this repo production ready", "organize the specs", "write the specs", "create the tickets", "create the epics", "one PR per issue", "ticket per branch", "phase plan", "review phase", "close the phase", "prepare the release", "spec driven development", "SDD", "análise e verificação do repo", "crie as specs", "gere os tickets", "feche a fase"."
 ---
 
-# SDD Delivery — análise → specs → tickets → PRs → revisão → release
+# SDD Delivery — analysis → specs → tickets → PRs → review → release
 
-Processo usado para levar um repositório de protótipo a projeto profissional, com
-**o dono decidindo** e **o agente executando**. É genérico: não depende de linguagem
-nem de ferramenta de build, só de GitHub (issues, sub-issues, Actions) e de um alvo
-local equivalente ao CI.
+The process used to take a repository from prototype to professional project, with
+**the owner deciding** and **the agent executing**. It is generic: it depends on no language
+or build tool, only on GitHub (issues, sub-issues, Actions) and on a local target
+equivalent to CI.
 
-Regras normativas completas: [references/process.md](references/process.md).
-Modelos de documentos e textos: [references/templates.md](references/templates.md).
-Gates de CI/testes e lições aprendidas: [references/quality-gates.md](references/quality-gates.md).
-Checklist para começar num repositório novo: [references/bootstrap-checklist.md](references/bootstrap-checklist.md).
+Full normative rules: [references/process.md](references/process.md).
+Document and text templates: [references/templates.md](references/templates.md).
+CI/test gates and lessons learned: [references/quality-gates.md](references/quality-gates.md).
+Checklist for starting in a new repository: [references/bootstrap-checklist.md](references/bootstrap-checklist.md).
 
-## Visão geral
+## Overview
 
 ```text
-descoberta → ANALYSIS.md → ⏸ decisões do dono → constituição + specs + ROADMAP
-  → épico por fase → tickets (sub-issues) → branch por ticket
-  → testes + código → validação local → push → PR → CI verde
-  → ⏸ revisão do dono → merge (dono) → PR de fechamento → tag (dono) → release
+discovery → ANALYSIS.md → ⏸ owner's decisions → constitution + specs + ROADMAP
+  → epic per phase → tickets (sub-issues) → branch per ticket
+  → tests + code → local validation → push → PR → green CI
+  → ⏸ owner's review → merge (owner) → closing PR → tag (owner) → release
 ```
 
-`⏸` = **ponto de parada**: o agente para e espera o dono. Não avance sozinho.
+`⏸` = **stop point**: the agent stops and waits for the owner. Do not move on alone.
 
-## Papéis (inegociável)
+## Language
 
-- **Dono** decide: decisões em aberto, escopo, prioridades, aprovação, **merge, tags,
-  releases, configurações do repositório** e qualquer ação irreversível ou visível para fora.
-- **Agente** executa: análise, specs, épicos, tickets, código, testes, PRs, manter o CI verde.
-- O agente **nunca**: faz merge (salvo quando o dono delega explicitamente uma rodada de
-  merges: vale só para ela, segue a ordem do épico e exige CI verde em cada head); dá force-push em branch alheia; reescreve histórico
-  publicado; trabalha fora das branches do seu ticket; cria tag ou release.
+This skill is written in English, but what it produces is not:
 
-## Fase de descoberta (repositório novo para o agente)
+- **Specs, issues, PRs, comments and documentation** are written in the **owner's language**.
+- **Commits and code** (identifiers, code comments, branch names) are in **English**.
 
-Objetivo: entender o estado real antes de mudar qualquer linha de código.
+Find the owner's language in this order and stop at the first hit:
 
-1. Leia **todo** o código. Compile. Rode **todos** os comandos documentados e os casos de
-   borda relevantes (entrada inválida, arquivo existente, stdin fechado, sem TTY, `--help`).
-2. Confira cada promessa do README executando-a (instalação, exemplos, flags).
-3. Registre tudo em `specs/ANALYSIS.md` (modelo em templates.md):
-   resumo executivo; tabela "o que foi verificado" (comando → resultado); achados
-   **crítico / alto / médio / baixo**, cada um com evidência (`arquivo:linha` ou saída de
-   comando) e a spec que o resolve; pontos positivos a preservar; avaliação do README;
-   melhorias priorizadas por fase; **decisões em aberto D1..Dn**, cada uma com opções e
-   uma recomendação.
-4. Separe sempre o que foi **verificado** (executado) do que é **inferido** (leitura de código).
-5. Escreva `specs/constitution.md` (5–10 princípios verificáveis), uma spec por área em
-   `specs/NNN-nome/spec.md`, `specs/README.md` (fluxo, convenções, índice com status) e
-   `specs/ROADMAP.md` (fases → versões, tarefas `T1..Tn` citando os IDs que fecham).
-   Fases padrão: **Fase 0** decisões → **Fase 1** "funcionar de verdade" `v0.1.0` →
-   **Fase 2** "confiável" `v0.2.0` → **Fase 3** "profissional" `v1.0.0`.
-6. Apresente ao dono uma lista **curta** das observações principais (críticas primeiro) e as
-   decisões D1..Dn com recomendação, apontando para os arquivos.
+1. An explicit rule in `CLAUDE.md` or `AGENTS.md` (e.g. "Idioma: português", "Language: English").
+2. The language `CLAUDE.md` or `AGENTS.md` is written in.
+3. The language of the existing `specs/`, `README.md` and recent issues.
+4. None of these: **ask the owner once**, then record the answer in `CLAUDE.md`
+   (create it if needed) so nobody has to ask again.
 
-**⏸ PARE.** Nenhuma implementação antes de o dono responder D1..Dn. Registre as respostas
-na seção "Decisões" das specs afetadas e em ANALYSIS.md; specs passam de `Draft` para `Approved`.
+The chat follows the language the owner writes in. The templates in
+[references/templates.md](references/templates.md) are in English: translate headings and text.
+Keep machine-read tokens as they are: `Status:` values (`Draft`, `Approved`, `In Progress`, `Done`),
+the IDs (`FR-n`, `NFR-n`, `AC-n`, `Dn`, `Tn`), `MUST`/`SHOULD`/`MAY`, `ADDED`/`MODIFIED`/`REMOVED`,
+`[Unreleased]` and the `Closes #N` line.
 
-## Implementação por fase
+Portuguese terms, used in Portuguese repositories and by the template scripts (`sdd-epic.sh`,
+`sdd-phase-status.sh`, `sdd-check.sh`, `sdd-mark.sh`), which read some of them. In a repository
+with those scripts, keep the labels and the headings marked *(read by scripts)* as written here:
 
-1. **Épico** por fase (labels `épico`, `fase-N`), com a ordem sugerida de revisão.
-2. **Ticket** por tarefa, como **sub-issue nativa** do épico. Crie a issue **primeiro**
-   (isso cria labels inexistentes) e **depois** anexe como sub-issue — criar já com o pai
-   falha se alguma label ainda não existir.
-   - Corpo: **Contexto / O que fazer / Critérios de aceite / Spec(s) / Épico**
-     (+ "Decisão para a revisão" opcional).
-   - Labels: `fase-N`, `tipo:feature|docs|ci|teste|chore` ou `bug` (label padrão do GitHub), `P1|P2|P3`.
-3. **Branch** por ticket: `<tipo>/<nº-da-issue>-<descrição-curta>`, a partir da `main` ou
-   empilhada na branch da fase anterior ainda não mergeada.
-4. **Testes a partir dos critérios de aceite**; depois o código. Cada `AC-*` vira ao menos
-   um teste. Saídas geradas → golden files.
-5. **Commits** em Conventional Commits, em inglês, no imperativo (`feat: add --watch mode`);
-   incompatível usa `!` e explica no corpo. Inclua as linhas de atribuição exigidas pela ferramenta.
-6. **Antes de cada push:** rode a verificação local completa (ex.: `make ci`) e só envie verde;
-   faça a **checagem de mutação** de cada teste novo; releia o diff de forma adversarial
-   (escopo, arquivos esquecidos, segredos, saídas geradas, README × specs × código).
-7. **PR por ticket.** Título em Conventional Commits. Descrição começa com
-   `Closes #N · Épico #M · Spec NNN` (`Spec —` se nenhuma), com **O que muda**,
-   **Como foi testado** e **Notas para a revisão**. PR empilhado declara logo após a
-   linha `Closes`: `> PR empilhado sobre #NN`. Termine com o rodapé de atribuição da ferramenta.
-8. **Não toque nos arquivos de status compartilhados** num PR de ticket (status das specs em
-   `specs/README.md` e cabeçalhos, checkboxes do ROADMAP, entradas do CHANGELOG) — isso é do
-   PR de fechamento. Exceção: o ticket que cria o arquivo; e o conteúdo normativo da spec,
-   que **muda junto com o código** quando a implementação diverge (com entrada em "Decisões").
-9. Trabalho descoberto no meio vira **ticket novo** no épico (atual ou futuro), nunca carona.
-10. Uma reestruturação coesa que não se divide sem estados quebrados MAY ser **um PR para a
-    fase inteira**, listando as tarefas que fecha.
-11. Inscreva-se na atividade de cada PR aberto; você é responsável por ele até ficar verde.
-
-## CI vermelho
-
-1. Leia o log exato do job (check runs / job logs). Reproduza localmente quando possível.
-2. Ache a **causa raiz**, corrija, rode a verificação local, envie.
-3. **Proibido:** chamar de "flake" sem evidência; pular, desativar ou enfraquecer testes ou
-   gates (cobertura, lint); commit vazio para "re-rodar".
-4. Se a correção sai do escopo mas é **pré-condição** para o PR ficar verde (ex.: linter
-   incompatível com a nova versão da linguagem), ela entra no mesmo PR, explicada em "O que muda".
-
-## Fase de revisão
-
-Quando todos os PRs da fase estão abertos e **verdes**:
-
-1. Verifique **conflitos par a par** entre as branches da fase com simulação real
-   (`git merge-tree --write-tree origin/a origin/b`) — não adivinhe. Documente nos PRs
-   afetados cada conflito e como resolvê-lo, e a ordem de merge sugerida.
-2. Avise o dono: lista de PRs na ordem do épico, o que foi verificado e o que não foi.
-
-**⏸ PARE.** O dono revisa na ordem do épico. O agente responde comentários; corrige pedidos
-pequenos; para mudanças grandes ou de design, **propõe** no comentário e só implementa após
-concordância. Merge é do dono: PRs de fase com outros empilhados → **merge commit**
-(os empilhados são redirecionados para a `main` sem rebase); demais PRs MAY usar squash.
-Depois que um PR base é mergeado, confira se o empilhado continua só com o seu ticket e verde.
-
-## Fechamento de fase
-
-1. Com todos os PRs mergeados, abra o **PR de fechamento**: status das specs
-   (`specs/README.md` + cabeçalhos + seção "Estado atual"), checkboxes do ROADMAP, `CHANGELOG.md`
-   (Keep a Changelog: `[Unreleased]` → `[X.Y.Z] - AAAA-MM-DD`). Checklist em templates.md.
-2. **⏸ PARE.** O dono mergeia e cria a tag `vX.Y.Z` (SemVer). O workflow de release roda o CI
-   completo antes de publicar binários e checksums.
-3. O épico fecha quando a release está publicada.
-
-## Comunicação
-
-- Atualizações **curtas**: feito / falta / bloqueia.
-- Achados vão para o **repositório** (specs, issues, PRs); o chat aponta para eles.
-- Diga sempre o que foi **verificado** e o que **não** foi ("testado no Linux; Windows só no CI").
-- Se o ambiente bloquear algo (proxy, rede, permissão), diga isso — nunca relate sucesso
-  que não aconteceu.
-- Mensagem nova do dono no meio de uma tarefa: trate-a e continue a tarefa em curso.
-- Trabalho paralelo pedido pelo dono: dispare agentes, mas **verifique a saída deles**
-  antes de usar ou publicar.
-- Escreva no idioma do dono (specs, issues, PRs); commits e código em inglês.
-
-## Retomada e economia de uso
-
-O contexto pode acabar a qualquer momento: compactação, sessão nova ou limite de uso. Trabalhe de modo que o **repositório** baste para continuar:
-
-- Crie o ticket ao começar a tarefa e abra o PR assim que ela passar na verificação local. Pedido novo do dono que não cabe na tarefa em curso vira ticket **na hora**.
-- Mantenha no épico um comentário **"Estado da fase"**, atualizado a cada marco: PRs e CI, decisões, conflitos previstos, próximo passo.
-- **Ao retomar:** leia o comentário de estado mais recente do épico, os PRs e as issues abertas e o `CLAUDE.md`, e continue do próximo passo.
-- **No repositório:** um `CLAUDE.md` (mapa do código, comandos, convenções, armadilhas) e um hook de início de sessão que instale as ferramentas do CI na web.
-- **Economia:**
-  - leia trechos (`sed -n`, `grep -n`) e não releia;
-  - no CI, só o resumo das conclusões, e o fim do log quando falhar;
-  - valide num comando só;
-  - subagentes só para buscas amplas;
-  - chat curto, detalhes nos PRs.
-
-## Scripts que poupam passos (spec 009)
-
-Quando o repositório tem os scripts do template, chame-os em vez de fazer os passos à mão. A saída é curta: uma linha por resultado.
-
-| Passo | Script |
+| English | Português |
 |---|---|
-| Esperar o CI e ler só as falhas | `sh scripts/sdd-ci.sh [SHA\|#PR\|branch]` |
-| Registrar as decisões do dono | `sh scripts/sdd-mark.sh decide D1=a D2=b` |
-| Arquivos de status do fechamento | `sh scripts/sdd-mark.sh close vX.Y.Z` |
-| Comentário "Estado da fase" | `sh scripts/sdd-phase-status.sh [--post]` |
-| Épico e sub-issues de uma fase | `sh scripts/sdd-epic.sh [--dry-run] N` |
-| Release Go antes e depois da tag | `sh scripts/sdd-release-check.sh pre\|post vX.Y.Z` |
+| epic (label) | `épico` *(read by scripts)* |
+| phase-N (label) | `fase-N` *(read by scripts)* |
+| type:feature, type:test… (labels) | `tipo:feature`, `tipo:teste`… *(written by `sdd-epic.sh`)* |
+| "Phase status" comment | "Estado da fase" *(written by scripts)* |
+| ROADMAP heading `` ## Phase N — <name> → `vX.Y.Z` ``, "Decisions" section | `` ## Fase N — <nome> → `vX.Y.Z` ``, `## Decisões` *(read by scripts)* |
+| spec section "Changes" / "Unreleased" | `## Mudanças` *(read by scripts)* / `### Não lançado` |
+| spec section "Current state (verified)" | `## Estado atual (verificado)` *(read by scripts)* |
+| Context / Functional requirements / Non-functional requirements | Contexto / Requisitos funcionais / Requisitos não funcionais |
+| Acceptance criteria / Out of scope / Decisions | Critérios de aceite / Fora de escopo / Decisões |
+| Given / When / Then | Dado / Quando / Então |
+| What to do / Spec(s) / Epic | O que fazer / Spec(s) / Épico |
+| What changes / How it was tested / Review notes | O que muda / Como foi testado / Notas para a revisão |
+| Stacked PR on #NN | PR empilhado sobre #NN |
+| Added / Changed / Fixed / Removed (CHANGELOG) | Adicionado / Alterado / Corrigido / Removido |
 
-## Operações de GitHub usadas
+## Roles (non-negotiable)
 
-Funciona com o GitHub MCP ou com `gh`:
+- **Owner** decides: open decisions, scope, priorities, approval, **merge, tags,
+  releases, repository settings** and any irreversible or externally visible action.
+- **Agent** executes: analysis, specs, epics, tickets, code, tests, PRs, keeping CI green.
+- The agent **never**: merges (unless the owner explicitly delegates a merge round:
+  it covers that round only, follows the epic's order and requires green CI on each head);
+  force-pushes someone else's branch; rewrites published history; works outside its ticket's
+  branches; creates a tag or release (unless the owner asks for it, e.g. through a release workflow).
 
-| Operação | GitHub MCP | `gh` |
+## Discovery phase (repository new to the agent)
+
+Goal: understand the real state before changing any line of code.
+
+1. Read **all** the code. Build it. Run **every** documented command and the relevant edge
+   cases (invalid input, existing file, closed stdin, no TTY, `--help`).
+2. Check every README promise by running it (installation, examples, flags).
+3. Record everything in `specs/ANALYSIS.md` (template in templates.md):
+   executive summary; "what was verified" table (command → result); findings
+   **critical / high / medium / low**, each with evidence (`file:line` or command
+   output) and the spec that resolves it; strengths to keep; README assessment;
+   improvements prioritized by phase; **open decisions D1..Dn**, each with options and
+   a recommendation.
+4. Always separate what was **verified** (executed) from what is **inferred** (code reading).
+5. Write `specs/constitution.md` (5–10 verifiable principles), one spec per area in
+   `specs/NNN-name/spec.md`, `specs/README.md` (flow, conventions, index with status) and
+   `specs/ROADMAP.md` (phases → versions, tasks `T1..Tn` citing the IDs they close).
+   Default phases: **Phase 0** decisions → **Phase 1** "actually works" `v0.1.0` →
+   **Phase 2** "reliable" `v0.2.0` → **Phase 3** "professional" `v1.0.0`.
+6. Give the owner a **short** list of the main findings (critical first) and the
+   decisions D1..Dn with a recommendation, pointing to the files.
+
+**⏸ STOP.** No implementation before the owner answers D1..Dn. Record the answers
+in the "Decisions" section of the affected specs and in ANALYSIS.md; specs move from `Draft` to `Approved`.
+
+## Implementation by phase
+
+1. **Epic** per phase (labels epic and `phase-N`; see [Language](#language)), with the suggested review order.
+2. **Ticket** per task, as a **native sub-issue** of the epic. Create the issue **first**
+   (this creates missing labels) and **then** attach it as a sub-issue — creating it with the
+   parent already set fails if any label does not exist yet.
+   - Body: **Context / What to do / Acceptance criteria / Spec(s) / Epic**
+     (+ optional "Decision for the review").
+   - Labels: `phase-N`, `type:feature|docs|ci|test|chore` or `bug` (GitHub's default label), `P1|P2|P3`.
+3. **Branch** per ticket: `<type>/<issue-number>-<short-description>`, from `main` or
+   stacked on the previous phase's branch not merged yet.
+4. **Tests from the acceptance criteria** first; then the code. Each `AC-*` becomes at least
+   one test. Generated outputs → golden files.
+5. **Commits** in Conventional Commits, in English, imperative (`feat: add --watch mode`);
+   a breaking change uses `!` and explains it in the body. Include the attribution lines the tool requires.
+6. **Before each push:** run the full local check (e.g. `make ci`) and push only green;
+   do the **mutation check** of each new test; reread the diff adversarially
+   (scope, forgotten files, secrets, generated outputs, README × specs × code).
+7. **PR per ticket.** Title in Conventional Commits. The description starts with
+   `Closes #N · Epic #M · Spec NNN` (`Spec —` if none), with **What changes**,
+   **How it was tested** and **Review notes**. A stacked PR states, right after the
+   `Closes` line: `> Stacked PR on #NN`. End with the tool's attribution footer.
+8. **Do not touch shared status files** in a ticket PR (spec status in
+   `specs/README.md` and headers, ROADMAP checkboxes, CHANGELOG entries) — that belongs to the
+   closing PR. Exceptions: the ticket that creates the file; and the spec's normative content,
+   which **changes together with the code** when the implementation diverges (with a "Decisions" entry).
+9. Work discovered midway becomes a **new ticket** in the epic (current or future), never a ride-along.
+10. A cohesive restructuring that cannot be split without broken states MAY be **one PR for the
+    whole phase**, listing the tasks it closes.
+11. Subscribe to the activity of each open PR; you own it until it is green.
+
+## Red CI
+
+1. Read the job's exact log (check runs / job logs). Reproduce locally when possible.
+2. Find the **root cause**, fix it, run the local check, push.
+3. **Forbidden:** calling it a "flake" without evidence; skipping, disabling or weakening tests or
+   gates (coverage, lint); an empty commit to "re-run".
+4. If the fix is out of scope but is a **precondition** for the PR to turn green (e.g. a linter
+   incompatible with the new language version), it goes in the same PR, explained in "What changes".
+
+## Review phase
+
+When all the phase's PRs are open and **green**:
+
+1. Check **pairwise conflicts** between the phase's branches with a real simulation
+   (`git merge-tree --write-tree origin/a origin/b`) — do not guess. Document in the affected
+   PRs each conflict and how to resolve it, and the suggested merge order.
+2. Tell the owner: list of PRs in the epic's order, what was verified and what was not.
+
+**⏸ STOP.** The owner reviews in the epic's order. The agent answers comments; fixes small
+requests; for large or design changes, **proposes** in the comment and implements only after
+agreement. Merge is the owner's: phase PRs with others stacked on them → **merge commit**
+(the stacked ones are retargeted to `main` without rebase); other PRs MAY use squash.
+After a base PR is merged, check that the stacked one still has only its ticket and is green.
+
+## Phase closing
+
+1. With all PRs merged, open the **closing PR**: spec status
+   (`specs/README.md` + headers + "Current state" section), ROADMAP checkboxes, `CHANGELOG.md`
+   (Keep a Changelog: `[Unreleased]` → `[X.Y.Z] - YYYY-MM-DD`). Checklist in templates.md.
+2. **⏸ STOP.** The owner merges and creates the tag `vX.Y.Z` (SemVer). The release workflow runs the
+   full CI before publishing binaries and checksums.
+3. The epic closes when the release is published.
+
+## Communication
+
+- **Short** updates: done / missing / blocking.
+- Findings go to the **repository** (specs, issues, PRs); the chat points to them.
+- Always say what was **verified** and what was **not** ("tested on Linux; Windows only in CI").
+- If the environment blocks something (proxy, network, permission), say so — never report success
+  that did not happen.
+- A new message from the owner in the middle of a task: handle it and continue the current task.
+- Parallel work requested by the owner: launch agents, but **check their output**
+  before using or publishing it.
+- Write in the owner's language (see [Language](#language)); commits and code in English.
+
+## Resuming and saving usage
+
+The context can end at any time: compaction, a new session or a usage limit. Work so that the **repository** is enough to continue:
+
+- Create the ticket when starting the task and open the PR as soon as it passes the local check. A new request from the owner that does not fit the current task becomes a ticket **right away**.
+- Keep a **"Phase status"** comment on the epic, updated at each milestone: PRs and CI, decisions, expected conflicts, next step.
+- **When resuming:** read the epic's most recent status comment, the open PRs and issues and `CLAUDE.md`, and continue from the next step.
+- **In the repository:** a `CLAUDE.md` (code map, commands, conventions, pitfalls, language) and a session-start hook that installs the CI tools on the web.
+- **Saving:**
+  - read excerpts (`sed -n`, `grep -n`) and do not reread;
+  - in CI, only the summary of the conclusions, and the end of the log on failure;
+  - validate with a single command;
+  - subagents only for broad searches;
+  - short chat, details in the PRs.
+
+## Scripts that save steps (spec 009)
+
+When the repository has the template's scripts, call them instead of doing the steps by hand. The output is short: one line per result.
+
+| Step | Script |
+|---|---|
+| Wait for CI and read only the failures | `sh scripts/sdd-ci.sh [SHA\|#PR\|branch]` |
+| Record the owner's decisions | `sh scripts/sdd-mark.sh decide D1=a D2=b` |
+| Closing status files | `sh scripts/sdd-mark.sh close vX.Y.Z` |
+| "Phase status" comment | `sh scripts/sdd-phase-status.sh [--post]` |
+| Epic and sub-issues of a phase | `sh scripts/sdd-epic.sh [--dry-run] N` |
+| Go release before and after the tag | `sh scripts/sdd-release-check.sh pre\|post vX.Y.Z` |
+
+## GitHub operations used
+
+Works with the GitHub MCP or with `gh`:
+
+| Operation | GitHub MCP | `gh` |
 |---|---|---|
-| Criar issue / épico | `issue_write` (create) | `gh issue create` |
-| Anexar sub-issue | `sub_issue_write` (add) | `gh api repos/O/R/issues/EPIC/sub_issues -F sub_issue_id=<id>` |
-| Criar PR | `create_pull_request` (procure antes o template do repo) | `gh pr create` |
-| Acompanhar PR | `subscribe_pr_activity` | `gh pr checks --watch` |
-| Ler CI | `pull_request_read` / `get_check_run` / `get_job_logs` | `gh run view --log-failed` |
-| Responder revisão | `add_reply_to_pull_request_comment` | `gh pr comment` |
+| Create issue / epic | `issue_write` (create) | `gh issue create` |
+| Attach sub-issue | `sub_issue_write` (add) | `gh api repos/O/R/issues/EPIC/sub_issues -F sub_issue_id=<id>` |
+| Create PR | `create_pull_request` (look for the repo's template first) | `gh pr create` |
+| Follow PR | `subscribe_pr_activity` | `gh pr checks --watch` |
+| Read CI | `pull_request_read` / `get_check_run` / `get_job_logs` | `gh run view --log-failed` |
+| Reply to review | `add_reply_to_pull_request_comment` | `gh pr comment` |
 
-Note que o `sub_issue_id` é o **id** numérico da issue, não o número `#N`.
+Note that `sub_issue_id` is the issue's numeric **id**, not its number `#N`.
 
-## Exemplo ilustrativo
+## Illustrative example
 
-No cv-craft (CLI em Go): a descoberta achou acentos corrompidos no PDF e conteúdo descartado;
-D1..D6 foram respondidas; a Fase 1 virou um PR único (reestruturação coesa); a Fase 2 virou
-tickets `chore/4-go-1.26`, `docs/5-contributing`, `ci/6-goreleaser`… em PRs empilhados,
-cada um com `make ci` verde antes do push.
+In cv-craft (a Go CLI, Portuguese-speaking owner): discovery found broken accents in the PDF and
+dropped content; D1..D6 were answered; Phase 1 became a single PR (cohesive restructuring); Phase 2
+became tickets `chore/4-go-1.26`, `docs/5-contributing`, `ci/6-goreleaser`… in stacked PRs,
+each with a green `make ci` before the push. Specs, issues and PRs were written in Portuguese;
+commits in English.

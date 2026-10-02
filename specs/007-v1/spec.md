@@ -45,6 +45,7 @@ Respondidas pelo dono em 2026-10-02: D10 (a) Rust e C#/.NET; D11 (b) `sdd-kit-de
 
 ### Não lançado
 
+- MODIFIED FR-5 — skill revisada com os achados do uso real (#51): numeração pela última tag, CI verde primeiro em repositório existente, PRs do Dependabot, lições de toolchain e lockfile; o que exige código ficou no #80.
 - ADDED AC-6 — regras de economia de tokens na skill, no `CLAUDE.md` do template e no do kit (#78).
 - MODIFIED FR-4 — template C#/.NET (`dotnet`): `make ci` com `dotnet format`, build sem avisos e cobertura do coverlet, CI, hook, dependabot, esqueleto e e2e (T9, #49).
 - MODIFIED FR-4 — template Rust: `make ci` com fmt, clippy e `cargo llvm-cov`, CI, hook, dependabot, esqueleto e e2e (T9, #48).

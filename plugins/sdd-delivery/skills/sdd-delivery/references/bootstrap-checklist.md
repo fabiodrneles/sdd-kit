@@ -9,6 +9,7 @@ it does not execute. The `⏸` are stop points.
       existing docs; if none, ask once and record it in `CLAUDE.md`.
 - [ ] Confirm with the owner: main branch, supported OSes and versions,
       whether the release will be automated.
+- [ ] Run `git tag --sort=-v:refname | head`: the phases continue from the last published version.
 - [ ] Check what already exists (`specs/`, `CONTRIBUTING.md`, `.github/`, CI, labels, epics)
       to **extend** it, not duplicate it.
 
@@ -30,6 +31,15 @@ it does not execute. The `⏸` are stop points.
 - [ ] One spec per area: `specs/NNN-name/spec.md` (FR/NFR, Given/When/Then AC, Out of
       scope, Decisions with the owner's answers).
 - [ ] `specs/ROADMAP.md` with phases → versions and tasks linked to `FR`/`AC`.
+
+## 2a. Existing repository: green CI first
+
+- [ ] Adopting the kit in existing code usually turns CI red at once (lint and markdownlint of
+      the old code and README). The first PR (adoption or discovery) brings **only the minimal
+      fixes** for green CI; everything else becomes a finding in `ANALYSIS.md` and a ticket.
+- [ ] Dependabot opens PRs right after the adoption: merge each one (owner) with green CI
+      against the current `main`, before the phase's tickets; a major bump that breaks the
+      build becomes a ticket.
 
 ## 3. GitHub
 

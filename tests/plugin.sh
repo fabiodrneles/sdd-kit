@@ -74,6 +74,14 @@ wf="$root/plugins/sdd-release/templates/release-tag.yml"
 if command -v actionlint >/dev/null; then actionlint "$wf"; fi
 grep -q 'uses: fabiodrneles/go-release-manager@' "$wf" || { echo "FALHOU: release-tag.yml não usa a Action" >&2; exit 1; }
 grep -q 'create: true' "$wf" || { echo "FALHOU: release-tag.yml sem create: true" >&2; exit 1; }
+# 008 FR-6: o modelo aceita release-as e ref; o comando compara com o ROADMAP.
+# shellcheck disable=SC2016 # expressões do GitHub Actions, literais
+if ! grep -q 'release-as: ${{ inputs.release-as }}' "$wf" || ! grep -q 'ref: ${{ inputs.ref }}' "$wf"; then
+  echo "FALHOU: release-tag.yml sem release-as/ref" >&2
+  exit 1
+fi
+grep -q 'ROADMAP' "$root/plugins/sdd-release/commands/sdd-release.md" ||
+  { echo "FALHOU: /sdd-release não compara com o ROADMAP" >&2; exit 1; }
 if [ "$(sed -n '/^on:/,/^[a-z]/p' "$wf" | grep -cE '^  [a-z_]+:')" -ne 1 ] || ! grep -q '^  workflow_dispatch:' "$wf"; then
   echo "FALHOU: release-tag.yml deve rodar só em workflow_dispatch" >&2
   exit 1

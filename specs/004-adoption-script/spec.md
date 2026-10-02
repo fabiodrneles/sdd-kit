@@ -11,7 +11,7 @@ D1 (a): um único script, para repositórios novos e antigos, que copia o templa
 
 ## Requisitos funcionais
 
-- **FR-1** `scripts/adopt.sh` (POSIX sh) e `scripts/adopt.ps1` (PowerShell 7) MUST aceitar: diretório de destino, `--lang go|node|java|python`, `--project`, `--owner`, `--repo`, `--dry-run` e `--force`.
+- **FR-1** `scripts/adopt.sh` (POSIX sh) e `scripts/adopt.ps1` (PowerShell 7) MUST aceitar: diretório de destino, `--lang go|node|java|python|rust`, `--project`, `--owner`, `--repo`, `--dry-run` e `--force`.
 - **FR-2** O script MUST copiar `template/common/` e `template/<lang>/` para o destino, substituindo os marcadores da spec 003 FR-3.
 - **FR-3** Um arquivo que já existe no destino MUST NOT ser sobrescrito, a menos que `--force` seja passado.
 - **FR-4** Ao terminar, o script MUST imprimir um relatório com os arquivos criados e os ignorados (já existiam), e sair com código 0.

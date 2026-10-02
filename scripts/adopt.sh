@@ -2,7 +2,7 @@
 # Adota o sdd-kit num repositório novo ou existente (spec 004): copia
 # template/common e template/<lang> sem sobrescrever o que já existe.
 #
-# Uso: adopt.sh --lang go|node|java|python [--project NOME] [--owner DONO]
+# Uso: adopt.sh --lang go|node|java|python|rust [--project NOME] [--owner DONO]
 #               [--repo REPO] [--dry-run] [--force] [--skeleton] [DESTINO]
 #
 # Sem o template ao lado do script (ex.: curl … | sh -s -- …), baixa o da
@@ -10,11 +10,11 @@
 set -eu
 
 KIT_REF="${SDD_KIT_REF:-v0.1.0}"
-LANGS="go node java python"
+LANGS="go node java python rust"
 
 usage() {
   cat >&2 <<USAGE
-uso: adopt.sh --lang go|node|java|python [opções] [DESTINO]
+uso: adopt.sh --lang go|node|java|python|rust [opções] [DESTINO]
 
   --lang LING      linguagem do repositório (obrigatório): $LANGS
   --project NOME   nome do projeto (padrão: nome do diretório de destino)

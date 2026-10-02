@@ -11,7 +11,7 @@ fail() { echo "FALHOU: $*" >&2; exit 1; }
 snapshot() { (cd "$1" && find . -type f -exec cksum {} + | LC_ALL=C sort); }
 opts="--project Demo --owner acme --repo demo"
 
-for lang in go node java python; do
+for lang in go node java python rust; do
   # 004 AC-1: diretório vazio recebe common + linguagem, sem marcadores.
   d="$tmp/$lang-empty"; mkdir "$d"
   # shellcheck disable=SC2086 # opts são palavras separadas de propósito
@@ -94,12 +94,12 @@ sh "$root/scripts/adopt.sh" --lang go --project demo --owner acme --repo demo --
 
 # 004 AC-6: a versão PowerShell gera a mesma árvore.
 if command -v pwsh >/dev/null; then
-  for lang in go node java python; do
+  for lang in go node java python rust; do
     a="$tmp/$lang-empty" b="$tmp/$lang-ps"; mkdir "$b"
     pwsh -NoProfile -File "$root/scripts/adopt.ps1" --lang "$lang" --project Demo --owner acme --repo demo "$b" > /dev/null
     [ "$(snapshot "$a")" = "$(snapshot "$b")" ] || { diff -r "$a" "$b" >&2 || true; fail "$lang: adopt.ps1 gerou árvore diferente"; }
   done
-  for lang in go node java python; do
+  for lang in go node java python rust; do
     a="$tmp/$lang-skel-sh" b="$tmp/$lang-skel-ps"; mkdir "$a" "$b"
     sh "$root/scripts/adopt.sh" --lang "$lang" --project demo --owner acme --repo demo --skeleton "$a" > /dev/null
     pwsh -NoProfile -File "$root/scripts/adopt.ps1" --lang "$lang" --project demo --owner acme --repo demo --skeleton "$b" > /dev/null

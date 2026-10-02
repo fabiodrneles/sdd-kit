@@ -44,4 +44,5 @@ Respondidas pelo dono em 2026-10-02: D10 (a) Rust e C#/.NET; D11 (b) `sdd-kit-de
 
 ### Não lançado
 
+- MODIFIED FR-4 — template Rust: `make ci` com fmt, clippy e `cargo llvm-cov`, CI, hook, dependabot, esqueleto e e2e (T9, #48).
 - ADDED AC-5 — a skill e os comandos dos plugins em inglês, escrevendo specs, issues e PRs no idioma do dono (T19, #50).

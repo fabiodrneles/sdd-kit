@@ -55,6 +55,35 @@ fi
 unknown="$(grep -rhoI '{{[A-Z_]*}}' . | sort -u | grep -vxE '\{\{(PROJECT|OWNER|REPO)\}\}' || true)"
 [ -z "$unknown" ] || err "marcadores desconhecidos: $unknown"
 
+# 011 AC-3: blocos marcados do README rodam no CI de docs; os outros, não.
+grep -q 'sh scripts/doc-commands.sh' common/.github/workflows/docs.yml || err "docs.yml não roda o doc-commands.sh"
+dc="$(mktemp -d)"
+# shellcheck disable=SC2016 # crases literais do markdown
+printf '<!-- doc-commands -->\n```bash\ntouch ran\n```\n\n```bash\nexit 1\n```\n' > "$dc/README.md"
+(cd "$dc" && sh "$root/template/common/scripts/doc-commands.sh" > out 2>&1) || err "doc-commands falhou com blocos bons: $(cat "$dc/out")"
+[ -f "$dc/ran" ] || err "doc-commands não rodou o bloco marcado"
+# shellcheck disable=SC2016 # crases literais do markdown
+printf '\n<!-- doc-commands -->\n```bash\nfalse\n```\n' >> "$dc/README.md"
+if (cd "$dc" && sh "$root/template/common/scripts/doc-commands.sh" > out 2>&1); then
+  err "doc-commands aceitou um bloco que falha"
+fi
+grep -q '^FALHOU README.md:12' "$dc/out" || err "doc-commands não apontou o bloco que falhou: $(cat "$dc/out")"
+# 011 AC-3: make linkcheck em toda linguagem; com o lychee, um link quebrado reprova.
+for lang in go node java python rust dotnet; do
+  grep -q '^linkcheck:' "$lang/Makefile" || err "template/$lang/Makefile sem alvo linkcheck"
+done
+if command -v lychee >/dev/null; then
+  sed -e 's/{{OWNER}}/acme/g' -e 's/{{REPO}}/demo/g' common/lychee.toml > "$dc/lychee.toml"
+  cp go/Makefile "$dc/"
+  rm "$dc/README.md"; printf '# X\n\n[ok](ok.md)\n' > "$dc/README.md"; printf '# Ok\n' > "$dc/ok.md"
+  (cd "$dc" && make -s linkcheck > out 2>&1) || err "make linkcheck reprovou links bons: $(cat "$dc/out")"
+  printf '\n[quebrado](nao-existe.md)\n' >> "$dc/README.md"
+  if (cd "$dc" && make -s linkcheck > out 2>&1); then err "make linkcheck aceitou um link quebrado"; fi
+else
+  echo "tests/template.sh: lychee ausente, make linkcheck não executado aqui"
+fi
+rm -rf "$dc"
+
 # 003 AC-1: workflows válidos.
 command -v actionlint >/dev/null || { echo "actionlint não instalado (veja .claude/hooks/session-start.sh)" >&2; exit 1; }
 # shellcheck disable=SC2046 # lista de arquivos sem espaços

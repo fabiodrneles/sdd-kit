@@ -20,6 +20,11 @@ deps: ## Instala o projeto com as dependências de desenvolvimento
 docs: ## markdownlint (o CI também verifica links)
 	npx --yes markdownlint-cli2@0.23.3
 
+.PHONY: linkcheck
+linkcheck: ## Links quebrados nos .md (precisa do lychee; o CI sempre verifica)
+	@command -v lychee >/dev/null || { echo "lychee não instalado: https://lychee.cli.rs" >&2; exit 1; }
+	lychee --config lychee.toml --no-progress './**/*.md'
+
 .PHONY: sdd-check
 sdd-check: ## Rastreabilidade specs × testes × ROADMAP (falha se houver aviso)
 	sh scripts/sdd-check.sh --strict

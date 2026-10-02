@@ -92,10 +92,30 @@ echo 'meu código' > "$sk/hello.go"
 sh "$root/scripts/adopt.sh" --lang go --project demo --owner acme --repo demo --skeleton --force "$sk" > /dev/null
 [ "$(cat "$sk/hello.go")" = 'meu código' ] || fail "--skeleton --force sobrescreveu código do projeto"
 
+# 011 AC-3: sem LICENSE, a adoção avisa e não cria uma (a licença é do dono);
+# com LICENSE, não avisa nem mexe nela.
+nolic="$tmp/unlicensed"; mkdir "$nolic"
+# shellcheck disable=SC2086
+sh "$adopt" --lang python $opts "$nolic" > "$tmp/out-lic"
+grep -q '^aviso: sem LICENSE' "$tmp/out-lic" || fail "sem aviso de LICENSE ausente"
+if [ -e "$nolic/LICENSE" ]; then fail "a adoção criou um LICENSE"; fi
+lic="$tmp/licensed"; mkdir "$lic"; echo 'minha licença' > "$lic/LICENSE"
+# shellcheck disable=SC2086
+sh "$adopt" --lang go $opts "$lic" > "$tmp/out-lic"
+! grep -q '^aviso: sem LICENSE' "$tmp/out-lic" || fail "avisou LICENSE ausente com LICENSE presente"
+[ "$(cat "$lic/LICENSE")" = 'minha licença' ] || fail "a adoção mexeu no LICENSE"
+if command -v pwsh >/dev/null; then
+  pwsh -NoProfile -File "$root/scripts/adopt.ps1" --lang python --project Demo --owner acme --repo demo --dry-run "$nolic" > "$tmp/out-ps"
+  grep -q '^aviso: sem LICENSE' "$tmp/out-ps" || fail "adopt.ps1 sem aviso de LICENSE ausente"
+  pwsh -NoProfile -File "$root/scripts/adopt.ps1" --lang go --project Demo --owner acme --repo demo --dry-run "$lic" > "$tmp/out-ps"
+  ! grep -q '^aviso: sem LICENSE' "$tmp/out-ps" || fail "adopt.ps1 avisou LICENSE ausente com LICENSE presente"
+fi
+
 # 011 AC-1: a adoção Node avisa lockfile ausente ou fora de sincronia e projeto
 # sem testes, sem falhar; com o projeto em ordem, não avisa. Com pwsh, o
 # adopt.ps1 avisa igual.
 n="$tmp/node-warn"; mkdir "$n"
+: > "$n/LICENSE"
 warns() {
   # shellcheck disable=SC2086
   sh "$adopt" --lang node $opts --dry-run "$n" > "$tmp/out" || fail "adoção Node com avisos falhou"

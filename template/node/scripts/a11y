@@ -1,0 +1,53 @@
+#!/usr/bin/env node
+// Acessibilidade com o axe (spec 011 do sdd-kit): roda o axe-core num DOM do
+// jsdom em cada página HTML e falha se houver violação. Sem layout, o jsdom não
+// mede contraste de cor; para isso, use um navegador (ex.: @axe-core/playwright).
+// Uso (o Makefile já faz): npx -p axe-core -p jsdom node scripts/a11y página.html ...
+//
+// Sem extensão para o c8 --all não contar a ferramenta na cobertura do projeto;
+// import() dentro de uma função roda tanto em projeto CommonJS quanto ESM.
+(async () => {
+  const { existsSync, readFileSync } = await import('node:fs');
+  const { createRequire } = await import('node:module');
+  const { delimiter, join, resolve } = await import('node:path');
+  const { pathToFileURL } = await import('node:url');
+
+  // O npx põe o node_modules/.bin dos pacotes pedidos no PATH, mas não no
+  // caminho de módulos: resolve o axe-core e o jsdom a partir dele.
+  const bin = (process.env.PATH || '')
+    .split(delimiter)
+    .find((p) => /node_modules[\\/]\.bin$/.test(p) && existsSync(join(p, '..', 'axe-core')));
+  const req = createRequire(join(bin ? join(bin, '..', '..') : process.cwd(), 'a11y.cjs'));
+  const { JSDOM } = req('jsdom');
+  const axeSource = readFileSync(req.resolve('axe-core/axe.min.js'), 'utf8');
+
+  const pages = process.argv.slice(2);
+  if (pages.length === 0) {
+    console.error('uso: a11y página.html ...');
+    process.exit(2);
+  }
+  let total = 0;
+  for (const page of pages) {
+    const dom = new JSDOM(readFileSync(page, 'utf8'), {
+      runScripts: 'outside-only',
+      url: pathToFileURL(resolve(page)).href,
+    });
+    dom.window.eval(axeSource);
+    const result = await dom.window.axe.run(dom.window.document, {
+      rules: { 'color-contrast': { enabled: false } },
+    });
+    for (const v of result.violations) {
+      total += 1;
+      console.log(`${page}: ${v.id} (${v.impact}): ${v.help}`);
+      for (const node of v.nodes) console.log(`  ${node.target.join(' ')}`);
+    }
+    if (result.violations.length === 0) console.log(`ok ${page}`);
+  }
+  if (total > 0) {
+    console.error(`a11y: ${total} violação(ões); veja https://dequeuniversity.com/rules/axe/`);
+    process.exit(1);
+  }
+})().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

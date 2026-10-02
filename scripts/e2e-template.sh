@@ -17,6 +17,20 @@ sh "$root/scripts/adopt.sh" --lang "$adopt_lang" --project demo --owner acme --r
 cd "$d"
 if grep -q '^deps:' Makefile; then make deps; fi
 make ci
+# 011 AC-6: com A11Y_PAGES, uma violação de acessibilidade derruba o make ci e
+# aparece na saída; corrigida, passa. O script do axe não conta na cobertura (o
+# make ci acima passou com ele no projeto).
+if [ "$lang" = node ]; then
+  printf '<!doctype html>\n<html lang="pt">\n<head><title>Demo</title></head>\n<body><main><h1>Demo</h1><img src="logo.png"></main></body>\n</html>\n' > page.html
+  if make ci A11Y_PAGES=page.html > a11y.log 2>&1; then
+    echo "FALHOU: make ci passou com uma imagem sem alt (axe)" >&2; tail -20 a11y.log >&2; exit 1
+  fi
+  grep -q 'page.html: image-alt' a11y.log || { echo "FALHOU: make ci não mostrou a violação" >&2; tail -20 a11y.log >&2; exit 1; }
+  sed 's/<img src="logo.png">/<img src="logo.png" alt="Logo">/' page.html > page.ok && mv page.ok page.html
+  make ci A11Y_PAGES=page.html > a11y.log 2>&1 || { echo "FALHOU: make ci reprovou a página corrigida" >&2; tail -20 a11y.log >&2; exit 1; }
+  rm -f page.html a11y.log
+fi
+
 # Spec 010 AC-1: um arquivo sem nenhum teste derruba a cobertura abaixo do mínimo,
 # e o make ci falha mostrando a cobertura (arquivos não carregados também contam).
 case "$lang" in

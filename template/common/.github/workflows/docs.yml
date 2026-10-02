@@ -24,5 +24,13 @@ jobs:
         with:
           args: --config lychee.toml --no-progress './**/*.md'
           fail: true
+          format: json
+          output: lychee/out.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # O log do job nem sempre é legível (ex.: agentes atrás de proxy); as
+      # anotações aparecem no check e na API.
+      - name: Links quebrados como anotações
+        if: failure()
+        run: >-
+          jq -r '((.error_map // {}) + (.timeout_map // {})) | to_entries[] | .key as $f | .value[] | "::error file=\($f),line=\(.span.line // 1)::link quebrado: \(.url) (\(.status.text // .status))"' lychee/out.json

@@ -1,0 +1,18 @@
+$ curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.2.0/scripts/adopt.sh | sh -s -- --lang go --skeleton .
+criado: AGENTS.md
+criado: CLAUDE.md
+criado: .github/workflows/ci.yml
+criado: Makefile
+criado: specs/ROADMAP.md
+criado: hello_test.go
+…
+sdd-kit go em .: 35 criados, 0 ignorados, 0 sobrescritos
+$ make ci
+golangci-lint run
+0 issues.
+go test -race -coverprofile=coverage.out ./...
+ok  	github.com/voce/meu-projeto	1.019s	coverage: 100.0% of statements
+cobertura: 100.0% (mínimo 80%)
+go build ./...
+$ claude
+> use a skill sdd-delivery: crie as specs e o ROADMAP para a minha ideia

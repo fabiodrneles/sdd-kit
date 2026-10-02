@@ -188,12 +188,24 @@ The context can end at any time: compaction, a new session or a usage limit. Wor
 - Keep a **"Phase status"** comment on the epic, updated at each milestone: PRs and CI, decisions, expected conflicts, next step.
 - **When resuming:** read the epic's most recent status comment, the open PRs and issues and `CLAUDE.md`, and continue from the next step.
 - **In the repository:** a `CLAUDE.md` (code map, commands, conventions, pitfalls, language) and a session-start hook that installs the CI tools on the web.
-- **Saving:**
-  - read excerpts (`sed -n`, `grep -n`) and do not reread;
-  - in CI, only the summary of the conclusions, and the end of the log on failure;
-  - validate with a single command;
-  - subagents only for broad searches;
-  - short chat, details in the PRs.
+- **Saving** (every rule below cut real sessions' usage; apply them from the first message):
+  - read excerpts (`sed -n`, `grep -n`) and do not reread, not even after editing a file;
+  - batch independent reads and checks in one command;
+  - send long output to a file and show only the exit code and the last lines:
+    `make ci > /tmp/ci.log 2>&1; echo "exit $?"; tail -n 3 /tmp/ci.log`;
+  - validate with a single command (`make ci`), once, before the push;
+  - follow CI with `sh scripts/sdd-ci.sh '#PR'` (one line per check, the end of the failing log only),
+    not with PR event subscriptions: if the session subscribes to a PR on its own, unsubscribe right away;
+  - make mechanical edits with a script that fails when the text is missing (e.g. a Python
+    `assert old in s` before `replace`), instead of reading the file to edit it;
+  - mutation check without rereading: copy the file aside, break it, run the test, copy it back;
+  - check tools and network access before starting (a proxy may block a download); try the
+    system package manager before giving up;
+  - ask GitHub tools for the fields you need (`fields`, `minimal_output`, `perPage`); avoid calls
+    whose answer is the whole issue or repository;
+  - restart a merged branch from `main` in one command (`git fetch origin main && git checkout -B <branch> origin/main`);
+  - subagents only for broad read-only searches, on a small model;
+  - "Phase status" only at milestones, a few lines; chat in three lines (done, missing, blocking), details in the PRs.
 
 ## Scripts that save steps (spec 009)
 

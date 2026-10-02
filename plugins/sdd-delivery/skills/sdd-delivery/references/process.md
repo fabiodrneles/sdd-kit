@@ -212,8 +212,11 @@ Recommended practice: before asking for the review, simulate the pairwise merge 
 - **FR-53** Resuming: status comment → open PRs and issues → `CLAUDE.md` → next step.
 - **FR-54** SHOULD: `CLAUDE.md` (map, commands, conventions, pitfalls, language) and a
   session-start hook that installs the CI tools on the web.
-- **FR-55** Saving: read excerpts and do not reread; CI summary and the end of the failing log;
-  validation in one command; subagents only for broad searches; short chat.
+- **FR-55** Saving: read excerpts and do not reread (not even after editing); batch independent reads;
+  long output to a file, showing only the exit code and the last lines; validation in one command;
+  CI through `sdd-ci.sh` (one line per check), not PR event subscriptions; mechanical edits by a
+  script that fails when the text is missing; check tools and network first; GitHub calls ask only
+  for the fields needed; subagents only for broad searches; short chat. Details in SKILL.md.
 
 ## Non-functional requirements
 

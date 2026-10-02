@@ -1,7 +1,7 @@
 # 010 — Esteira de qualidade criada pela adoção
 
 - **Prioridade:** P1
-- **Status:** Approved — pedido do dono em 2026-10-02
+- **Status:** Done — entregue na `v0.2.0`
 - **Código afetado:** `template/<lang>/`, `scripts/adopt.sh`, `scripts/adopt.ps1`, `plugins/sdd-release/`
 - **Resolve:** achados 1 e 2 do #51; Gradle (caso exemplo-automacao-page-object)
 

@@ -1,0 +1,4 @@
+# Mesma configuração da raiz; comandos de barra são prompts e não começam com título.
+MD013: false
+MD060: false
+MD041: false

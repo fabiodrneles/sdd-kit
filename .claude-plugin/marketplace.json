@@ -13,6 +13,12 @@
       "source": "./plugins/sdd-delivery",
       "description": "Processo SDD ponta a ponta: análise, specs, épicos, um PR por ticket, CI verde, revisão e release",
       "category": "development"
+    },
+    {
+      "name": "sdd-release",
+      "source": "./plugins/sdd-release",
+      "description": "Próxima versão SemVer pelos Conventional Commits (go-release-manager) para o fechamento de fase",
+      "category": "development"
     }
   ]
 }

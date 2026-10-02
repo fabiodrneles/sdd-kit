@@ -35,3 +35,4 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 - [ ] **T17** Arquivos de comunidade — 007 FR-2, AC-2 — #42
 - [ ] **T18** Estudo de caso do cv-craft — 007 FR-3, AC-3 — #43
 - [ ] **T19** Skill para quem não lê português — 007 FR-6 *(depende de D12)*
+- [ ] **T20** Plugin `sdd-release`: próxima versão pelo go-release-manager — 008 FR-1 a FR-5, AC-1 a AC-3 — #53

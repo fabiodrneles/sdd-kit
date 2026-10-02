@@ -53,6 +53,32 @@ if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
   exit 1
 fi
 
+# 008 AC-2: /sdd-release sem description e manifest com name errado são recusados.
+cp "$root/plugins/sdd-delivery/commands/sdd-next.md" "$tmp/plugins/sdd-delivery/commands/"
+sed '/^description:/d' "$root/plugins/sdd-release/commands/sdd-release.md" > "$tmp/plugins/sdd-release/commands/sdd-release.md"
+if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
+  echo "FALHOU: check-plugin aceitou /sdd-release sem description" >&2
+  exit 1
+fi
+cp "$root/plugins/sdd-release/commands/sdd-release.md" "$tmp/plugins/sdd-release/commands/"
+jq '.name = "outro"' "$root/plugins/sdd-release/.claude-plugin/plugin.json" > "$tmp/plugins/sdd-release/.claude-plugin/plugin.json"
+if sh "$tmp/scripts/check-plugin.sh" 2>/dev/null; then
+  echo "FALHOU: check-plugin aceitou plugin.json com name diferente do diretório" >&2
+  exit 1
+fi
+cp "$root/plugins/sdd-release/.claude-plugin/plugin.json" "$tmp/plugins/sdd-release/.claude-plugin/"
+sh "$tmp/scripts/check-plugin.sh" >/dev/null
+
+# 008 AC-3: o modelo de workflow passa no actionlint e só cria a tag em workflow_dispatch.
+wf="$root/plugins/sdd-release/templates/release-tag.yml"
+if command -v actionlint >/dev/null; then actionlint "$wf"; fi
+grep -q 'uses: fabiodrneles/go-release-manager@' "$wf" || { echo "FALHOU: release-tag.yml não usa a Action" >&2; exit 1; }
+grep -q 'create: true' "$wf" || { echo "FALHOU: release-tag.yml sem create: true" >&2; exit 1; }
+if [ "$(sed -n '/^on:/,/^[a-z]/p' "$wf" | grep -cE '^  [a-z_]+:')" -ne 1 ] || ! grep -q '^  workflow_dispatch:' "$wf"; then
+  echo "FALHOU: release-tag.yml deve rodar só em workflow_dispatch" >&2
+  exit 1
+fi
+
 zip="$(sh "$root/scripts/package-skill.sh" "$tmp/out/sdd-delivery.zip")"
 list="$(unzip -Z1 "$zip")"
 for f in SKILL.md references/process.md references/templates.md \

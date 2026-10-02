@@ -15,7 +15,7 @@ The kit comes from [cv-craft](https://github.com/fabiodrneles/cv-craft), which w
 | Part | Purpose | Spec |
 |---|---|---|
 | `sdd-delivery` skill | Teaches the agent the whole process: evidence-based analysis, specs, epics, PRs, root-causing red CI, review, phase closing and release. Written in English, it writes specs, issues and PRs in the owner's language | [002](specs/002-skill-plugin/spec.md) |
-| `template/` | `CLAUDE.md`, session hook, issue and PR templates, `CONTRIBUTING.md`, `specs/` skeleton and ready-made CI for **Go, Node/TS, Java, Python, Rust and C#/.NET** | [003](specs/003-template/spec.md) |
+| `template/` | `CLAUDE.md`, session hook, issue and PR templates, `CONTRIBUTING.md`, `CHANGELOG.md`, `specs/` skeleton and ready-made CI for **Go, Node/TS, Java, Python, Rust and C#/.NET** | [003](specs/003-template/spec.md) |
 | Adoption script | Copies the template into a new or existing repository **without overwriting anything**; sh and PowerShell | [004](specs/004-adoption-script/spec.md) |
 
 ## How it works

@@ -1,7 +1,7 @@
 # 007 — Versão 1.0: profissional e pronto para a comunidade
 
 - **Prioridade:** P1
-- **Status:** Draft — aguarda as decisões D10–D12 do dono
+- **Status:** Approved — decisões D10–D12 respondidas pelo dono em 2026-10-02
 - **Código afetado:** `Makefile`, `template/`, `plugins/sdd-delivery/`, `docs/`, arquivos de comunidade
 - **Resolve:** #39, #40
 
@@ -20,9 +20,9 @@ A `v0.1.0` entregou o kit funcionando (Fases 1 e 2). A `v1.0.0` fecha o que um p
 - **FR-1** O CI do kit e o workflow `docs.yml` do template MUST rodar `sdd-check --strict` (D6: erro a partir da Fase 3).
 - **FR-2** O repositório MUST ter `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `SECURITY.md` e um issue template "Nova linguagem".
 - **FR-3** O repositório MUST ter um estudo de caso em `docs/` com números verificáveis (cada número com link para a issue, o PR ou a release de origem).
-- **FR-4 (D10)** O template SHOULD ganhar as linguagens escolhidas pelo dono, cada uma com `make ci`, CI, hook, dependabot e o e2e da spec 003 AC-4.
-- **FR-5 (D11)** A skill MUST ser revisada depois do uso em pelo menos dois repositórios além do cv-craft (T10). Cada problema encontrado vira um ticket, e a revisão é registrada no CHANGELOG.
-- **FR-6 (D12)** A skill SHOULD estar disponível para quem não lê português, na forma escolhida pelo dono.
+- **FR-4 (D10)** O template SHOULD ganhar Rust e C#/.NET, cada uma com `make ci`, CI, hook, dependabot e o e2e da spec 003 AC-4.
+- **FR-5 (D11)** A skill MUST ser revisada depois do uso em pelo menos dois repositórios além do cv-craft (T10): um repositório público de demonstração, `sdd-kit-demo`, criado do zero com o kit, e um repositório existente do dono. Cada problema encontrado vira um ticket, e a revisão é registrada no CHANGELOG.
+- **FR-6 (D12)** A skill SHOULD ser escrita em inglês e orientar o agente a escrever specs, issues e PRs no idioma do dono do repositório; o princípio 8 da constituição é ajustado no mesmo ticket (T19).
 
 ## Critérios de aceite
 
@@ -35,6 +35,6 @@ A `v0.1.0` entregou o kit funcionando (Fases 1 e 2). A `v1.0.0` fecha o que um p
 
 - Site de documentação próprio: o README e `docs/` no GitHub bastam na `v1.0.0`.
 
-## Decisões em aberto
+## Decisões
 
-Ver [ANALYSIS.md §7](../ANALYSIS.md#7-decisões-da-fase-3-em-aberto).
+Respondidas pelo dono em 2026-10-02: D10 (a) Rust e C#/.NET; D11 (b) `sdd-kit-demo` mais um repositório existente do dono; D12 (a) skill em inglês que escreve no idioma do dono. Ver [ANALYSIS.md §7](../ANALYSIS.md#7-decisões-da-fase-3-respondidas-pelo-dono-em-2026-10-02).

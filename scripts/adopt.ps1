@@ -3,17 +3,17 @@
 # template/common e template/<lang> sem sobrescrever o que já existe.
 # Equivalente a scripts/adopt.sh, com as mesmas opções e a mesma saída.
 #
-# Uso: adopt.ps1 --lang go|node|java|python|rust [--project NOME] [--owner DONO]
+# Uso: adopt.ps1 --lang go|node|java|python|rust|dotnet [--project NOME] [--owner DONO]
 #                [--repo REPO] [--dry-run] [--force] [--skeleton] [DESTINO]
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $KitRef = if ($env:SDD_KIT_REF) { $env:SDD_KIT_REF } else { 'v0.1.0' }
-$Langs = @('go', 'node', 'java', 'python', 'rust')
+$Langs = @('go', 'node', 'java', 'python', 'rust', 'dotnet')
 
 function Show-Usage {
   [Console]::Error.WriteLine(@"
-uso: adopt.ps1 --lang go|node|java|python|rust [opções] [DESTINO]
+uso: adopt.ps1 --lang go|node|java|python|rust|dotnet [opções] [DESTINO]
 
   --lang LING      linguagem do repositório (obrigatório): $($Langs -join ' ')
   --project NOME   nome do projeto (padrão: nome do diretório de destino)

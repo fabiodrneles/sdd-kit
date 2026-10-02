@@ -2,10 +2,10 @@
 # Spec 003 AC-4, 007 AC-4 e 010 AC-1: adota o template num projeto mínimo da linguagem e roda o
 # `make ci` gerado (o mesmo comando que o ci.yml gerado roda). Precisa da
 # linguagem instalada; o CI roda um job por linguagem.
-# Uso: scripts/e2e-template.sh go|node|java|java-gradle|python|rust [diretório-de-trabalho]
+# Uso: scripts/e2e-template.sh go|node|java|java-gradle|python|rust|dotnet [diretório-de-trabalho]
 set -eu
 
-lang="${1:?uso: e2e-template.sh go|node|java|java-gradle|python|rust}"
+lang="${1:?uso: e2e-template.sh go|node|java|java-gradle|python|rust|dotnet}"
 # java-gradle: o template Java num projeto Gradle (spec 010 AC-3).
 adopt_lang="${lang%-gradle}"
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -26,6 +26,7 @@ case "$lang" in
   rust) # antes do módulo de teste, que o clippy exige no fim do arquivo
     awk '/^#\[cfg\(test\)\]/ && !done { print "pub fn untested(n: i32) -> i32 {\n    let mut t = n;\n    for i in 0..n {\n        t += i;\n    }\n    if t > 10 {\n        return t * 2;\n    }\n    t\n}\n"; done = 1 } { print }' \
       src/lib.rs > src/lib.rs.new && mv src/lib.rs.new src/lib.rs ;;
+  dotnet) printf 'namespace Demo;\n\npublic static class Untested\n{\n    public static int Run(int n)\n    {\n        var t = n;\n        for (var i = 0; i < n; i++)\n        {\n            t += i;\n        }\n\n        if (t > 10)\n        {\n            return t * 2;\n        }\n\n        return t;\n    }\n}\n' > src/Demo/Untested.cs ;;
   java | java-gradle) printf 'package demo;\n\npublic final class Untested {\n  private Untested() {}\n\n  public static int run(int n) {\n    int t = n;\n    for (int i = 0; i < n; i++) {\n      t += i;\n    }\n    if (t > 10) {\n      return t * 2;\n    }\n    return t;\n  }\n}\n' > src/main/java/demo/Untested.java ;;
 esac
 if make ci > coverage-gate.log 2>&1; then

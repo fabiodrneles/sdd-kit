@@ -69,3 +69,18 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 ## Fase 8 — Checkpoints de retomada (P1) → `v1.4.0` · épico #122
 
 - [x] **T38** `sdd-checkpoint.sh` e os hooks de início de sessão e `Stop` — 014 FR-1 a FR-4, AC-1 a AC-4 — #123
+
+## Próximas fases (visão, sem versão)
+
+Ideias aprovadas pelo dono em 2026-10-03, em ordem de impacto. Cada uma vira spec e fase quando chegar a vez.
+
+1. **Independente do agente, com prova:** o mesmo fluxo validado de ponta a ponta com Codex, Cursor e Gemini CLI, com e2e no CI.
+2. **Métricas de entrega (`sdd-report`):** por fase, tempo por ticket, PRs verdes de primeira, ACs cobertos e custo em tokens por ticket.
+3. **Motor em Go (`sdd`):** um binário único no lugar dos scripts sh/PowerShell duplicados, sem depender de jq; base do orquestrador abaixo.
+4. **Tickets em paralelo:** o motor lê o grafo de dependências do épico e roda um agente por ticket independente, cada um no seu worktree e branch, com checkpoint próprio.
+5. **Revisor contra a spec:** um agente confere cada PR contra os critérios de aceite antes do dono.
+6. **Desvio entre spec e código:** aviso quando o código muda e a spec não acompanha.
+7. **Modo autônomo com rédea:** rotinas agendadas puxam o próximo ticket; o dono aprova por label ou comentário.
+8. **Orçamento por fase:** limite de tokens ou de tempo; ao chegar perto, checkpoint e pausa.
+9. **`sdd doctor`:** diagnóstico da adoção (hooks, versões, estado, labels, permissões do workflow) com a correção sugerida.
+10. **Alcance:** GitLab e Bitbucket, mais linguagens pela comunidade, specs a partir de código legado.

@@ -84,3 +84,24 @@ Ideias aprovadas pelo dono em 2026-10-03, em ordem de impacto. Cada uma vira spe
 8. **Orçamento por fase:** limite de tokens ou de tempo; ao chegar perto, checkpoint e pausa.
 9. **`sdd doctor`:** diagnóstico da adoção (hooks, versões, estado, labels, permissões do workflow) com a correção sugerida.
 10. **Alcance:** GitLab e Bitbucket, mais linguagens pela comunidade, specs a partir de código legado.
+
+### Motor em Go: comandos que trocam dezenas de passos da LLM por uma linha
+
+Levantados no uso real (sessão de 2026-10-02/03): cada um substitui uma sequência mecânica que hoje o agente faz chamada a chamada. O motor também pode rodar como servidor MCP, com respostas curtas e estruturadas.
+
+11. **`sdd ship`:** commit, push, PR com o corpo gerado do ticket, da spec e do diff, espera do CI, merge quando verde e delegado, e checkpoint. O maior ganho: hoje são 6 a 8 chamadas por PR.
+12. **`sdd release vX`:** fechamento completo (ROADMAP, CHANGELOG gerado das seções "Mudanças", versão em todos os arquivos, artefatos, release e épico fechado).
+13. **`sdd sync` com regiões do projeto:** marcas no template para o merge de três vias preservar o que é do projeto (ex.: descrição e armadilhas no `CLAUDE.md`), sem resolver conflito à mão.
+14. **`sdd ci why`:** só o erro e o contexto mínimo de um job vermelho, em vez do log inteiro.
+15. **`sdd context`:** início de sessão num resumo (checkpoint, PRs e CI, issues da fase, próximo passo), com as consultas em paralelo.
+16. **`sdd mutate`:** checagem de mutação automática de um teste novo (quebra, roda, restaura, relata).
+17. **`sdd plan`:** spec, fase no ROADMAP, índice e épico a partir de um YAML curto, com os números das issues anotados de volta.
+
+### Contra as dores comuns das ferramentas de SDD
+
+18. **Spec viva:** um PR que muda comportamento sem linha em "Mudanças" da spec reprova no CI; specs que não envelhecem.
+19. **Modo leve:** caminho rápido para bug e mudança pequena (ticket com teste, sem spec nova), porque cerimônia demais para tarefa pequena afasta quem adota.
+20. **Contexto por ticket:** o motor monta só o pedaço de spec, código e decisões de que o ticket precisa, em vez de o agente ler specs inteiras.
+21. **Evidência por PR:** um resumo automático no PR mostra cada critério de aceite e o teste que o prova, para o dono revisar em segundos.
+22. **Times:** mais de um dono e revisor, atribuição de tickets e regras de quem aprova o quê.
+23. **Gate de segurança:** segredos, dependências vulneráveis e licenças no `make ci` do template.

@@ -9,6 +9,9 @@ fi
 
 cd "${CLAUDE_PROJECT_DIR:-$(pwd)}"
 
+# Spec 014: o ponto de retomada do épico aberto entra no contexto da sessão.
+sh scripts/sdd-checkpoint.sh show 2>/dev/null || true
+
 if [ -f go.mod ]; then
   go mod download
   # A toolchain que o GOTOOLCHAIN baixa para a versão do go.mod não traz o

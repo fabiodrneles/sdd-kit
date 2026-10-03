@@ -65,3 +65,7 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 - [x] **T35** "Comece em 5 minutos" no README, com o comando rodando no CI — 013 FR-1, AC-1 — #108
 - [x] **T36** Demonstração animada no topo do README, gerada da saída real — 013 FR-2, AC-2 — #109
 - [x] **T37** Perguntas nas Discussions e issues `good first issue` — 013 FR-3, AC-3 — #110
+
+## Fase 8 — Checkpoints de retomada (P1) → `v1.4.0` · épico #122
+
+- [ ] **T38** `sdd-checkpoint.sh` e os hooks de início de sessão e `Stop` — 014 FR-1 a FR-4, AC-1 a AC-4 — #123

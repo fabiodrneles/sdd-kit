@@ -41,5 +41,6 @@ Convenções: `MUST`/`SHOULD`/`MAY` seguem a RFC 2119. Prioridades: **P0** (bloq
 | 011 | [Adoção ajustada pelo uso real](011-adoption-findings/spec.md) | P2 | Done |
 | 012 | [Arquivos do projeto fora da sincronização](012-project-owned-files/spec.md) | P1 | Done |
 | 013 | [Primeira impressão](013-first-impression/spec.md) | P1 | Done |
+| 014 | [Checkpoints de retomada](014-checkpoints/spec.md) | P1 | Approved |
 
 Status possíveis: `Draft` → `Approved` → `In Progress` → `Done`.

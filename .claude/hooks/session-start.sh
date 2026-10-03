@@ -9,6 +9,9 @@ fi
 
 cd "${CLAUDE_PROJECT_DIR:-$(pwd)}"
 
+# Spec 014: o ponto de retomada do épico aberto entra no contexto da sessão.
+sh template/common/scripts/sdd-checkpoint.sh show 2>/dev/null || true
+
 # Versão do shellcheck igual à do CI e do Makefile.
 want="$(sed -n 's/^SHELLCHECK_VERSION *:\?= *//p' Makefile)"
 bin="$HOME/.local/bin"

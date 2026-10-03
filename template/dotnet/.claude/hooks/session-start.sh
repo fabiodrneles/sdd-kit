@@ -9,6 +9,9 @@ fi
 
 cd "${CLAUDE_PROJECT_DIR:-$(pwd)}"
 
+# Spec 014: o ponto de retomada do épico aberto entra no contexto da sessão.
+sh scripts/sdd-checkpoint.sh show 2>/dev/null || true
+
 if ls ./*.sln ./*.csproj >/dev/null 2>&1; then
   dotnet restore
 fi

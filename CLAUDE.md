@@ -4,7 +4,7 @@ Guia rápido para agentes (Claude Code) trabalharem neste repositório. O proces
 
 ## Retomar o trabalho (sessão nova ou contexto perdido)
 
-1. Leia o **comentário "Estado da fase"** mais recente no épico aberto (label `épico`).
+1. O hook de início de sessão mostra o **checkpoint** do épico aberto (`sh template/common/scripts/sdd-checkpoint.sh show`): continue do "Próximo" dele, sem esperar instrução. Sem checkpoint, leia o comentário "Estado da fase" mais recente do épico.
 2. Liste os **PRs abertos** com o CI de cada um e as **issues abertas** da fase.
 3. Continue do próximo passo registrado. Não refaça análise que já está em specs, issues ou PRs.
 
@@ -49,7 +49,7 @@ Numa sessão na web, o hook `.claude/hooks/session-start.sh` instala o shellchec
 
 Cada regra abaixo reduziu o gasto de sessões reais; aplique desde a primeira mensagem.
 
-- **Pausa ou fim de sessão** (limite de uso, "paro por hoje", contexto acabando): sem esperar pedido do dono, faça push do trabalho em andamento (branch com commit WIP se preciso), atualize o "Estado da fase" do épico com o feito, o próximo passo e o que bloqueia, e termine a resposta só com o prompt de retomada para colar numa sessão nova.
+- **Checkpoint contínuo:** a sessão pode acabar a qualquer momento, sem aviso. Depois de cada passo (commit, PR aberto, CI verde, merge), faça push e rode `sh template/common/scripts/sdd-checkpoint.sh save "feito" "próximo passo" ["o que bloqueia"]`: ele atualiza um único comentário de checkpoint no épico aberto, com branch, commit e PRs. Nunca deixe mais de um passo só na máquina; trabalho a meio vai num commit WIP na branch do ticket. O hook Stop mantém o estado do git atualizado a cada resposta.
 - Leia trechos (`sed -n 'a,bp'`, `grep -n`) em vez de arquivos inteiros, e não releia o que já leu, nem depois de editar.
 - Junte leituras e checagens independentes num comando só.
 - Saída longa vai para um arquivo; mostre só o código de saída e o fim: `make ci > /tmp/ci.log 2>&1; echo "exit $?"; tail -n 3 /tmp/ci.log`.

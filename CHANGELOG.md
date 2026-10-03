@@ -4,6 +4,15 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-10-03
+
+Correções achadas ao sincronizar o [sdd-kit-demo](https://github.com/fabiodrneles/sdd-kit-demo) da `v0.1.0` para a `v1.3.0`.
+
+### Corrigido
+
+- O `sdd-sync.sh` roda uma cópia de si mesmo: a sincronização o atualizava enquanto ele rodava, e o `sh` terminava com `Syntax error` antes de abrir o PR. Quem adotou até a `v1.3.0` roda a cópia uma vez à mão (veja "Atualização automática" no README) (spec 005 FR-1).
+- A cobertura do template Go usa `-coverpkg=./...`: um pacote testado só pelos testes de outro contava 0% (no demo, 49% em vez de 88%) (spec 010 FR-1).
+
 ## [1.3.0] - 2026-10-02
 
 Fase 7 do [ROADMAP](specs/ROADMAP.md): primeira impressão para quem chega pela divulgação (spec 013).
@@ -108,7 +117,8 @@ Primeira versão pública: Fases 1 e 2 do [ROADMAP](specs/ROADMAP.md).
 - Critérios de aceite em EARS e seção "Mudanças" por spec, que alimenta o CHANGELOG (spec 006 FR-1, FR-4).
 - CI do kit em Linux, macOS e Windows, com e2e dos templates nas quatro linguagens.
 
-[Unreleased]: https://github.com/fabiodrneles/sdd-kit/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/fabiodrneles/sdd-kit/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/fabiodrneles/sdd-kit/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/fabiodrneles/sdd-kit/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/fabiodrneles/sdd-kit/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/fabiodrneles/sdd-kit/compare/v1.0.0...v1.1.0

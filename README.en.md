@@ -59,7 +59,7 @@ In about 5 minutes the kit is installed and the agent is working on your project
 2. In the project folder, install the kit, replacing `go` with the project's language (`node`, `java`, `python`, `rust` or `dotnet`):
 
    ```text
-   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.3.0/scripts/adopt.sh | sh -s -- --lang go .
+   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.3.1/scripts/adopt.sh | sh -s -- --lang go .
    ```
 
    The command copies into the repository:
@@ -72,7 +72,7 @@ In about 5 minutes the kit is installed and the agent is working on your project
    **It never overwrites a file you already have** and lists at the end what it created and what it skipped. To only see what it would do, without writing anything, add `--dry-run`:
 
    ```text
-   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.3.0/scripts/adopt.sh | sh -s -- --lang go --dry-run .
+   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.3.1/scripts/adopt.sh | sh -s -- --lang go --dry-run .
    ```
 
    In an empty repository, `--skeleton` also creates a minimal project with one test, so the first CI run is already green.
@@ -155,7 +155,7 @@ Adoption also brings scripts for the mechanical steps of the process. The agent 
 
 ## Automatic updates
 
-Adoption writes `.sdd-kit.json` (kit version and a hash per managed file). Every Monday the `sdd-kit sync` workflow compares it with the latest release and opens **one PR**: untouched files are updated, files the kit did not change stay as they are, files both you and the kit changed get the new version and are listed under **"Conflitos"** for you to decide in the PR, files that are only yours are never touched, and `specs/` and `CHANGELOG.md` belong to the project: the kit creates them on adoption if missing and never changes them again. Enable *Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests"*.
+Adoption writes `.sdd-kit.json` (kit version and a hash per managed file). Every Monday the `sdd-kit sync` workflow compares it with the latest release and opens **one PR**: untouched files are updated, files the kit did not change stay as they are, files both you and the kit changed get the new version and are listed under **"Conflitos"** for you to decide in the PR, files that are only yours are never touched, and `specs/` and `CHANGELOG.md` belong to the project: the kit creates them on adoption if missing and never changes them again. Enable *Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests"*. If you adopted up to `v1.3.0` and the sync fails with `Syntax error`, the old script was overwriting itself while running: run a copy of it once, from the repository root, and open the PR with the result (`cp scripts/sdd-sync.sh /tmp/sdd-sync.sh && sh /tmp/sdd-sync.sh`). From `v1.3.1` on, the script does this itself.
 
 ## Installing the skill
 

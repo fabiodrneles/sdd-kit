@@ -36,3 +36,9 @@ D3 (a): melhorias na skill e nos modelos precisam chegar aos repositórios que j
   - arquivo alterado localmente que o kit também mudou recebe a versão nova no PR e aparece em "Conflitos" na descrição, para o dono restaurar o que quiser no próprio PR;
   - o estado guarda o hash do conteúdo do kit, não do arquivo local, para que uma alteração local continue detectável;
   - o repositório precisa permitir que o GitHub Actions crie PRs (Settings → Actions → General).
+
+## Mudanças
+
+### v1.3.1
+
+- MODIFIED FR-1 — o `sdd-sync.sh` roda uma cópia de si mesmo, porque a sincronização o atualiza enquanto ele roda (achado na sincronização do sdd-kit-demo, v1.3.1).

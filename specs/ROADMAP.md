@@ -115,3 +115,25 @@ Levantados no uso real (sessão de 2026-10-02/03): cada um substitui uma sequên
 - **31 · Além do GitHub:** GitLab, Bitbucket e Gitea (issues, PRs e CI), porque o kit hoje depende do GitHub.
 - **32 · Desfazer:** reverter um ticket ou uma fase inteira de forma limpa (código, status, CHANGELOG e issues).
 - **33 · Visão para humanos:** um resumo de arquitetura e estado sempre atual, gerado das specs e do código, para quem entra no projeto sem ler tudo.
+
+### Comunidade e alcance de pessoas
+
+Funcionalidade não basta: o peso de um projeto aberto vem de quem o usa.
+
+- **34 · Inglês de primeira classe:** `README.en.md`, guia e exemplos em inglês no mesmo nível do português, verificados no CI.
+- **35 · Casos de adoção:** histórias documentadas de projetos reais (antes e depois, números), começando pelo `sdd-kit-demo`.
+- **36 · Contribuição fácil:** `CONTRIBUTING`, issues `good first issue`, guia para adicionar uma linguagem e resposta rápida a quem chega.
+- **37 · Decisões explicadas:** artigos curtos em inglês sobre o porquê de cada escolha (checkpoint no épico, sh POSIX, sync de três vias).
+- **38 · Divulgação contínua:** cada release com nota e demonstração curtas nas comunidades de Claude Code e de agentes.
+
+### Rumo à v2.0
+
+A `v2.0.0` marca a troca de base, não a soma de recursos. Critérios:
+
+- o motor `sdd` em Go substitui os scripts sh/PowerShell (itens 3 e 11–17), com migração automática e um único binário por plataforma;
+- o fluxo validado em mais de um agente (item 1) e fora do GitHub (item 31);
+- tickets em paralelo (item 4) e revisor contra a spec (item 5) estáveis;
+- formato de spec, estado e configuração versionado e documentado como contrato público (o que permite a mudança incompatível do major);
+- adoção externa real: projetos de terceiros usando, com casos documentados (item 35).
+
+Depois da v2.0: ecossistema (plugins de linguagem e de gate pela comunidade), painel web das fases e métricas (item 2), e o modo autônomo (item 7) como padrão para times.

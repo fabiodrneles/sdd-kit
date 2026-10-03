@@ -49,6 +49,7 @@ Numa sessão na web, o hook `.claude/hooks/session-start.sh` instala o shellchec
 
 Cada regra abaixo reduziu o gasto de sessões reais; aplique desde a primeira mensagem.
 
+- **Pausa ou fim de sessão** (limite de uso, "paro por hoje", contexto acabando): sem esperar pedido do dono, faça push do trabalho em andamento (branch com commit WIP se preciso), atualize o "Estado da fase" do épico com o feito, o próximo passo e o que bloqueia, e termine a resposta só com o prompt de retomada para colar numa sessão nova.
 - Leia trechos (`sed -n 'a,bp'`, `grep -n`) em vez de arquivos inteiros, e não releia o que já leu, nem depois de editar.
 - Junte leituras e checagens independentes num comando só.
 - Saída longa vai para um arquivo; mostre só o código de saída e o fim: `make ci > /tmp/ci.log 2>&1; echo "exit $?"; tail -n 3 /tmp/ci.log`.

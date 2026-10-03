@@ -68,4 +68,4 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 
 ## Fase 8 — Checkpoints de retomada (P1) → `v1.4.0` · épico #122
 
-- [ ] **T38** `sdd-checkpoint.sh` e os hooks de início de sessão e `Stop` — 014 FR-1 a FR-4, AC-1 a AC-4 — #123
+- [x] **T38** `sdd-checkpoint.sh` e os hooks de início de sessão e `Stop` — 014 FR-1 a FR-4, AC-1 a AC-4 — #123

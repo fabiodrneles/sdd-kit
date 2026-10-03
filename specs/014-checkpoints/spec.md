@@ -1,7 +1,7 @@
 # 014 — Checkpoints de retomada
 
 - **Prioridade:** P1
-- **Status:** Approved — pedido do dono em 2026-10-03
+- **Status:** Done — entregue na `v1.4.0`
 - **Código afetado:** `template/common/scripts/`, `template/common/.claude/settings.json`, `template/<lang>/.claude/hooks/`, `template/common/CLAUDE.md`
 - **Resolve:** a sessão pode acabar sem aviso (limite de uso, contexto); hoje o dono precisa pedir um handoff e colar um prompt para continuar
 
@@ -25,7 +25,7 @@ O "Estado da fase" do épico só é escrito nos marcos, e quando o agente lembra
 
 ## Mudanças
 
-### Não lançado
+### v1.4.0
 
 - ADDED FR-1 — `sdd-checkpoint.sh save` mantém um comentário de checkpoint no épico aberto (T38, #123).
 - ADDED FR-2 — `show` no hook de início de sessão de cada linguagem (T38, #123).

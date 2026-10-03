@@ -132,6 +132,7 @@ Repositórios adotados pelo script já recebem essa configuração; se o seu já
 | Problema comum com agentes | Como o kit resolve |
 |---|---|
 | O agente "esquece" o projeto a cada sessão e relê tudo | `CLAUDE.md` com mapa e armadilhas + comentário "Estado da fase" no épico: a retomada lê um comentário, não o repositório inteiro |
+| A sessão acaba no meio (limite de uso, contexto cheio) e o trabalho se perde | **Checkpoints de retomada:** a cada passo, o agente grava no épico onde parou (branch, commit, PRs, próximo passo); a sessão seguinte o lê sozinha ao abrir e continua, sem você explicar nada |
 | Gasto de tokens com leitura e validação | A skill orienta a ler trechos, pedir só o resumo do CI e validar tudo num comando (`make ci`) |
 | Código que "parece pronto" mas não cumpre o pedido | Critérios de aceite verificáveis; cada `AC-*` vira teste; mutação de cada teste novo |
 | PRs gigantes e difíceis de revisar | Um ticket = uma branch = um PR, com ordem de revisão no épico |
@@ -150,7 +151,7 @@ A comunidade já tem ótimas ferramentas de SDD, e cada uma brilha num ponto:
 | [Kiro](https://github.com/kirodotdev/Kiro) (AWS) | Experiência integrada na IDE | `requirements.md` em notação EARS, `design.md`, `tasks.md` e hooks |
 | [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) | Projetos grandes e regulados | Time ágil simulado com papéis (analista, PM, arquiteto, QA…) |
 
-O **sdd-kit** cobre o trecho que essas ferramentas deixam para você: **a entrega**. A spec vira épico e tickets no GitHub, cada ticket vira um PR revisável com CI verde, a fase fecha com CHANGELOG e a release sai de uma tag. Tudo com papéis claros (o dono decide), retomada barata entre sessões e CI pronto por linguagem. E o kit incorpora o melhor delas ([spec 006](specs/006-community-features/spec.md)): critérios em EARS (Kiro), deltas `ADDED`/`MODIFIED`/`REMOVED` por spec (OpenSpec), checagem de rastreabilidade AC → teste e comandos de barra (spec-kit), e `AGENTS.md` para outros agentes.
+O **sdd-kit** cobre o trecho que essas ferramentas deixam para você: **a entrega**. A spec vira épico e tickets no GitHub, cada ticket vira um PR revisável com CI verde, a fase fecha com CHANGELOG e a release sai de uma tag. Tudo com papéis claros (o dono decide), **checkpoints de retomada** (feche a sessão a qualquer momento; a próxima continua sozinha de onde a anterior parou) e CI pronto por linguagem. E o kit incorpora o melhor delas ([spec 006](specs/006-community-features/spec.md)): critérios em EARS (Kiro), deltas `ADDED`/`MODIFIED`/`REMOVED` por spec (OpenSpec), checagem de rastreabilidade AC → teste e comandos de barra (spec-kit), e `AGENTS.md` para outros agentes.
 
 ## Comandos e verificações
 

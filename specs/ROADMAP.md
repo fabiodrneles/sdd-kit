@@ -135,7 +135,7 @@ Resumo para o README: *"The sdd engine is a local-first modular monolith in Go, 
 
 Funcionalidade não basta: o peso de um projeto aberto vem de quem o usa.
 
-- **34 · Inglês de primeira classe:** `README.en.md`, guia e exemplos em inglês no mesmo nível do português, verificados no CI.
+- **34 · Inglês e francês de primeira classe:** `README.en.md` e `README.fr.md`, guia, exemplos e documentação em inglês e francês no mesmo nível do português, com seletor de idioma no topo de cada README e verificação no CI (seções e links equivalentes nos três idiomas). O francês abre o mercado de Quebec e do Canadá francófono.
 - **35 · Casos de adoção:** histórias documentadas de projetos reais (antes e depois, números), começando pelo `sdd-kit-demo`.
 - **36 · Contribuição fácil:** `CONTRIBUTING`, issues `good first issue`, guia para adicionar uma linguagem e resposta rápida a quem chega.
 - **37 · Decisões explicadas:** artigos curtos em inglês sobre o porquê de cada escolha (checkpoint no épico, sh POSIX, sync de três vias).

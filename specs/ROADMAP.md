@@ -126,6 +126,14 @@ Funcionalidade não basta: o peso de um projeto aberto vem de quem o usa.
 - **37 · Decisões explicadas:** artigos curtos em inglês sobre o porquê de cada escolha (checkpoint no épico, sh POSIX, sync de três vias).
 - **38 · Divulgação contínua:** cada release com nota e demonstração curtas nas comunidades de Claude Code e de agentes.
 
+### Posicionamento: "os outros escrevem a spec; o sdd-kit entrega e prova"
+
+Concorrentes (Spec Kit, Kiro, BMAD, OpenSpec, Agent OS) param na spec; as plataformas absorvem o genérico. O diferencial é a garantia por código (CI), o estado no GitHub e o ciclo inteiro até a release.
+
+- **39 · Importar specs de concorrentes:** ler specs do Spec Kit, Kiro e OpenSpec e entregá-las com o nosso fluxo; quem usa outra ferramenta adota sem trocar nada.
+- **40 · Benchmark público:** a mesma tarefa com cada ferramenta, medindo PRs verdes de primeira, ACs com teste, retrabalho e tokens; resultados e roteiro abertos e reprodutíveis.
+- **41 · Nicho primeiro:** devs solo e times pequenos com Claude Code; guias, exemplos e divulgação focados nesse público antes de expandir.
+
 ### Rumo à v2.0
 
 A `v2.0.0` marca a troca de base, não a soma de recursos. Critérios:

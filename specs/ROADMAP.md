@@ -97,6 +97,21 @@ Levantados no uso real (sessão de 2026-10-02/03): cada um substitui uma sequên
 - **16 · `sdd mutate`:** checagem de mutação automática de um teste novo (quebra, roda, restaura, relata).
 - **17 · `sdd plan`:** spec, fase no ROADMAP, índice e épico a partir de um YAML curto, com os números das issues anotados de volta.
 
+### Arquitetura do motor `sdd` (decisão de visão)
+
+Sem painel web, o motor é um **monólito modular local-first**: um binário Go por plataforma, sem servidor nem banco de dados.
+
+- **Monólito modular, distribuído como CLI:** um binário com pacotes independentes (`ship`, `release`, `sync`, `orch`, `mcp`...), cada um com testes próprios; um bug num pacote se corrige e se testa só nele.
+- **Portas e adaptadores (hexagonal):** o núcleo (specs, ACs, fases, tickets) fala com interfaces; adaptadores ligam GitHub, GitLab, Gitea e os agentes (Claude Code, Codex, Cursor, Gemini CLI). Base dos itens 1 e 31.
+- **Supervisor com um processo por ticket:** no orquestrador (item 4), cada agente roda como processo do sistema no seu worktree; goroutines com `recover`; falha de um ticket é registrada no épico e no checkpoint e não para os outros (`sdd run --ticket N` retoma só ele). Isolamento de falhas como requisito.
+- **Comandos isolados e idempotentes:** cada comando é um processo que começa e termina; cada passo é retomável a partir do estado no GitHub e no checkpoint, sem estado em memória.
+- **Estado local-first no Git e no GitHub:** o repositório (specs, ROADMAP) e a forja (épicos, issues, PRs, checkpoint) são a fonte da verdade.
+- **Três modos do mesmo binário:** CLI (`sdd ship`), servidor MCP local por stdio (`sdd mcp`) e orquestrador (`sdd run --epic N`).
+- **Microserviços só se houver painel web ou modo para times (pós-v2.0),** como serviço opcional; o núcleo segue local.
+- **Também vão para o motor:** contexto por ticket (20), spec viva e desvio (18, 6), evidência por PR (21), guardas do PR (26–29), importador (39), benchmark (40), orçamento por fase (8), `sdd report` (2) e `sdd doctor` (9).
+
+Resumo para o README: *"The sdd engine is a local-first modular monolith in Go, using ports and adapters for forges and agents, and a supervisor that runs one isolated process per ticket; all state lives in Git and GitHub."*
+
 ### Contra as dores comuns das ferramentas de SDD
 
 - **18 · Spec viva:** um PR que muda comportamento sem linha em "Mudanças" da spec reprova no CI; specs que não envelhecem.

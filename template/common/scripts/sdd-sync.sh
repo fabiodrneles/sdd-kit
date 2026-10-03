@@ -20,6 +20,14 @@
 # Requer jq e curl (ou --kit).
 set -eu
 
+# Este script está entre os arquivos que a sincronização atualiza, e o sh lê o
+# script aos poucos: roda uma cópia para não continuar lendo a versão nova.
+if [ -z "${SDD_SYNC_COPY:-}" ]; then
+  copy="$(mktemp)"
+  cp "$0" "$copy"
+  SDD_SYNC_COPY="$copy" exec sh "$copy" "$@"
+fi
+
 version="" kit="" summary=""
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -52,7 +60,7 @@ if [ "$version" = "$current" ]; then
 fi
 
 tmp="$(mktemp -d)"
-trap 'rm -rf "$tmp"' EXIT
+trap 'rm -rf "$tmp" "$SDD_SYNC_COPY"' EXIT
 if [ -z "$kit" ]; then
   curl -fsSL "https://github.com/fabiodrneles/sdd-kit/archive/refs/tags/$version.tar.gz" | tar -xz -C "$tmp"
   kit="$(find "$tmp" -mindepth 1 -maxdepth 1 -type d | head -n1)"

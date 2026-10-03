@@ -24,3 +24,9 @@ A adoção já cria o `ci.yml` por linguagem, o `docs.yml`, o `sdd-sync.yml` e o
 - **AC-3** Dado um projeto Gradle, quando a adoção roda, então o `Makefile` e o `ci.yml` usam o Gradle e `make ci` passa.
 - **AC-4** Dados os templates, quando o CI do kit roda, então cada `release-tag.yml` passa no actionlint e aceita `release-as` e `ref`.
 - **AC-5** Dado o qa-portfolio adotado com a esteira, quando um PR é aberto, então o CI roda lint, testes com cobertura mínima e build.
+
+## Mudanças
+
+### v1.3.1
+
+- MODIFIED FR-1 — a cobertura do template Go usa `-coverpkg=./...`, e conta pacotes testados só por outros pacotes (achado no sdd-kit-demo, v1.3.1).

@@ -74,7 +74,7 @@ Em uns 5 minutos o kit está instalado e o agente trabalhando no seu projeto.
 2. Na pasta do projeto, instale o kit, trocando `go` pela linguagem do projeto (`node`, `java`, `python`, `rust` ou `dotnet`):
 
    ```text
-   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.3.0/scripts/adopt.sh | sh -s -- --lang go .
+   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.3.1/scripts/adopt.sh | sh -s -- --lang go .
    ```
 
    O comando copia para o repositório:
@@ -87,7 +87,7 @@ Em uns 5 minutos o kit está instalado e o agente trabalhando no seu projeto.
    **Ele nunca sobrescreve um arquivo que você já tem** e mostra no final o que criou e o que deixou de lado. Para só ver o que ele faria, sem gravar nada, acrescente `--dry-run`:
 
    ```text
-   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.3.0/scripts/adopt.sh | sh -s -- --lang go --dry-run .
+   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.3.1/scripts/adopt.sh | sh -s -- --lang go --dry-run .
    ```
 
    Num repositório vazio, `--skeleton` cria também um projeto mínimo com um teste, para o primeiro CI já nascer verde.
@@ -200,6 +200,8 @@ A adoção grava `.sdd-kit.json` (versão do kit e o hash de cada arquivo gerenc
 - `specs/` e `CHANGELOG.md` são do projeto: o kit os cria na adoção, se faltarem, e nunca mais os altera.
 
 Para o workflow abrir PRs, ative em *Settings → Actions → General* a opção **"Allow GitHub Actions to create and approve pull requests"**.
+
+Quem adotou até a `v1.3.0` e vê a sincronização falhar com `Syntax error`: o script antigo se sobrescrevia enquanto rodava. Rode uma vez uma cópia dele, na raiz do repositório, e abra o PR com o resultado: `cp scripts/sdd-sync.sh /tmp/sdd-sync.sh && sh /tmp/sdd-sync.sh`. Da `v1.3.1` em diante, o próprio script faz isso.
 
 ## Instalar a skill
 

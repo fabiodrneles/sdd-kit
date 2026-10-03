@@ -22,6 +22,9 @@ before="$(snapshot .)"
 sh scripts/sdd-sync.sh --kit "$kit" --version v0.0.1 | grep -q 'nada a fazer' || fail "mesma versão deveria não fazer nada"
 [ "$before" = "$(snapshot .)" ] || fail "mesma versão mudou arquivos"
 
+# A própria sdd-sync.sh muda na versão nova (o sh lê o script aos poucos).
+{ head -n 1 "$kit/template/common/scripts/sdd-sync.sh"; for i in $(seq 1 40); do echo "# linha nova $i, que desloca o resto do script"; done
+  tail -n +2 "$kit/template/common/scripts/sdd-sync.sh"; } > "$tmp/sync.new" && cp "$tmp/sync.new" "$kit/template/common/scripts/sdd-sync.sh"
 # Nova versão do kit: CONTRIBUTING e CLAUDE mudam, surgem NEW.txt e own.txt.
 printf 'linha nova\n' >> "$kit/template/common/CONTRIBUTING.md"
 printf 'kit novo\n' >> "$kit/template/common/CLAUDE.md"

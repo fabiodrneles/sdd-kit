@@ -105,3 +105,13 @@ Levantados no uso real (sessão de 2026-10-02/03): cada um substitui uma sequên
 - **21 · Evidência por PR:** um resumo automático no PR mostra cada critério de aceite e o teste que o prova, para o dono revisar em segundos.
 - **22 · Times:** mais de um dono e revisor, atribuição de tickets e regras de quem aprova o quê.
 - **23 · Gate de segurança:** segredos, dependências vulneráveis e licenças no `make ci` do template.
+- **24 · Projeto legado (brownfield):** specs geradas por engenharia reversa do código e dos testes existentes, porque quase toda ferramenta de SDD assume projeto do zero.
+- **25 · Spec ambígua:** um verificador aponta termos vagos, AC sem critério mensurável e conflitos entre specs, e gera perguntas ao dono antes de codar.
+- **26 · Dependência alucinada:** o CI reprova pacote inexistente, recém-publicado ou com nome parecido com um conhecido (slopsquatting) antes da instalação.
+- **27 · Teste de fachada:** detecta teste sem asserção, que só repete o mock ou que passa com o código quebrado, ligado ao `sdd mutate`.
+- **28 · Escopo do ticket:** alerta quando o PR mexe em arquivos ou áreas fora do que o ticket e a spec citam (o agente que "aproveita" para refatorar).
+- **29 · Decisão contrariada:** o diff é conferido contra as decisões D1..Dn e a constituição; contrariar uma exige registrar a nova decisão.
+- **30 · Monorepo:** várias linguagens e pacotes num repositório, com CI, cobertura e specs por pacote.
+- **31 · Além do GitHub:** GitLab, Bitbucket e Gitea (issues, PRs e CI), porque o kit hoje depende do GitHub.
+- **32 · Desfazer:** reverter um ticket ou uma fase inteira de forma limpa (código, status, CHANGELOG e issues).
+- **33 · Visão para humanos:** um resumo de arquitetura e estado sempre atual, gerado das specs e do código, para quem entra no projeto sem ler tudo.

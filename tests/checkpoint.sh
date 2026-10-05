@@ -81,7 +81,7 @@ body | grep -qx -- '- \*\*Feito:\*\* T2 pronto' || fail "auto perdeu o feito"
 
 # 014 AC-4: hooks de início de sessão e hook Stop do template.
 for h in "$root"/template/*/.claude/hooks/session-start.sh; do
-  grep -q 'sdd-checkpoint.sh show' "$h" || fail "$h não mostra o checkpoint"
+  grep -q 'sdd-resume.sh' "$h" || fail "$h não retoma o trabalho"
 done
 jq -e '.hooks.Stop[0].hooks[0].command | test("sdd-checkpoint.sh auto")' "$root/template/common/.claude/settings.json" > /dev/null ||
   fail "settings.json do template sem o hook Stop"

@@ -191,7 +191,7 @@ A adoção também traz scripts para os passos mecânicos do processo. O agente 
 | `scripts/sdd-phase-status.sh [--post]` | Comentário "Estado da fase" do épico |
 | `scripts/sdd-epic.sh [--dry-run] N` | Épico da fase N e os tickets como sub-issues |
 | `scripts/sdd-checkpoint.sh save\|show` | Checkpoint de retomada no épico: uma sessão nova continua sozinha de onde a anterior parou |
-| `scripts/sdd-checkpoint.sh save\|show` | Checkpoint de retomada no épico: uma sessão nova continua sozinha de onde a anterior parou |
+| `scripts/sdd-resume.sh` | Retomada em um comando: checkpoint, branch, PRs abertos com CI e issues abertas do épico |
 | `scripts/sdd-release-check.sh pre\|post vX.Y.Z` | Go: simula o release antes da tag e confere a release publicada |
 
 ## Atualização automática

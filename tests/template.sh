@@ -46,6 +46,16 @@ for t in 'issues:' 'types: [closed]' "vars.SDD_ENGINE != 'off'" 'sdd-on-phase-do
 done
 if grep -q 'pull_request_target' "$pd"; then err "$pd usa pull_request_target"; fi
 
+# 015 AC-3/AC-7: o resumo do CI roda por workflow_run, só para PRs do próprio repositório,
+# e é desligável por SDD_ENGINE.
+cs=common/.github/workflows/sdd-ci-summary.yml
+[ -f "$cs" ] || err "$cs não existe"
+for t in 'workflow_run:' 'SDD_ENGINE' 'head_repository.full_name == github.repository' 'sdd-ci-comment.sh'; do
+  grep -qF "$t" "$cs" || err "$cs sem '$t'"
+done
+if grep -q 'pull_request_target' "$cs"; then err "$cs usa pull_request_target"; fi
+if grep -q 'ref:' "$cs"; then err "$cs faz checkout de outra ref (código do PR)"; fi
+
 [ -f common/AGENTS.md ] || err "template/common/AGENTS.md não existe"
 grep -q 'make ci' common/AGENTS.md || err "template/common/AGENTS.md não cita make ci"
 

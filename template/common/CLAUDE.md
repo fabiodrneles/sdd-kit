@@ -4,9 +4,8 @@ Guia rápido para agentes (Claude Code) trabalharem no {{PROJECT}} sem redescobr
 
 ## Retomar o trabalho (sessão nova ou contexto perdido)
 
-1. O hook de início de sessão mostra o **checkpoint** do épico aberto (`sh scripts/sdd-checkpoint.sh show`): continue do "Próximo" dele, sem esperar instrução. Sem checkpoint, leia o comentário "Estado da fase" mais recente do épico.
-2. Liste os **PRs abertos** e o CI de cada um, e as **issues abertas** da fase.
-3. Continue do próximo passo registrado. Não refaça análise que já está em specs, issues ou PRs.
+1. Rode `sh scripts/sdd-resume.sh` (o hook de início de sessão já o roda): mostra o **checkpoint** do épico aberto, entra na branch dele (árvore limpa), lista os **PRs abertos** com o CI de cada um e as **issues abertas** do épico. Continue do "Próximo" do checkpoint, sem esperar instrução. Sem checkpoint, leia o comentário "Estado da fase" mais recente do épico.
+2. Continue do próximo passo registrado. Não refaça análise que já está em specs, issues ou PRs.
 
 O estado do trabalho vive no GitHub, e não na conversa. Abra o ticket e o PR assim que a tarefa começar e terminar, e atualize o comentário de estado do épico a cada marco.
 

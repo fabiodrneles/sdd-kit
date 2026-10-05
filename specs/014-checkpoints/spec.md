@@ -21,9 +21,13 @@ O "Estado da fase" do épico só é escrito nos marcos, e quando o agente lembra
 - **AC-1** Dado um épico aberto sem checkpoint, quando `save` roda, então um comentário com a marca, a branch, o feito e o próximo é criado; rodando de novo, o mesmo comentário é editado.
 - **AC-2** Dado um checkpoint, quando `show` roda, então ele é impresso; sem épico aberto, `show` e `save` saem com 0 e avisam.
 - **AC-3** Dado um checkpoint, quando `auto` roda sem nada mudado, então nada é escrito; com um commit novo, o comentário passa a ter o commit novo e mantém o feito e o próximo.
-- **AC-4** Dados o template e as linguagens, quando o CI roda, então cada hook de início de sessão chama `sdd-checkpoint.sh show` e o `settings.json` tem o hook `Stop` com `sdd-checkpoint.sh auto`.
+- **AC-4** Dados o template e as linguagens, quando o CI roda, então cada hook de início de sessão chama `sdd-resume.sh` (que mostra o checkpoint com `sdd-checkpoint.sh show`) e o `settings.json` tem o hook `Stop` com `sdd-checkpoint.sh auto`.
 
 ## Mudanças
+
+### Não lançado
+
+- MODIFIED FR-2 — o hook de início de sessão chama `sdd-resume.sh`: checkpoint, branch do checkpoint, PRs abertos com o CI e sub-issues do épico (#136).
 
 ### v1.4.0
 

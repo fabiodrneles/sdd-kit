@@ -52,6 +52,7 @@ Cada regra abaixo reduziu o gasto de sessões reais; aplique desde a primeira me
 - Saída longa vai para um arquivo; mostre só o código de saída e o fim: `make ci > /tmp/ci.log 2>&1; echo "exit $?"; tail -n 3 /tmp/ci.log`.
 - Valide tudo com `make ci`, uma vez, antes do push.
 - CI dos PRs: `sh scripts/sdd-ci.sh '#PR'` (uma linha por check e só o fim do log das falhas). Não assine os eventos do PR; se a sessão assinar sozinha, cancele.
+- Entrega do ticket num comando: `sh scripts/sdd-pr.sh [--spec NNN] [--dry-run]` (merge da `main`, `make ci`, push, PR ou o já aberto, CI do PR e checkpoint; não faz merge).
 - Edição mecânica por script que falha se o trecho não existir (ex.: `assert old in s` antes do `replace` em Python), sem reler o arquivo.
 - Checagem de mutação sem reler: copie o arquivo, quebre, rode o teste, restaure com `cp`.
 - Confira ferramentas e rede antes de começar (o proxy pode bloquear downloads); tente o gerenciador de pacotes do sistema.

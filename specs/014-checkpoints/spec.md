@@ -25,7 +25,7 @@ O "Estado da fase" do épico só é escrito nos marcos, e quando o agente lembra
 
 ## Mudanças
 
-### Não lançado
+### v1.5.0
 
 - MODIFIED FR-2 — o hook de início de sessão chama `sdd-resume.sh`: checkpoint, branch do checkpoint, PRs abertos com o CI e sub-issues do épico (#136).
 

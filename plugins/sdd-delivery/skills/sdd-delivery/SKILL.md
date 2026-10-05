@@ -216,6 +216,7 @@ When the repository has the template's scripts, call them instead of doing the s
 | Step | Script |
 |---|---|
 | Wait for CI and read only the failures | `sh scripts/sdd-ci.sh [SHA\|#PR\|branch]` |
+| Ship the ticket branch (merge main, `make ci`, push, open/reuse the PR, wait for CI, checkpoint) | `sh scripts/sdd-pr.sh [--spec NNN] [--dry-run]` |
 | Record the owner's decisions | `sh scripts/sdd-mark.sh decide D1=a D2=b` |
 | Closing status files | `sh scripts/sdd-mark.sh close vX.Y.Z` |
 | "Phase status" comment | `sh scripts/sdd-phase-status.sh [--post]` |

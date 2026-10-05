@@ -184,6 +184,7 @@ A adoção também traz scripts para os passos mecânicos do processo. O agente 
 | Script | Faz |
 |---|---|
 | `scripts/sdd-ci.sh [#PR\|SHA]` | Espera o CI e mostra só o fim do log dos checks que falharam |
+| `scripts/sdd-pr.sh [--spec NNN] [--dry-run]` | Entrega a branch do ticket: merge da `main`, `make ci`, push, PR (ou reaproveita o aberto), CI do PR e checkpoint |
 | `scripts/sdd-mark.sh decide D1=a` | Registra as decisões do dono e aprova as specs |
 | `scripts/sdd-mark.sh close vX.Y.Z` | Arquivos de status do fechamento da fase (specs, ROADMAP, CHANGELOG) |
 | `scripts/sdd-phase-status.sh [--post]` | Comentário "Estado da fase" do épico |

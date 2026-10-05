@@ -6,7 +6,7 @@
 # Uso: sdd-pr.sh [--repo DONO/REPO] [--spec NNN|—] [--title "feat: ..."]
 #                [--body-file ARQ] [--no-wait] [--dry-run]
 #   --spec       número da spec do PR (padrão "—")
-#   --title      título do PR (padrão: assunto do último commit que não é merge)
+#   --title      título do PR (padrão: assunto do primeiro commit da branch que não é merge)
 #   --body-file  texto que entra depois da linha "Closes #N · Épico #M · Spec NNN"
 #                no lugar das seções vazias de .github/pull_request_template.md
 #   --no-wait    não espera o CI do PR (sdd-ci.sh)
@@ -86,13 +86,16 @@ if [ -n "$found" ]; then
   pr="${found%% *}"
   echo "sdd-pr: PR #$pr já existe: ${found#* }"
 else
-  [ -n "$title" ] || title="$(git log origin/main..HEAD --no-merges -n 1 --format=%s)"
+  [ -n "$title" ] || title="$(git log origin/main..HEAD --no-merges --reverse --format=%s | head -n 1)"
   [ -n "$title" ] || die "sem commit na branch; passe --title"
   epic="$(gh api "repos/$repo/issues?labels=%C3%A9pico&state=open&per_page=1" --jq '.[0].number // empty' 2> /dev/null || true)"
   tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
   {
-    echo "${n:+Closes #$n · }Épico ${epic:+#}${epic:-—} · Spec $spec"
+    # Branch numerada como o próprio épico aberto: "Refs", para o merge não fechá-lo.
+    verb="Closes"
+    [ "$n" != "$epic" ] || verb="Refs"
+    echo "${n:+$verb #$n · }Épico ${epic:+#}${epic:-—} · Spec $spec"
     echo
     if [ -n "$bodyfile" ]; then
       cat "$bodyfile"

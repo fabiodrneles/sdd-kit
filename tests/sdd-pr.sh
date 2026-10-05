@@ -110,6 +110,7 @@ rc=0; out="$($pr 2>&1)" || rc=$?
 if ! { printf '%s\n' "$out" | grep -qx '40' && ! printf '%s\n' "$out" | grep -qx '5'; }; then fail "não mostrou só o fim do log: $out"; fi
 git ls-remote --exit-code origin feat/9-x > /dev/null 2>&1 && fail "enviou com o CI vermelho"
 git reset -q --hard "$good"
+echo t > t.txt; git add t.txt; git commit -q -m "test: cobre a"  # o título não pode virar o deste commit
 
 # Caminho feliz: merge, CI, push, PR criado com título, corpo e checkpoint.
 git checkout -q main; echo m2 > m2.txt; git add m2.txt; git commit -q -m "feat: m2"; git push -q origin main; git checkout -q feat/9-x
@@ -134,6 +135,15 @@ rm "$G/created"
 out="$($pr --no-wait 2>&1)" || fail "segunda rodada falhou: $out"
 printf '%s\n' "$out" | grep -q 'PR #42 já existe: https://github.com/o/r/pull/42' || fail "não reconheceu o PR existente: $out"
 [ ! -e "$G/created" ] || fail "criou um segundo PR"
+
+# Branch numerada como o épico aberto (#7): "Refs", nunca "Closes".
+echo "[]" > "$G/pulls.json"
+git checkout -q -b docs/7-x main
+echo e > e.txt; git add e.txt; git commit -q -m "docs: e"
+out="$($pr --dry-run 2>&1)" || fail "dry-run do épico falhou: $out"
+printf '%s\n' "$out" | grep -q 'Refs #7 · Épico #7 · Spec —' || fail "branch do épico sem Refs: $out"
+printf '%s\n' "$out" | grep -q 'Closes #7' && fail "branch do épico com Closes: $out"
+git checkout -q feat/9-x
 
 # --body-file e --title substituem as seções do template.
 echo '[]' > "$G/pulls.json"

@@ -9,8 +9,8 @@ fi
 
 cd "${CLAUDE_PROJECT_DIR:-$(pwd)}"
 
-# Spec 014: o ponto de retomada do épico aberto entra no contexto da sessão.
-sh scripts/sdd-checkpoint.sh show 2>/dev/null || true
+# Spec 014: o ponto de retomada, a branch, os PRs e as issues do épico aberto entram no contexto da sessão.
+sh scripts/sdd-resume.sh 2>/dev/null || true
 
 if [ -f Cargo.toml ]; then
   make deps

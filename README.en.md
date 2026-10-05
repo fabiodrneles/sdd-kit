@@ -152,7 +152,7 @@ In adopted repositories:
 
 ### Token-saving scripts
 
-Adoption also brings scripts for the mechanical steps of the process. The agent calls a script and reads one line per result instead of running dozens of steps and reading long outputs: `sdd-ci.sh` (wait for CI, show only the tail of failed logs), `sdd-mark.sh decide|close` (status files for decisions and phase closing), `sdd-phase-status.sh` (the epic's "Estado da fase" comment), `sdd-epic.sh` (phase epic and sub-issue tickets), `sdd-checkpoint.sh save|show` (resume checkpoint on the epic, so a new session picks up where the last one stopped) and, for Go, `sdd-release-check.sh pre|post` (simulate the release before tagging; verify the published release).
+Adoption also brings scripts for the mechanical steps of the process. The agent calls a script and reads one line per result instead of running dozens of steps and reading long outputs: `sdd-ci.sh` (wait for CI, show only the tail of failed logs), `sdd-mark.sh decide|close` (status files for decisions and phase closing), `sdd-phase-status.sh` (the epic's "Estado da fase" comment), `sdd-epic.sh` (phase epic and sub-issue tickets), `sdd-checkpoint.sh save|show` (resume checkpoint on the epic, so a new session picks up where the last one stopped), `sdd-resume.sh` (the whole resume routine in one command: checkpoint, branch, open PRs with CI, open epic issues) and, for Go, `sdd-release-check.sh pre|post` (simulate the release before tagging; verify the published release).
 
 ## Automatic updates
 

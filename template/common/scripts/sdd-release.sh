@@ -2,8 +2,13 @@
 # sdd-release: prepara o PR de fechamento de uma versão em um comando (sdd-kit,
 # issue #142) e, depois do merge dele, cria a tag. Só REST (gh api); não faz merge.
 #
-# Uso: sdd-release.sh [--repo DONO/REPO] [--dry-run] X.Y.Z
-#      sdd-release.sh [--repo DONO/REPO] [--dry-run] --tag X.Y.Z
+# Uso: sdd-release.sh [--repo DONO/REPO] [--dry-run] [X.Y.Z]
+#      sdd-release.sh [--repo DONO/REPO] [--dry-run] --tag [X.Y.Z]
+#
+# A versão vem do go-release-manager (`go-release-manager next` na origin/main,
+# pelos Conventional Commits desde a última tag estável; sem o binário, usa
+# `go run` com GRM_VERSION). X.Y.Z só força a versão (release-as), com aviso se
+# divergir da calculada. Sem GRM nem Go, e sem X.Y.Z, falha dizendo como instalar.
 #
 # Preparar (X.Y.Z):
 #   1 recusa árvore suja; cria a branch chore/release-vX.Y.Z a partir de origin/main;
@@ -42,15 +47,40 @@ while [ $# -gt 0 ]; do
     *) [ -z "$ver" ] || die "versão repetida: $1"; ver="${1#v}"; shift ;;
   esac
 done
-[ -n "$ver" ] || die "uso: sdd-release.sh [--dry-run] X.Y.Z | --tag X.Y.Z"
-printf '%s\n' "$ver" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || die "versão inválida (use X.Y.Z): $ver"
-tag="v$ver"
 here="$(cd "$(dirname "$0")" && pwd)"
 if [ -z "$repo" ]; then
   url="$(git remote get-url origin 2> /dev/null)" || die "sem remote origin; use --repo"
   repo="$(printf '%s\n' "$url" | sed -E 's#\.git$##; s#^.*[:/]([^/]+/[^/]+)$#\1#')"
 fi
 git fetch -q --tags origin main
+
+# Próxima versão pelo go-release-manager, analisando a origin/main (sem tocar na
+# árvore de trabalho: worktree descartável).
+GRM_VERSION="${GRM_VERSION:-v1.1.0}"
+grm_next() {
+  wt="$(mktemp -d)"
+  git worktree add -q --detach "$wt" origin/main 2> /dev/null || { rm -rf "$wt"; return 1; }
+  if command -v go-release-manager > /dev/null 2>&1; then
+    out="$(cd "$wt" && go-release-manager next 2> /dev/null)" || out=""
+  elif command -v go > /dev/null 2>&1; then
+    out="$(cd "$wt" && go run "github.com/fabiodrneles/go-release-manager@$GRM_VERSION" next 2> /dev/null)" || out=""
+  else
+    out=""
+  fi
+  git worktree remove --force "$wt" 2> /dev/null || rm -rf "$wt"
+  printf '%s\n' "$out" | tail -n 1 | sed 's/^v//'
+}
+calc="$(grm_next || true)"
+if [ -z "$ver" ]; then
+  [ -n "$calc" ] || die "sem versão: instale o go-release-manager (go install github.com/fabiodrneles/go-release-manager@latest) ou passe X.Y.Z; sem commits feat/fix desde a última tag, não há o que lançar"
+  ver="$calc"
+  echo "sdd-release: versão v$ver calculada pelo go-release-manager"
+elif [ -n "$calc" ] && [ "$calc" != "${ver#v}" ]; then
+  echo "sdd-release: aviso: o go-release-manager calcula v$calc; usando v${ver#v} (release-as)" >&2
+fi
+ver="${ver#v}"
+printf '%s\n' "$ver" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || die "versão inválida (use X.Y.Z): $ver"
+tag="v$ver"
 if git ls-remote --tags origin "$tag" | grep -q .; then die "a tag $tag já existe na origin"; fi
 short() { printf '%s' "$1" | cut -c1-7; }
 

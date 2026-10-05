@@ -185,7 +185,7 @@ A adoção também traz scripts para os passos mecânicos do processo. O agente 
 |---|---|
 | `scripts/sdd-ci.sh [#PR\|SHA]` | Espera o CI e mostra só o fim do log dos checks que falharam |
 | `scripts/sdd-pr.sh [--spec NNN] [--dry-run]` | Entrega a branch do ticket: merge da `main`, `make ci`, push, PR (ou reaproveita o aberto), CI do PR e checkpoint |
-| `scripts/sdd-release.sh X.Y.Z [--dry-run]` | PR de fechamento da versão: rascunho do CHANGELOG pelos PRs mesclados, versões do `.sdd-release`, commit e PR; `--tag X.Y.Z` depois do merge dispara o *Release tag* ou cria a tag |
+| `scripts/sdd-release.sh [X.Y.Z] [--dry-run]` | PR de fechamento da versão (versão calculada pelo go-release-manager; X.Y.Z só força): rascunho do CHANGELOG pelos PRs mesclados, versões do `.sdd-release`, commit e PR; `--tag` depois do merge dispara o *Release tag* ou cria a tag |
 | `scripts/sdd-mark.sh decide D1=a` | Registra as decisões do dono e aprova as specs |
 | `scripts/sdd-mark.sh close vX.Y.Z` | Arquivos de status do fechamento da fase (specs, ROADMAP, CHANGELOG) |
 | `scripts/sdd-phase-status.sh [--post]` | Comentário "Estado da fase" do épico |

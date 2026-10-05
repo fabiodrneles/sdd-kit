@@ -40,6 +40,9 @@ case "$method $url" in
 esac
 SH
 chmod +x "$tmp/bin/gh"
+# go-release-manager falso: imprime $GRM_NEXT (vazio = nada a lançar).
+printf '#!/bin/sh\n[ "$1" = next ] && [ -n "${GRM_NEXT:-}" ] && echo "$GRM_NEXT"\nexit 0\n' > "$tmp/bin/go-release-manager"
+chmod +x "$tmp/bin/go-release-manager"
 export PATH="$tmp/bin:$PATH" G
 : > "$G/writes"
 cat > "$G/closed.json" <<'JSON'
@@ -104,6 +107,15 @@ out="$($rel --dry-run 1.1.0 2>&1)" || fail "dry-run falhou: $out"
 printf '%s\n' "$out" | grep -q '## \[1.1.0\]' || fail "dry-run sem o bloco: $out"
 printf '%s\n' "$out" | grep -q 'add x (#11)' || fail "dry-run sem o rascunho: $out"
 printf '%s\n' "$out" | grep -q 'subiria a versão em VERSION' || fail "dry-run sem os bumps: $out"
+
+# Sem X.Y.Z, a versão vem do go-release-manager; com X.Y.Z diferente, avisa.
+out="$(GRM_NEXT=v1.1.0 $rel --dry-run 2>&1)" || fail "dry-run sem versão falhou: $out"
+printf '%s\n' "$out" | grep -q 'v1.1.0 calculada pelo go-release-manager' || fail "não usou o go-release-manager: $out"
+printf '%s\n' "$out" | grep -q '## \[1.1.0\]' || fail "versão do go-release-manager não entrou no CHANGELOG: $out"
+out="$(GRM_NEXT=v1.1.0 $rel --dry-run 2.0.0 2>&1)" || fail "dry-run com release-as falhou: $out"
+printf '%s\n' "$out" | grep -q 'calcula v1.1.0; usando v2.0.0' || fail "sem aviso de divergência: $out"
+out="$($rel --dry-run 2>&1)" && fail "sem versão nem go-release-manager deveria falhar: $out"
+printf '%s\n' "$out" | grep -q 'go install github.com/fabiodrneles/go-release-manager' || fail "não explicou como instalar: $out"
 if ! { [ -z "$(git status --porcelain)" ] && [ "$(git rev-parse HEAD)" = "$head" ] && [ "$(git rev-parse --abbrev-ref HEAD)" = main ]; }; then fail "dry-run mexeu no repositório"; fi
 git rev-parse -q --verify refs/heads/chore/release-v1.1.0 > /dev/null && fail "dry-run criou a branch"
 [ ! -s "$G/writes" ] || fail "dry-run escreveu na API"

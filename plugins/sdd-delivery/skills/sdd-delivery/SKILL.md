@@ -217,7 +217,7 @@ When the repository has the template's scripts, call them instead of doing the s
 |---|---|
 | Wait for CI and read only the failures | `sh scripts/sdd-ci.sh [SHA\|#PR\|branch]` |
 | Ship the ticket branch (merge main, `make ci`, push, open/reuse the PR, wait for CI, checkpoint) | `sh scripts/sdd-pr.sh [--spec NNN] [--dry-run]` |
-| Prepare the version's closing PR (CHANGELOG draft from merged PRs, version bumps from `.sdd-release`); after the merge, tag it | `sh scripts/sdd-release.sh X.Y.Z [--dry-run]`, then `sh scripts/sdd-release.sh --tag X.Y.Z` |
+| Prepare the version's closing PR (version computed by go-release-manager, X.Y.Z only forces it; CHANGELOG draft from merged PRs, version bumps from `.sdd-release`); after the merge, tag it | `sh scripts/sdd-release.sh X.Y.Z [--dry-run]`, then `sh scripts/sdd-release.sh --tag X.Y.Z` |
 | Record the owner's decisions | `sh scripts/sdd-mark.sh decide D1=a D2=b` |
 | Closing status files | `sh scripts/sdd-mark.sh close vX.Y.Z` |
 | "Phase status" comment | `sh scripts/sdd-phase-status.sh [--post]` |

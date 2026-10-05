@@ -13,7 +13,7 @@
 #   --dry-run    mostra o que faria, sem merge, CI, push nem escrita na API
 # Passos: 1 branch <tipo>/<N>-<desc> e árvore limpa; 2 merge de origin/main (no
 # conflito, aborta e lista os arquivos); 3 make ci (só as últimas 30 linhas se
-# falhar); 4 git push; 5 PR; 6 sdd-ci.sh '#PR'; 7 sdd-checkpoint.sh save.
+# falhar); 4 git push; 5 PR; 6 sdd-ci.sh <SHA enviado>; 7 sdd-checkpoint.sh save.
 # Códigos: 0 ok; 1 falha de uma etapa (ou do CI do PR); 2 tempo esgotado no
 # sdd-ci.sh; 3 uso/pré-condição.
 set -eu
@@ -133,7 +133,9 @@ fi
 # 6. CI do PR.
 rc=0
 if [ "$wait" -eq 1 ]; then
-  sh "$here/sdd-ci.sh" --repo "$repo" "#$pr" || rc=$?
+  # Sem REF, o sdd-ci.sh espera o HEAD local (o SHA enviado): logo depois do
+  # push, "#PR" ainda pode ler o head anterior do PR e dar um falso verde.
+  sh "$here/sdd-ci.sh" --repo "$repo" || rc=$?
 fi
 
 # 7. Checkpoint (falha ignorada).

@@ -4,6 +4,21 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-05
+
+Scripts que tiram do agente os passos mecânicos de retomar, entregar, preparar o ambiente e fechar a versão, para que a LLM gaste tokens e contexto só com código e decisões.
+
+### Adicionado
+
+- **`scripts/sdd-resume.sh`:** a retomada da sessão num comando. Mostra o checkpoint do épico aberto e entra na branch dele (só com a árvore limpa e sem commits não enviados). Depois lista os PRs abertos com o resumo do CI e as sub-issues abertas do épico. Os hooks de início de sessão passam a chamá-lo (spec 014 FR-2, #139).
+- **`scripts/sdd-pr.sh`:** a entrega do ticket num comando. Faz merge da `main` e roda o `make ci`, mostrando só o fim do log em falha. Depois faz push e abre o PR com o template preenchido, ou reaproveita o que já existe. Por fim espera o CI e grava o checkpoint (#138).
+- **`scripts/sdd-doctor.sh`:** deixa o ambiente local igual ao do CI quando o hook de sessão não rodou. Cobre as ferramentas nas versões fixadas, o `covdata` do Go, um `golangci-lint` antigo escondendo o certo no PATH e o locale UTF-8. No template Go, o `make lint` passa a preferir o `golangci-lint` do `GOPATH/bin` (spec 010, #144).
+- **`scripts/sdd-release.sh`:** o fechamento da versão num comando. A versão vem do [go-release-manager](https://github.com/fabiodrneles/go-release-manager) pelos Conventional Commits, e um X.Y.Z passado à mão só a força, com aviso. O script monta o rascunho do CHANGELOG pelos PRs mesclados, sobe a versão nos arquivos de `.sdd-release` e abre o PR. Depois do merge, `--tag` dispara o *Release tag* (spec 008, #145, #155).
+
+### Corrigido
+
+- O `sdd-pr.sh` espera o CI pelo SHA enviado: logo depois do push, `#PR` ainda podia ler o head anterior e dar um falso verde (#141).
+
 ## [1.4.0] - 2026-10-03
 
 Fase 8 do [ROADMAP](specs/ROADMAP.md): checkpoints de retomada (spec 014).

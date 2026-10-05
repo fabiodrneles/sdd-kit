@@ -1,0 +1,7 @@
+# Arquivos que o PR de fechamento (sdd-release.sh) atualiza com a versão nova.
+# Formato: CAMINHO TEXTO (@V@ = versão sem o "v"); veja o cabeçalho do script.
+plugins/sdd-delivery/.claude-plugin/plugin.json "version": "@V@"
+scripts/adopt.sh SDD_KIT_REF:-v@V@
+scripts/adopt.ps1 { 'v@V@' }
+README.md sdd-kit/v@V@/scripts/adopt.sh
+README.en.md sdd-kit/v@V@/scripts/adopt.sh

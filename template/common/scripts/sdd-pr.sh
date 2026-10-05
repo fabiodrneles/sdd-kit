@@ -91,7 +91,7 @@ else
   tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
   {
-    echo "Closes #$n · Épico #${epic:-—} · Spec $spec"
+    echo "Closes #$n · Épico ${epic:+#}${epic:-—} · Spec $spec"
     echo
     if [ -n "$bodyfile" ]; then
       cat "$bodyfile"

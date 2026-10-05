@@ -40,6 +40,8 @@ Numa sessão na web, o hook `.claude/hooks/session-start.sh` instala as dependê
 
 ## Armadilhas já conhecidas
 
+- Ferramenta antiga antes no PATH ofusca a versão certa do Makefile, e o shellcheck quebra em locale que não é UTF-8 (use `LC_ALL=C.UTF-8`): `sh scripts/sdd-doctor.sh` aponta e imprime o `export` a usar.
+
 <!-- Registre aqui o que já custou tempo: arquivos gerados, testes frágeis, diferenças entre sistemas. -->
 
 ## Economia de uso
@@ -53,6 +55,7 @@ Cada regra abaixo reduziu o gasto de sessões reais; aplique desde a primeira me
 - Valide tudo com `make ci`, uma vez, antes do push.
 - CI dos PRs: `sh scripts/sdd-ci.sh '#PR'` (uma linha por check e só o fim do log das falhas). Não assine os eventos do PR; se a sessão assinar sozinha, cancele.
 - Entrega do ticket num comando: `sh scripts/sdd-pr.sh [--spec NNN] [--dry-run]` (merge da `main`, `make ci`, push, PR ou o já aberto, CI do PR e checkpoint; não faz merge).
+- Ambiente antes de `make ci`: `sh scripts/sdd-doctor.sh [--check]` confere e conserta ferramentas nas versões do CI, locale UTF-8 e PATH (uma linha por item); rode quando o hook de sessão não rodou (ex.: repositório anexado no meio da sessão) ou o `make ci` falhar por ferramenta.
 - Fechamento da versão num comando: `sh scripts/sdd-release.sh [--dry-run]` (versão pelo go-release-manager; X.Y.Z só força; branch `chore/release-vX.Y.Z`, rascunho do CHANGELOG pelos PRs mesclados, versões listadas em `.sdd-release`, commit e PR); com o PR mesclado, `sh scripts/sdd-release.sh --tag X.Y.Z` (dispara o *Release tag* ou cria a tag; não faz merge).
 - Edição mecânica por script que falha se o trecho não existir (ex.: `assert old in s` antes do `replace` em Python), sem reler o arquivo.
 - Checagem de mutação sem reler: copie o arquivo, quebre, rode o teste, restaure com `cp`.

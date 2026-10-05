@@ -36,7 +36,7 @@ case "$method $url" in
   "GET "*issues\?labels*) echo '[{"number":7}]' | jq -r "$jq"; exit 0 ;;
   "GET "*/comments*) exit 0 ;;
   "GET "*pulls/42) echo '{"head":{"sha":"abc1234"}}' | jq -r "$jq"; exit 0 ;;
-  "GET "*check-runs*) echo '{"total_count":1,"check_runs":[{"id":1,"name":"ci","status":"completed","conclusion":"success","app":{"slug":"github-actions"}}]}' | jq -r "$jq"; exit 0 ;;
+  "GET "*check-runs*) echo "$url" >> "$G/ci-urls"; echo '{"total_count":1,"check_runs":[{"id":1,"name":"ci","status":"completed","conclusion":"success","app":{"slug":"github-actions"}}]}' | jq -r "$jq"; exit 0 ;;
   "GET "*/status*) echo '{"statuses":[]}' | jq -r "$jq"; exit 0 ;;
   *) echo "gh falso: $method $url" >&2; exit 1 ;;
 esac
@@ -118,6 +118,7 @@ git ls-remote --exit-code origin feat/9-x > /dev/null || fail "a branch não foi
 [ -f m2.txt ] || fail "não mesclou origin/main"
 printf '%s\n' "$out" | grep -q 'PR #42 aberto' || fail "não reportou o PR: $out"
 printf '%s\n' "$out" | grep -q 'check(s) verdes' || fail "não esperou o CI do PR: $out"
+grep -q "commits/$(git rev-parse HEAD)/check-runs" "$G/ci-urls" || fail "não esperou o CI pelo SHA enviado: $(cat "$G/ci-urls")"
 c="$(cat "$G/created")"
 printf '%s\n' "$c" | grep -qx 'title=feat: add a' || fail "título errado: $c"
 printf '%s\n' "$c" | grep -qx 'head=feat/9-x' || fail "head errado: $c"

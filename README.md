@@ -185,6 +185,7 @@ A adoção também traz scripts para os passos mecânicos do processo. O agente 
 |---|---|
 | `scripts/sdd-ci.sh [#PR\|SHA]` | Espera o CI e mostra só o fim do log dos checks que falharam |
 | `scripts/sdd-pr.sh [--spec NNN] [--dry-run]` | Entrega a branch do ticket: merge da `main`, `make ci`, push, PR (ou reaproveita o aberto), CI do PR e checkpoint |
+| `scripts/sdd-doctor.sh [--check]` | Confere e conserta o ambiente local para o `make ci` valer como o CI (ferramentas nas versões do Makefile, `covdata`, `golangci-lint` ofuscado no PATH, locale UTF-8); uma linha por item, `--check` só relata |
 | `scripts/sdd-release.sh X.Y.Z [--dry-run]` | PR de fechamento da versão: rascunho do CHANGELOG pelos PRs mesclados, versões do `.sdd-release`, commit e PR; `--tag X.Y.Z` depois do merge dispara o *Release tag* ou cria a tag |
 | `scripts/sdd-mark.sh decide D1=a` | Registra as decisões do dono e aprova as specs |
 | `scripts/sdd-mark.sh close vX.Y.Z` | Arquivos de status do fechamento da fase (specs, ROADMAP, CHANGELOG) |

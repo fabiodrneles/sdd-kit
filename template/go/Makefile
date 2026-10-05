@@ -9,8 +9,8 @@ COVERAGE_MIN ?= 80
 ci: lint test build ## Tudo o que o CI verifica
 
 .PHONY: lint
-lint: ## golangci-lint
-	golangci-lint run
+lint: ## golangci-lint (prefere o do GOPATH/bin, que o sdd-doctor.sh instala na versão certa)
+	$(or $(wildcard $(shell go env GOPATH)/bin/golangci-lint),golangci-lint) run
 
 .PHONY: test
 test: ## Testes com race detector e cobertura mínima (COVERAGE_MIN)

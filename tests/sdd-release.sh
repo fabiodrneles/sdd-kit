@@ -41,6 +41,7 @@ esac
 SH
 chmod +x "$tmp/bin/gh"
 # go-release-manager falso: imprime $GRM_NEXT (vazio = nada a lançar).
+# shellcheck disable=SC2016 # o script falso expande $1 e $GRM_NEXT ao rodar
 printf '#!/bin/sh\n[ "$1" = next ] && [ -n "${GRM_NEXT:-}" ] && echo "$GRM_NEXT"\nexit 0\n' > "$tmp/bin/go-release-manager"
 chmod +x "$tmp/bin/go-release-manager"
 export PATH="$tmp/bin:$PATH" G

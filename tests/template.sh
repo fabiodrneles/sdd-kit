@@ -38,6 +38,14 @@ for step in 'npm run lint' 'check-coverage --lines $(COVERAGE_MIN)' 'npm test' '
   grep -qF "$step" node/Makefile || err "template/node/Makefile: o make ci não roda '$step'"
 done
 
+# 015 AC-4/AC-7: o PR de fechamento abre quando uma issue fecha, desligável por SDD_ENGINE.
+pd=common/.github/workflows/sdd-on-phase-done.yml
+[ -f "$pd" ] || err "$pd não existe"
+for t in 'issues:' 'types: [closed]' "vars.SDD_ENGINE != 'off'" 'sdd-on-phase-done.sh' 'SDD_ENGINE_TOKEN || github.token'; do
+  grep -qF "$t" "$pd" || err "$pd sem '$t'"
+done
+if grep -q 'pull_request_target' "$pd"; then err "$pd usa pull_request_target"; fi
+
 [ -f common/AGENTS.md ] || err "template/common/AGENTS.md não existe"
 grep -q 'make ci' common/AGENTS.md || err "template/common/AGENTS.md não cita make ci"
 

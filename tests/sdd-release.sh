@@ -181,4 +181,22 @@ git ls-remote --exit-code origin refs/tags/v1.1.0 > /dev/null || fail "a tag nã
 [ "$(git rev-parse 'v1.1.0^{commit}')" = "$(git rev-parse origin/main)" ] || fail "tag fora da origin/main"
 rc=0; out="$($rel --tag 1.1.0 2>&1)" || rc=$?
 [ "$rc" -eq 3 ] || fail "tag repetida saiu com $rc: $out"
+
+# Tentativa anterior: com a branch chore/release-v1.2.0 já na origin (ou só local), reaproveita
+# e traz a origin/main em vez de falhar.
+git checkout -q main
+out="$($rel 1.2.0 2>&1)" || fail "primeira tentativa 1.2.0 falhou: $out"
+git checkout -q main
+git branch -q -D chore/release-v1.2.0
+echo novo > extra.txt; git add -A; git commit -q -m "docs: extra"; git push -q origin main
+out="$($rel 1.2.0 2>&1)" || fail "branch existente na origin não foi reaproveitada: $out"
+printf '%s\n' "$out" | grep -q 'já existe; reaproveitando' || fail "sem aviso de reaproveitamento: $out"
+[ "$(git rev-parse --abbrev-ref HEAD)" = chore/release-v1.2.0 ] || fail "branch errada após reaproveitar"
+git merge-base --is-ancestor origin/main HEAD || fail "não trouxe a origin/main para a branch reaproveitada"
+[ "$(grep -c '^## \[1.2.0\]' CHANGELOG.md)" -eq 1 ] || fail "CHANGELOG duplicou a versão: $(sed -n '1,12p' CHANGELOG.md)"
+[ "$(cat VERSION)" = "1.2.0" ] || fail "VERSION errada ao reaproveitar"
+git checkout -q main
+git push -q origin --delete chore/release-v1.2.0
+out="$($rel 1.2.0 2>&1)" || fail "branch só local não foi reaproveitada: $out"
+printf '%s\n' "$out" | grep -q 'já existe; reaproveitando' || fail "sem aviso (branch local): $out"
 echo "sdd-release: ok"

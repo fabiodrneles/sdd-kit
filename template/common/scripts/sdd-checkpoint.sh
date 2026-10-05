@@ -4,20 +4,24 @@
 # é atualizado a cada passo; o hook de início de sessão o mostra, e uma sessão
 # nova continua dele sem o dono precisar explicar nada.
 #
-# Uso: sdd-checkpoint.sh [--repo DONO/REPO] save "FEITO" "PRÓXIMO" ["BLOQUEIA"]
-#      sdd-checkpoint.sh [--repo DONO/REPO] auto   (hook Stop: só o estado do git)
-#      sdd-checkpoint.sh [--repo DONO/REPO] show   (hook SessionStart)
+# Uso: sdd-checkpoint.sh [--repo DONO/REPO] [--ci] save "FEITO" "PRÓXIMO" ["BLOQUEIA"]
+#      sdd-checkpoint.sh [--repo DONO/REPO] [--ci] auto   (hook Stop: só o estado do git)
+#      sdd-checkpoint.sh [--repo DONO/REPO] [--ci] show   (hook SessionStart)
 # O estado do git (branch, commit, alterações locais, commits não enviados) e os
 # PRs abertos entram sozinhos. "auto" mantém o feito e o próximo do último save.
+# --ci (workflow, sem máquina de trabalho): a linha da branch traz só branch e commit,
+# sem alterações locais nem commits não enviados (spec 015 FR-2).
 # Sem épico aberto ou sem gh, avisa e sai com 0: nunca bloqueia a sessão.
 set -eu
 
-repo=""
-[ "${1:-}" != --repo ] || { repo="${2:?}"; shift 2; }
+repo="" ci=0
+while [ "${1:-}" = --repo ] || [ "${1:-}" = --ci ]; do
+  if [ "$1" = --ci ]; then ci=1; shift; else repo="${2:?}"; shift 2; fi
+done
 cmd="${1:-}"
 [ $# -eq 0 ] || shift
-case "$cmd" in save | auto | show) ;; *) sed -n '2,12p' "$0"; exit 2 ;; esac
-[ "$cmd" != save ] || [ $# -ge 2 ] || { sed -n '2,12p' "$0"; exit 2; }
+case "$cmd" in save | auto | show) ;; *) sed -n '2,14p' "$0"; exit 2 ;; esac
+[ "$cmd" != save ] || [ $# -ge 2 ] || { sed -n '2,14p' "$0"; exit 2; }
 
 command -v gh >/dev/null 2>&1 || { echo "sdd-checkpoint: gh ausente"; exit 0; }
 if [ -z "$repo" ]; then
@@ -65,7 +69,11 @@ prs="$(gh api "repos/$repo/pulls?state=open&per_page=20" --jq '.[] | "#\(.number
   echo "$marker"
   echo "## Checkpoint (retome daqui)"
   echo
-  echo "- **Branch:** \`$branch\` em \`$sha\`; alterações locais: $dirty; commits não enviados: $ahead"
+  if [ "$ci" -eq 1 ]; then
+    echo "- **Branch:** \`$branch\` em \`$sha\`"
+  else
+    echo "- **Branch:** \`$branch\` em \`$sha\`; alterações locais: $dirty; commits não enviados: $ahead"
+  fi
   echo "- **PRs abertos:** ${prs:-nenhum}"
   echo "- **Feito:** $done_"
   echo "- **Próximo:** $next"

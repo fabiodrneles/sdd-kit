@@ -4,6 +4,18 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-05
+
+### Adicionado
+
+- add sdd-pr.sh to ship a ticket branch in one command (#138)
+- add sdd-doctor.sh to check and fix the local CI environment (#144)
+- take the release version from go-release-manager in sdd-release.sh (#155)
+
+### Corrigido
+
+- wait for CI on the pushed SHA in sdd-pr.sh (#141)
+
 ## [1.4.0] - 2026-10-03
 
 Fase 8 do [ROADMAP](specs/ROADMAP.md): checkpoints de retomada (spec 014).

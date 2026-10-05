@@ -149,6 +149,18 @@ Concorrentes (Spec Kit, Kiro, BMAD, OpenSpec, Agent OS) param na spec; as plataf
 - **40 · Benchmark público:** a mesma tarefa com cada ferramenta, medindo PRs verdes de primeira, ACs com teste, retrabalho e tokens; resultados e roteiro abertos e reprodutíveis.
 - **41 · Nicho primeiro:** devs solo e times pequenos com Claude Code; guias, exemplos e divulgação focados nesse público antes de expandir.
 
+### Rumo ao Archon (visão do dono, 2026-10-05)
+
+O sdd-kit amadurece e vira o **Archon**: um harness que entrega aplicações no GitHub como um time de TI, gastando o mínimo da LLM cara. Princípio: **cada papel com a peça mais barata que o faz bem**, e a LLM grande só onde nada mais resolve. Ordem, do mais barato e garantido ao mais caro e incerto:
+
+- **42 · Contexto determinístico primeiro (custo zero):** mapa do repositório com tree-sitter (assinaturas e tipos, sem corpos), busca lexical (BM25/ctags) e o grafo de quem chama quem montam o contexto do ticket; amplia o item 20. Medir tokens antes e depois.
+- **43 · Modelo por papel, configurável:** roteador, planejador, executor, verificador e redator como papéis do motor (portas do item 3); cada um aponta para um modelo local, um free tier (Groq, OpenRouter, Gemini) ou a LLM principal, com queda automática para o local quando a cota acaba. Painel no terminal (`sdd models`) para escolher; sem escolha, valem os padrões.
+- **44 · Classificadores pequenos onde a decisão é fechada:** spec ambígua (25), ticket pronto ou não, tipo da mudança (bug, feature, refatoração, para o modo leve do 19); modelos de classificação (família BERT) treinados com os dados abaixo, rodando em CPU.
+- **45 · Dados do próprio uso (flywheel):** cada spec, ticket, PR e revisão aprovada vira exemplo rotulado; geração sintética só como complemento, validada por regra antes de entrar no conjunto.
+- **46 · Laboratório de modelos (`archon-lab`, repositório separado):** gerar dados, ajustar (LoRA/QLoRA no Colab ou Kaggle), medir contra um conjunto fixo e exportar (GGUF, Hugging Face Hub), num comando; nenhum modelo entra no motor sem vencer a linha de base no benchmark.
+- **47 · Piso de hardware medido:** o motor e os classificadores rodam numa máquina modesta (i3 de 4ª geração, 4 GB); um SLM generativo local de 1B a 1,5B quantizado é opcional e lento nessa máquina, e o free tier é o caminho padrão para os papéis generativos. Números de latência e memória publicados, não estimados.
+- **48 · Prova antes do discurso:** toda alegação de economia (tokens, custo, acerto) sai do benchmark do item 40, com a mesma tarefa feita com e sem o roteamento; o artigo sobre a arquitetura usa só números medidos.
+
 ### Rumo à v2.0
 
 A `v2.0.0` marca a troca de base, não a soma de recursos. Critérios:

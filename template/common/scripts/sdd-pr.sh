@@ -13,7 +13,8 @@
 #   --dry-run    mostra o que faria, sem merge, CI, push nem escrita na API
 # Passos: 1 branch <tipo>/<N>-<desc> e árvore limpa; 2 merge de origin/main (no
 # conflito, aborta e lista os arquivos); 3 make ci (só as últimas 30 linhas se
-# falhar); 4 git push; 5 PR; 6 sdd-ci.sh <SHA enviado>; 7 sdd-checkpoint.sh save.
+# falhar); 4 git push; 5 PR; 6 sdd-ci.sh <SHA enviado>; 7 sdd-checkpoint.sh save;
+# 8 imprime o comando do vigia do merge (sdd-wait.sh merged-any, spec 016).
 # Códigos: 0 ok; 1 falha de uma etapa (ou do CI do PR); 2 tempo esgotado no
 # sdd-ci.sh; 3 uso/pré-condição.
 set -eu
@@ -28,7 +29,7 @@ while [ $# -gt 0 ]; do
     --body-file) bodyfile="${2:?}"; shift 2 ;;
     --no-wait) wait=0; shift ;;
     --dry-run) dry=1; shift ;;
-    -h | --help) sed -n '2,19p' "$0"; exit 0 ;;
+    -h | --help) sed -n '2,20p' "$0"; exit 0 ;;
     *) die "opção desconhecida: $1" ;;
   esac
 done
@@ -156,4 +157,8 @@ fi
 
 # 7. Checkpoint (falha ignorada).
 sh "$here/sdd-checkpoint.sh" --repo "$repo" save "PR #$pr aberto/atualizado ($branch)" "CI do PR #$pr e merge" || true
+# 8. O vigia do merge, sem LLM (spec 016 FR-3): a última linha é o comando a deixar
+# em segundo plano; o merge acorda a sessão, sem o dono precisar avisar.
+rel="${here#"$(pwd)"/}"
+echo "vigia: sh $rel/sdd-wait.sh merged-any"
 exit "$rc"

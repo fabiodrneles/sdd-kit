@@ -135,6 +135,8 @@ rm "$G/created"
 out="$($pr --no-wait 2>&1)" || fail "segunda rodada falhou: $out"
 printf '%s\n' "$out" | grep -q 'PR #42 já existe: https://github.com/o/r/pull/42' || fail "não reconheceu o PR existente: $out"
 [ ! -e "$G/created" ] || fail "criou um segundo PR"
+# 016 AC-4: a última linha é o comando do vigia do merge.
+[ "$(printf '%s\n' "$out" | tail -n 1)" = "vigia: sh scripts/sdd-wait.sh merged-any" ] || fail "última linha não é o vigia: $(printf '%s\n' "$out" | tail -n 1)"
 
 # Branch numerada como o épico aberto (#7): "Refs", nunca "Closes".
 echo "[]" > "$G/pulls.json"

@@ -4,6 +4,16 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-10-06
+
+### Adicionado
+
+- the relay picks the model per ticket and records it with the cost (#254)
+- sdd-report.sh tokens shows the first call's context of each session (#255)
+- sdd-context.sh lists the tests that cite the ticket's AC (#256)
+- benchmark the same tasks with and without sdd-kit on a real project (#258)
+- context pack with code signatures per language and an offline --task mode (#260)
+
 ## [1.12.0] - 2026-10-06
 
 ### Adicionado

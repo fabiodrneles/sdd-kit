@@ -13,6 +13,7 @@ var version = "dev"
 
 const (
 	exitOK    = 0
+	exitFail  = 2
 	exitUsage = 3
 )
 
@@ -22,6 +23,8 @@ Uso:
   axyn version        mostra a versão
   axyn gate [--base REF] [--max-lines N] [--ci CMD] [--protect CAMINHO]
                       portões do diff: CI, teste afrouxado, caminhos protegidos e tamanho
+  axyn install [--dir DIR]
+                      configura o opencode do projeto: servidor MCP, agentes e o comando /axyn
   axyn mcp            servidor MCP (stdio) para o opencode: axyn_plan, axyn_next, axyn_gate, axyn_ship
   axyn help         mostra esta ajuda
 `
@@ -41,6 +44,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return exitOK
 	case "gate":
 		return runGate(args[1:], stdout, stderr)
+	case "install":
+		return runInstall(args[1:], stdout, stderr)
 	case "mcp":
 		return runMCP(args[1:], os.Stdin, stdout, stderr)
 	case "help", "-h", "--help":

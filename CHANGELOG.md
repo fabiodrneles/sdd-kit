@@ -4,6 +4,15 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-10-06
+
+### Corrigido
+
+- never lose a sync when the new version brings workflows (#171)
+- measure Go coverage correctly with a warm cache (-count=1 and a cold-cache valve) (#173)
+- dispatch CI after the engine updates a PR branch (#175)
+- accept kit sync branches in sdd-pr.sh (#176)
+
 ## [1.6.0] - 2026-10-06
 
 Fase 9 do [ROADMAP](specs/ROADMAP.md): motor orientado a eventos (spec 015). Workflows do GitHub Actions reagem aos eventos de PR e de CI sem LLM; a sessão do agente não espera nem acompanha eventos e só volta para o que pede julgamento.

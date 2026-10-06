@@ -6,18 +6,25 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [1.6.0] - 2026-10-06
 
+Fase 9 do [ROADMAP](specs/ROADMAP.md): motor orientado a eventos (spec 015). Workflows do GitHub Actions reagem aos eventos de PR e de CI sem LLM; a sessão do agente não espera nem acompanha eventos e só volta para o que pede julgamento.
+
 ### Adicionado
 
-- add sdd-wait.sh to wait for merges, CI and issues without an LLM (#158)
-- summarize a red CI in one PR comment without an LLM (#160)
-- bring main into open PRs without an LLM (#161)
-- update the epic checkpoint on merge without an LLM (#162)
-- dispatch the release when the closing PR merges without an LLM (#163)
-- open the closing PR when a phase is done without an LLM (#164)
+- **`scripts/sdd-wait.sh`:** espera um PR mergeado, um CI concluído ou uma issue fechada, sem LLM, com intervalo e tempo máximo configuráveis (spec 015 FR-1, #158).
+- **Checkpoint no merge (`sdd-on-merge.yml`):** o merge de um PR de ticket atualiza o checkpoint do épico com o PR feito e o próximo ticket aberto (FR-2, #162).
+- **Resumo do CI vermelho (`sdd-ci-summary.yml`):** um único comentário no PR, com uma linha por check e só o fim do log das falhas, editado a cada rodada (FR-3, #160).
+- **Fase concluída (`sdd-on-phase-done.yml`):** quando o último ticket do épico fecha, o PR de fechamento é aberto com o `sdd-release.sh`. O script também reaproveita uma branch de release que já existe (FR-4, #164).
+- **Release no merge do fechamento (`sdd-on-release-merge.yml`):** o merge do PR `chore/release-vX.Y.Z` dispara o *Release tag* uma única vez (FR-5, #163).
+- **`main` levada aos PRs (`sdd-update-prs.yml`):** quando a `main` muda, os PRs abertos que estão atrás dela são atualizados, e os que têm conflito recebem um único aviso (FR-6, #161).
+- O `CLAUDE.md` do template manda o agente abrir o PR, gravar o checkpoint e encerrar, sem esperar eventos; o README documenta o motor (FR-7, #165).
 
 ### Corrigido
 
-- title sdd-pr PRs by the first commit and never close the epic (#159)
+- O `sdd-pr.sh` dá ao PR o título do primeiro commit da branch, e não do último; e, numa branch com o número do épico aberto, escreve `Refs` em vez de `Closes`, para o merge não fechar o épico (#159).
+
+### Configuração
+
+- Para o motor abrir PRs (fechamento da fase) e para o `sdd-sync` abrir o PR de atualização, ative em *Settings → Actions → General → Workflow permissions* a opção "Allow GitHub Actions to create and approve pull requests". Opcional: o segredo `SDD_ENGINE_TOKEN` faz o CI rodar nos pushes do motor; a variável `SDD_ENGINE=off` desliga tudo.
 
 ## [1.5.0] - 2026-10-05
 

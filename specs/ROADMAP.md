@@ -72,13 +72,13 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 
 ## Fase 9 — Motor orientado a eventos (P1) → `v1.6.0` · épico #146
 
-- [ ] **T39** `sdd-wait.sh`: espera sem LLM por merge, CI ou issue — 015 FR-1, AC-1 — #147
-- [ ] **T40** Workflow de PR mergeado: checkpoint do épico atualizado — 015 FR-2, NFR-1, NFR-2, AC-2, AC-7 — #148
-- [ ] **T41** Workflow de CI vermelho: comentário único de resumo no PR — 015 FR-3, NFR-1, NFR-2, AC-3 — #149
-- [ ] **T42** Workflow de fase concluída: PR de fechamento com `sdd-release.sh` — 015 FR-4, NFR-1, NFR-2, AC-4 — #150
-- [ ] **T43** Workflow de fechamento mergeado: release disparada — 015 FR-5, NFR-1, NFR-2, AC-5 — #151
-- [ ] **T44** Workflow de `main` alterada: PRs atualizados ou avisados do conflito — 015 FR-6, NFR-1, NFR-2, AC-6 — #152
-- [ ] **T45** `CLAUDE.md` e skill: o agente não espera eventos, o motor faz — 015 FR-7 — #153
+- [x] **T39** `sdd-wait.sh`: espera sem LLM por merge, CI ou issue — 015 FR-1, AC-1 — #147
+- [x] **T40** Workflow de PR mergeado: checkpoint do épico atualizado — 015 FR-2, NFR-1, NFR-2, AC-2, AC-7 — #148
+- [x] **T41** Workflow de CI vermelho: comentário único de resumo no PR — 015 FR-3, NFR-1, NFR-2, AC-3 — #149
+- [x] **T42** Workflow de fase concluída: PR de fechamento com `sdd-release.sh` — 015 FR-4, NFR-1, NFR-2, AC-4 — #150
+- [x] **T43** Workflow de fechamento mergeado: release disparada — 015 FR-5, NFR-1, NFR-2, AC-5 — #151
+- [x] **T44** Workflow de `main` alterada: PRs atualizados ou avisados do conflito — 015 FR-6, NFR-1, NFR-2, AC-6 — #152
+- [x] **T45** `CLAUDE.md` e skill: o agente não espera eventos, o motor faz — 015 FR-7 — #153
 
 ## Próximas fases (visão, sem versão)
 

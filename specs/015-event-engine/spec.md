@@ -1,7 +1,7 @@
 # 015 — Motor orientado a eventos
 
 - **Prioridade:** P1
-- **Status:** Draft
+- **Status:** Done — entregue na `v1.6.0`
 - **Código afetado:** `template/common/scripts/`, `template/common/.github/workflows/`, `template/common/CLAUDE.md`, `plugins/sdd-delivery/`
 - **Resolve:** cada evento de PR (CI, merge, conflito) acorda a sessão do agente, e cada despertar recarrega a conversa inteira; esperar CI e merges custa tokens e contexto de LLM sem precisar de julgamento
 
@@ -36,7 +36,7 @@ Na sessão de 2026-10-05, só ler notificações de PR e cancelar assinaturas cu
 
 ## Mudanças
 
-### Não lançado
+### v1.6.0
 
 - ADDED FR-1 — `sdd-wait.sh` espera PR mergeado, CI ou issue fechada, sem LLM (T39, #158).
 - ADDED FR-2 — `sdd-on-merge.yml` atualiza o checkpoint do épico quando um PR de ticket é mergeado (T40, #162).

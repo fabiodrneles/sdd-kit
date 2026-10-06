@@ -209,7 +209,7 @@ Cada evento de PR que acordava a sessão do agente (CI, merge, conflito) recarre
 | Último ticket do épico fechado | `sdd-on-phase-done.yml` | Abre o PR de fechamento da versão (`sdd-release.sh`) |
 | PR de fechamento mergeado | `sdd-on-release-merge.yml` | Dispara a release da versão uma única vez (`sdd-release.sh --tag`) |
 
-Todos são idempotentes, usam só o `GITHUB_TOKEN` (ou o segredo opcional abaixo), sem segredos de LLM, e só agem em PRs do próprio repositório. O `sdd-wait.sh` cobre o que sobrar para esperar num shell.
+Todos são idempotentes, usam só o `GITHUB_TOKEN` (ou o segredo opcional abaixo), sem segredos de LLM, e só agem em PRs do próprio repositório. O `sdd-wait.sh` cobre o que sobrar para esperar num shell. O próprio sdd-kit roda esse motor (`make self-sync` gera os workflows dele a partir do template e o CI falha se divergirem).
 
 Configuração do repositório:
 

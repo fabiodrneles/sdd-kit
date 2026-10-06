@@ -17,6 +17,7 @@ Fase 9 do [ROADMAP](specs/ROADMAP.md): motor orientado a eventos (spec 015). Wor
 - **Release no merge do fechamento (`sdd-on-release-merge.yml`):** o merge do PR `chore/release-vX.Y.Z` dispara o *Release tag* uma única vez (FR-5, #163).
 - **`main` levada aos PRs (`sdd-update-prs.yml`):** quando a `main` muda, os PRs abertos que estão atrás dela são atualizados, e os que têm conflito recebem um único aviso (FR-6, #161).
 - O `CLAUDE.md` do template manda o agente abrir o PR, gravar o checkpoint e encerrar, sem esperar eventos; o README documenta o motor (FR-7, #165).
+- **O próprio sdd-kit roda o motor:** `make self-sync` gera os workflows do kit a partir do template, sem cópias editadas à mão, e o `make ci` falha se elas divergirem. A partir desta versão, o fechamento e a release do kit também saem pelo motor (FR-8, #168).
 
 ### Corrigido
 

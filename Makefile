@@ -30,6 +30,10 @@ test: ## Testes dos scripts (tests/*.sh)
 sdd-check: ## Rastreabilidade specs × testes × ROADMAP do próprio kit (estrita: 007 AC-1)
 	sh template/common/scripts/sdd-check.sh --strict
 
+.PHONY: self-sync
+self-sync: ## Regenera os workflows do motor do próprio kit a partir do template (015 FR-8)
+	sh scripts/self-sync.sh
+
 .PHONY: links
 links: ## Verificação de links (requer lychee; o CI sempre roda)
 	@if command -v lychee >/dev/null; then lychee --config lychee.toml --no-progress './**/*.md'; \

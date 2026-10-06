@@ -196,6 +196,41 @@ Repository setup:
 
 Adoption writes `.sdd-kit.json` (kit version and a hash per managed file). Every Monday the `sdd-kit sync` workflow compares it with the latest release and opens **one PR**: untouched files are updated, files the kit did not change stay as they are, files both you and the kit changed get the new version and are listed under **"Conflitos"** for you to decide in the PR, files that are only yours are never touched, and `specs/` and `CHANGELOG.md` belong to the project: the kit creates them on adoption if missing and never changes them again. When the new version creates or changes files under `.github/workflows/`, the `GITHUB_TOKEN` cannot push them (it never gets the `workflows` permission). Without the **`SDD_SYNC_TOKEN`** secret (a fine-grained token with write access to *Contents*, *Pull requests* and *Workflows*; `SDD_ENGINE_TOKEN` works too if it has *Workflows*), the PR carries everything except those workflows and its description lists them: configure the secret, or run `sh scripts/sdd-sync.sh --only-workflows` on the PR branch and push. Enable *Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests"*; without it the job pushes the `sdd-kit/sync` branch, writes the link to open the PR in the job summary and ends with a warning instead of failing. If you adopted up to `v1.3.0` and the sync fails with `Syntax error`, the old script was overwriting itself while running: run a copy of it once, from the repository root, and open the PR with the result (`cp scripts/sdd-sync.sh /tmp/sdd-sync.sh && sh /tmp/sdd-sync.sh`). From `v1.3.1` on, the script does this itself.
 
+## axyn
+
+**axyn** brings the process to [opencode](https://opencode.ai) with free or local models: you describe what you want, it writes the spec, opens the tickets and delivers **one PR per ticket**, moving on only when the gates (tests, lint, coverage) pass. It is a single binary with no dependencies.
+
+**1. Install, one command.** Inside the project's cloned repository (the binary goes to `~/.local/bin`; without Go it downloads from the release and checks the sha256, and at the end it runs `axyn install` to set up opencode):
+
+```text
+curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.sh | sh
+```
+
+On Windows (PowerShell) the binary goes to `%LOCALAPPDATA%\axyn`; then run `axyn install` in the repository:
+
+```text
+irm https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.ps1 | iex
+```
+
+**2. Set up a free model in opencode.** The key lives only in an environment variable, never in a repository file. With [OpenRouter](https://openrouter.ai), export `OPENROUTER_API_KEY`, open opencode and pick a model ending in `:free` in `/models`. To run locally, use [Ollama](https://ollama.com) and opencode's Ollama provider.
+
+**3. Model ladder (optional).** In `~/.config/axyn/config.yaml`, an ordered list: if a model does not pass the gates, axyn tries the next one. `key_env` is the variable's name, never the key (a literal key in the file is refused):
+
+```yaml
+models:
+  - id: openrouter/qwen/qwen3-coder:free
+    key_env: OPENROUTER_API_KEY
+  - id: ollama/qwen2.5-coder
+```
+
+**4. Run.** In opencode, inside the repository:
+
+```text
+/axyn build a landing page
+```
+
+axyn writes the spec, opens the tickets, implements each on its own branch, runs the gates and opens one PR per ticket; merging stays with you. To follow progress (ticket, gates, model and attempts), run `axyn status` in a terminal.
+
 ## Installing the skill
 
 In Claude Code:

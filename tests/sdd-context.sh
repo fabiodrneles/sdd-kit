@@ -71,6 +71,14 @@ done
 printf '%s\n' "$out" | grep -qF 'build.sh fora da seção' && fail "trouxe linha fora das armadilhas: $out"
 printf '%s\n' "$out" | grep -qF 'sh scripts/sdd-pr.sh --spec 003 --no-wait' || fail "sem a entrega: $out"
 
+# 020 AC-3: o teste que cita "003 AC-1" entra no pacote; o que cita só o AC-2 (não citado), não.
+mkdir -p "$r/tests"
+printf '# 003 AC-1: empacota\n' > "$r/tests/build.sh"
+printf '# 003 AC-2: outro\n' > "$r/tests/outro.sh"
+out="$($c '#7')" || fail "context falhou: $out"
+printf '%s\n' "$out" | grep -qxF -- '- `tests/build.sh` (003 AC-1)' || fail "sem o teste que cita 003 AC-1: $out"
+printf '%s\n' "$out" | grep -qF 'tests/outro.sh' && fail "trouxe teste de AC não citado: $out"
+
 # 018 AC-1: o teto. Primeiro os arquivos perdem as assinaturas; depois, o corte.
 full="$(printf '%s\n' "$out" | wc -c)"
 out="$(SDD_CONTEXT_MAX=$((full - 10)) $c '#7')" || fail "teto 1 falhou"

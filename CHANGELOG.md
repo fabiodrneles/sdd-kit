@@ -4,6 +4,18 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-10-06
+
+### Adicionado
+
+- **Custo medido, sem LLM (spec 017):** `sdd-report.sh tokens [--since DATA]` soma as chamadas das sessões do Claude Code (cada uma uma vez, por `message.id`): tokens relidos, gravados e gerados, e o contexto médio e máximo por chamada (#219).
+- `sdd-report.sh ticket '#N'` mede o ticket na janela do PR que o fecha, com o tempo e se o CI passou de primeira; `sdd-report.sh phase '#ÉPICO'` junta os tickets numa tabela, num único comentário do épico editado a cada rodada (#220).
+- Os despertares sem mensagem do dono (avisos, fim de tarefas em segundo plano) aparecem numa linha e numa coluna próprias, com a contagem e os tokens; o PR de fechamento cita a tabela da fase (#221, #224).
+
+### Corrigido
+
+- O motor fecha o épico da fase entregue antes de abrir a próxima fase (#218).
+
 ## [1.9.0] - 2026-10-06
 
 ### Adicionado

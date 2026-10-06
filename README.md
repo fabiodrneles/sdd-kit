@@ -75,7 +75,7 @@ Em uns 5 minutos o kit está instalado e o agente trabalhando no seu projeto.
 2. Na pasta do projeto, instale o kit, trocando `go` pela linguagem do projeto (`node`, `java`, `python`, `rust` ou `dotnet`):
 
    ```text
-   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.9.0/scripts/adopt.sh | sh -s -- --lang go .
+   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.10.0/scripts/adopt.sh | sh -s -- --lang go .
    ```
 
    O comando copia para o repositório:
@@ -88,7 +88,7 @@ Em uns 5 minutos o kit está instalado e o agente trabalhando no seu projeto.
    **Ele nunca sobrescreve um arquivo que você já tem** e mostra no final o que criou e o que deixou de lado. Para só ver o que ele faria, sem gravar nada, acrescente `--dry-run`:
 
    ```text
-   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.9.0/scripts/adopt.sh | sh -s -- --lang go --dry-run .
+   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.10.0/scripts/adopt.sh | sh -s -- --lang go --dry-run .
    ```
 
    Num repositório vazio, `--skeleton` cria também um projeto mínimo com um teste, para o primeiro CI já nascer verde.

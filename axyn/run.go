@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -342,12 +343,18 @@ func (r *runner) ticket() (string, string) {
 			prompt += "\n\nA tentativa anterior foi reprovada pelo motor:\n" + feedback
 		}
 		r.set("código")
+		planPath, planBefore := r.planSnapshot()
 		if err := r.agent("axyn-code", modelArg, prompt); err != nil {
 			return runStopped, err.Error()
 		}
 		r.set("portões")
-		green, report, err := r.gate()
-		if err != nil {
+		var green bool
+		var report string
+		var err error
+		if r.planTampered(planPath, planBefore) {
+			advice, _ := r.s.recordAttempt(false, []finding{{"plan", "o agente alterou o plano do axyn (restaurado)"}}, nil, "")
+			report = strings.TrimSpace("gate: reprovado [plan] o agente alterou o plano do axyn (restaurado)\n" + advice)
+		} else if green, report, err = r.gate(); err != nil {
 			return runStopped, err.Error()
 		}
 		r.st.Gate = firstLine(report)
@@ -371,6 +378,31 @@ func (r *runner) ticket() (string, string) {
 		feedback = report
 	}
 	return runStopped, "teto de tentativas do ticket " + r.st.Title
+}
+
+// planSnapshot keeps the plan as it was before the coding agent runs. The plan lives
+// in .git, out of every diff, so the gates cannot see an agent that rewrites it (marks a
+// ticket delivered, changes the spec); the engine compares it instead.
+func (r *runner) planSnapshot() (string, []byte) {
+	p, err := r.s.statePath()
+	if err != nil {
+		return "", nil
+	}
+	b, _ := os.ReadFile(p)
+	return p, b
+}
+
+// planTampered reports whether the agent changed the plan, and puts the original back.
+func (r *runner) planTampered(path string, before []byte) bool {
+	if path == "" {
+		return false
+	}
+	after, _ := os.ReadFile(path)
+	if bytes.Equal(after, before) {
+		return false
+	}
+	_ = os.WriteFile(path, before, 0o644)
+	return true
 }
 
 // gate runs the gates on the agent's diff. An agent that changed nothing is a failed attempt.

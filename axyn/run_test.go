@@ -109,6 +109,28 @@ func TestRunAgentDeletingTestIsNotDelivered(t *testing.T) {
 	}
 }
 
+// 021 FR-5, FR-9: the plan lives out of the diff, so the engine itself refuses an agent
+// that rewrites it, and puts the original back.
+func TestRunAgentRewritingPlanIsNotDelivered(t *testing.T) {
+	dir := repo(t)
+	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `printf 'package x\n\nfunc F() {}\n' > x.go
+	printf '{}' > "$(git rev-parse --git-dir)/axyn/plan.json"`))
+
+	code, out := runLoopIn(t, dir)
+	if code != exitFail || !strings.Contains(out, "alterou o plano") {
+		t.Fatalf("code %d, quer %d com o motivo\n%s", code, exitFail, out)
+	}
+	for _, s := range subjects(t, dir) {
+		if strings.HasPrefix(s, "feat:") {
+			t.Errorf("ticket entregue com o plano reescrito: %s", s)
+		}
+	}
+	s := &mcpServer{dir: dir}
+	if pl, tk := s.openTicket(); pl == nil || len(pl.Tickets) != 2 || tk == nil || tk.ID != 1 {
+		t.Errorf("o plano deveria voltar ao original, com o ticket 1 aberto: %+v %+v", pl, tk)
+	}
+}
+
 func TestRunAgentCommandMissing(t *testing.T) {
 	dir := repo(t)
 	t.Setenv("AXYN_OPENCODE", "/nonexistent/opencode")

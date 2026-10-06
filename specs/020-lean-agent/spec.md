@@ -1,7 +1,7 @@
 # 020 — Agente enxuto do relé
 
 - **Prioridade:** P1
-- **Status:** Approved — pedida pelo dono em 2026-10-06
+- **Status:** Done — entregue na `v1.13.0`
 - **Código afetado:** `template/common/scripts/sdd-relay.sh`, `template/common/scripts/sdd-report.sh`, `template/common/scripts/sdd-context.sh`, `README.md`, `README.en.md`, `docs/assets/`
 - **Resolve:** cerca de 80% de cada chamada de um agente do relé é custo fixo (prompt, ferramentas, skills, servidores MCP), relido a cada chamada
 
@@ -31,7 +31,7 @@ Medição de 2026-10-06, com `claude -p` na raiz do repositório e só "Responda
 
 ## Mudanças
 
-### Não lançado
+### v1.13.0
 
 - ADDED FR-1 — agente padrão do relé só com as ferramentas da entrega (`SDD_AGENT_TOOLS`, padrão `Bash Read Edit Write Grep Glob`), sem skills e sem servidores MCP: contexto inicial de 37 mil para 11 mil tokens; o relé roda de uma cópia dos scripts, para o agente trocar de branch sem quebrá-lo (T62, #248).
 - ADDED FR-5 — modelo por ticket: o label `modelo:NOME` da issue, senão `SDD_AGENT_MODEL`; o agente padrão recebe `--model NOME`, e o custo gravado na issue diz o modelo (T66, #251).

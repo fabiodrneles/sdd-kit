@@ -178,7 +178,7 @@ printf '%s\n' "$b" | grep -qF '| **Total** | 2 PRs | | 90 | 1 de 2 | 4 | 9350 | 
 # 018 AC-5: o custo médio por ticket com e sem relé, lado a lado.
 printf '%s\n' "$b" | grep -qF 'com relé 54 (1 tickets); sem relé 9334 (1 tickets).' || fail "sem a comparação: $b"
 
-# 019 AC-3: --compare põe ao lado o custo médio de outro épico (aqui, o próprio), com
+# 019 AC-3 e 020 AC-4: --compare põe ao lado o custo médio de outro épico (aqui, o próprio), com
 # só os tickets do relé deste lado (#6: 54 tokens) contra todos do outro (4694).
 out="$(sh "$r" --repo o/r phase '#9' --compare '#9')" || fail "phase --compare falhou"
 printf '%s\n' "$out" | grep -qF 'Comparação com o épico #9: custo médio por ticket 54 aqui (1 tickets, com relé) contra 4694 lá (2 tickets), 86.9 vezes menos; contexto médio por chamada' \

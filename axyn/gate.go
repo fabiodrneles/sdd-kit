@@ -189,6 +189,31 @@ type stringList []string
 func (s *stringList) String() string     { return strings.Join(*s, ",") }
 func (s *stringList) Set(v string) error { *s = append(*s, v); return nil }
 
+// evalGate runs every gate on the working tree diff against base; the CI output goes to ciOut.
+func evalGate(dir, base string, maxLines int, ci string, extraProtect []string, ciOut io.Writer) (int, []finding, error) {
+	diff, err := gitDiff(dir, base)
+	if err != nil {
+		return 0, nil, err
+	}
+	files := parseDiff(strings.NewReader(diff))
+
+	protected := append(append([]string{}, defaultProtected...), extraProtect...)
+	var findings []finding
+	findings = append(findings, checkProtected(files, protected)...)
+	findings = append(findings, checkLoosenedTests(files)...)
+	findings = append(findings, checkSize(files, maxLines)...)
+
+	if strings.TrimSpace(ci) != "" {
+		cmd := exec.Command("sh", "-c", ci)
+		cmd.Dir = dir
+		cmd.Stdout, cmd.Stderr = ciOut, ciOut
+		if err := cmd.Run(); err != nil {
+			findings = append(findings, finding{"ci", fmt.Sprintf("`%s` falhou: %v", ci, err)})
+		}
+	}
+	return len(files), findings, nil
+}
+
 // runGate implements `axyn gate`: the deterministic gates of spec 021 FR-5.
 func runGate(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("gate", flag.ContinueOnError)
@@ -203,30 +228,14 @@ func runGate(args []string, stdout, stderr io.Writer) int {
 		return exitUsage
 	}
 
-	diff, err := gitDiff(*dir, *base)
+	nfiles, findings, err := evalGate(*dir, *base, *maxLines, *ci, protect, stderr)
 	if err != nil {
 		_, _ = fmt.Fprintf(stderr, "axyn gate: git diff falhou: %v\n", err)
 		return exitUsage
 	}
-	files := parseDiff(strings.NewReader(diff))
-
-	protected := append(append([]string{}, defaultProtected...), protect...)
-	var findings []finding
-	findings = append(findings, checkProtected(files, protected)...)
-	findings = append(findings, checkLoosenedTests(files)...)
-	findings = append(findings, checkSize(files, *maxLines)...)
-
-	if strings.TrimSpace(*ci) != "" {
-		cmd := exec.Command("sh", "-c", *ci)
-		cmd.Dir = *dir
-		cmd.Stdout, cmd.Stderr = stderr, stderr
-		if err := cmd.Run(); err != nil {
-			findings = append(findings, finding{"ci", fmt.Sprintf("`%s` falhou: %v", *ci, err)})
-		}
-	}
 
 	if len(findings) == 0 {
-		_, _ = fmt.Fprintf(stdout, "gate: verde (%d arquivo(s) no diff)\n", len(files))
+		_, _ = fmt.Fprintf(stdout, "gate: verde (%d arquivo(s) no diff)\n", nfiles)
 		return exitOK
 	}
 	for _, f := range findings {

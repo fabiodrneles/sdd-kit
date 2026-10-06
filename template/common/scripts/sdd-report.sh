@@ -1,7 +1,7 @@
 #!/bin/sh
 # sdd-report: quanto custam as sessões do agente em tokens, sem LLM (spec 017).
 #
-# Uso: sdd-report.sh [--repo DONO/REPO] tokens [--session ARQ] [--since DATA] [--until DATA]
+# Uso: sdd-report.sh [--repo DONO/REPO] tokens [--session ARQ]... [--json] [--since DATA] [--until DATA]
 #      sdd-report.sh [--repo DONO/REPO] ticket '#N'
 #      sdd-report.sh [--repo DONO/REPO] phase '#ÉPICO'
 #   tokens: lê os arquivos de sessão do Claude Code (*.jsonl em $SDD_SESSIONS_DIR,
@@ -69,18 +69,20 @@ print_usage() {
   fi
 }
 
-session="" since="" until=""
+session="" since="" until="" json=0
 if [ "$cmd" = tokens ]; then
   while [ $# -gt 0 ]; do
     case "$1" in
-      --session) session="${2:?}"; shift 2 ;;
+      --session) session="${session:+$session }${2:?}"; shift 2 ;;
       --since) since="${2:?}"; shift 2 ;;
       --until) until="${2:?}"; shift 2 ;;
+      --json) json=1; shift ;;
       -h | --help) usage ;;
       *) echo "sdd-report: opção desconhecida: $1" >&2; exit 3 ;;
     esac
   done
-  [ -z "$session" ] || [ -f "$session" ] || { echo "sdd-report: $session não existe" >&2; exit 3; }
+  for f in $session; do [ -f "$f" ] || { echo "sdd-report: $f não existe" >&2; exit 3; }; done
+  if [ "$json" -eq 1 ]; then usage_json "$since" "$until"; exit 0; fi
   print_usage "$(usage_json "$since" "$until")" " (nenhuma chamada no período ou nenhum arquivo de sessão)"
   exit 0
 fi
@@ -108,6 +110,9 @@ pages() {
   done
 }
 
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+
 # Um ticket em JSON: PR, janela, tempo em minutos, CI na primeira rodada e uso; o
 # PR é o mais recente cujo corpo começa por "Closes #N" (a convenção do kit).
 ticket_json() {
@@ -125,9 +130,21 @@ ticket_json() {
       | map(select(.head_sha == $s)) | if all(.conclusion == "success" or .conclusion == "skipped") then "sim"
         elif any(.status != "completed") then "rodando" else "não" end end' 2> /dev/null || echo "sem dado")"
   start="$(printf '%s\n' "$win" | jq -r .start)" end="$(printf '%s\n' "$win" | jq -r .end)"
-  u="$(usage_json "$start" "$end")"
-  jq -nc --argjson n "$1" --argjson pr "$num" --argjson w "$win" --arg ci "$ci" --argjson u "$u" \
-    '{ticket: $n, pr: $pr, start: $w.start, end: $w.end, ci: $ci, usage: $u,
+  # Medição exata: o comentário que o relé grava na issue com as sessões que abriu
+  # para o ticket (spec 018 FR-6). Sem ele, a janela começa no último merge antes do
+  # primeiro commit, porque o trabalho do ticket começa antes do commit (FR-2).
+  relay="$(pages "repos/$repo/issues/$1/comments?" 'select(.body | startswith("<!-- sdd-relay-cost ")) | .body | split("\n")[0]' \
+    | sed -n 's/^<!-- sdd-relay-cost \(.*\) -->$/\1/p' | tail -n 1)" || relay=""
+  if [ -n "$relay" ] && printf '%s' "$relay" | jq -e .usage > /dev/null 2>&1; then
+    measure="relé" from="$(printf '%s' "$relay" | jq -r .start)"
+    u="$(printf '%s' "$relay" | jq -c .usage)"
+  else
+    [ -s "$tmp/merged" ] || { pages "repos/$repo/pulls?state=closed" '.merged_at // empty' > "$tmp/merged" || : > "$tmp/merged"; echo >> "$tmp/merged"; }
+    from="$(jq -Rsr --arg s "$start" 'split("\n") | map(select(. != "" and . < $s)) | max // $s' "$tmp/merged")"
+    measure="janela" u="$(usage_json "$from" "$end")"
+  fi
+  jq -nc --argjson n "$1" --argjson pr "$num" --argjson w "$win" --arg ci "$ci" --argjson u "$u" --arg m "$measure" --arg f "$from" \
+    '{ticket: $n, pr: $pr, start: $w.start, end: $w.end, from: $f, measure: $m, ci: $ci, usage: $u,
       minutes: ((($w.end | fromdateiso8601) - ($w.start | fromdateiso8601)) / 60 | floor)}'
 }
 
@@ -135,7 +152,8 @@ if [ "$cmd" = ticket ]; then
   t="$(ticket_json "$n")" || { echo "sdd-report: falha ao ler o GitHub" >&2; exit 1; }
   [ "$t" != null ] || { echo "sdd-report: nenhum PR fecha #$n" >&2; exit 1; }
   printf '%s\n' "$t" | jq -r '"ticket: #\(.ticket) (PR #\(.pr))", "janela: \(.start) → \(.end) (\(.minutes) min)",
-    "CI verde na primeira rodada: \(.ci)"'
+    "CI verde na primeira rodada: \(.ci)",
+    "medição: \(if .measure == "relé" then "relé (sessões que ele abriu para o ticket, desde \(.from))" else "janela desde \(.from) (último merge antes do primeiro commit)" end)"'
   print_usage "$(printf '%s\n' "$t" | jq -c .usage)" " na janela do ticket"
   exit 0
 fi
@@ -143,8 +161,6 @@ fi
 # phase: uma linha por sub-issue, o total e um único comentário no épico.
 subs="$(pages "repos/$repo/issues/$n/sub_issues?" '"\(.number)\t\(.title)"')" \
   || { echo "sdd-report: falha ao ler as sub-issues de #$n" >&2; exit 1; }
-tmp="$(mktemp -d)"
-trap 'rm -rf "$tmp"' EXIT
 : > "$tmp/rows"
 t="$(printf '\t')"
 printf '%s\n' "$subs" | while IFS="$t" read -r num title; do
@@ -158,11 +174,17 @@ jq -rs --arg m "$marker" --arg e "$n" '
   def tok(f): if .usage == null then "—" else (.usage | f | tostring) end;
   (map(select(.usage != null) | .usage)) as $u
   | $m, "## Relatório da fase (épico #\($e))", "",
-    "| Ticket | PR | Tempo (min) | CI verde na 1ª rodada | Chamadas | Relidos | Gravados | Gerados | Despertares (tokens) |",
-    "|---|---|---|---|---|---|---|---|---|",
-    (.[] | "| #\(.ticket) \(.title | gsub("\\|"; "\\|")) | \(if .pr then "#\(.pr)" else "sem PR" end) | \(.minutes | k) | \(.ci // "—") | \(tok(.calls)) | \(tok(.read)) | \(tok(.created)) | \(tok(.output)) | \(if .usage == null then "—" else "\(.usage.wakes) (\(.usage.wake_tokens))" end) |"),
-    "| **Total** | \(map(select(.pr)) | length) PRs | \(map(.minutes // 0) | add // 0) | \(map(select(.ci == "sim")) | length) de \(map(select(.pr)) | length) | \($u | map(.calls) | add // 0) | \($u | map(.read) | add // 0) | \($u | map(.created) | add // 0) | \($u | map(.output) | add // 0) | \($u | map(.wakes) | add // 0) (\($u | map(.wake_tokens) | add // 0)) |",
+    "| Ticket | PR | Medição | Tempo (min) | CI verde na 1ª rodada | Chamadas | Relidos | Gravados | Gerados | Despertares (tokens) |",
+    "|---|---|---|---|---|---|---|---|---|---|",
+    (.[] | "| #\(.ticket) \(.title | gsub("\\|"; "\\|")) | \(if .pr then "#\(.pr)" else "sem PR" end) | \(.measure // "—") | \(.minutes | k) | \(.ci // "—") | \(tok(.calls)) | \(tok(.read)) | \(tok(.created)) | \(tok(.output)) | \(if .usage == null then "—" else "\(.usage.wakes) (\(.usage.wake_tokens))" end) |"),
+    "| **Total** | \(map(select(.pr)) | length) PRs | | \(map(.minutes // 0) | add // 0) | \(map(select(.ci == "sim")) | length) de \(map(select(.pr)) | length) | \($u | map(.calls) | add // 0) | \($u | map(.read) | add // 0) | \($u | map(.created) | add // 0) | \($u | map(.output) | add // 0) | \($u | map(.wakes) | add // 0) (\($u | map(.wake_tokens) | add // 0)) |",
     "",
+    # 018 AC-5: o custo médio por ticket com e sem relé, lado a lado.
+    (def tot: (.read + .created + .input + .output);
+     def avg($m): map(select(.measure == $m and .usage != null) | .usage | tot) | if length == 0 then null else {n: length, avg: (add / length | floor)} end;
+     (avg("relé")) as $r | (avg("janela")) as $w
+     | if $r == null and $w == null then empty else
+       "Custo médio por ticket (tokens relidos + gravados + entrada + gerados): \(if $r then "com relé \($r.avg) (\($r.n) tickets)" else "com relé —" end); \(if $w then "sem relé \($w.avg) (\($w.n) tickets)" else "sem relé —" end)." end),
     (if ($u | length) < (map(select(.pr)) | length) then "Tickets sem dado de tokens (outro contêiner ou outro agente) aparecem com —." else empty end),
     "Gerado por `sdd-report.sh phase` (spec 017), sem LLM; uma rodada nova edita este comentário."' "$tmp/rows" > "$tmp/body"
 cat "$tmp/body"

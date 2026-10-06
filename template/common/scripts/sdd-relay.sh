@@ -78,10 +78,14 @@ prompt() {
 }
 
 # Uma sessão nova do agente, com o teto de contexto (FR-4, sdd-session-guard.sh).
+# Os arquivos de sessão que surgem durante a chamada são as sessões do ticket.
+sessions_now() { find "${SDD_SESSIONS_DIR:-$HOME/.claude/projects}" -name '*.jsonl' -type f 2> /dev/null | sort; }
 run_agent() {
-  runs=$((runs + 1))
+  runs=$((runs + 1)) tsess=$((tsess + 1))
+  sessions_now > "$tmp/before"
   SDD_SESSION_MAX_TOKENS="${SDD_SESSION_MAX_TOKENS:-150000}" sh -c "$agent" < "$tmp/prompt" \
     || say "aviso: o agente saiu com erro no ticket #$n"
+  sessions_now | comm -13 "$tmp/before" - >> "$tmp/tfiles"
 }
 
 # Tokens gastos nas sessões desde $1 (spec 017), para o orçamento da fase.
@@ -113,7 +117,10 @@ while :; do
     [ "$used" -lt "$budget" ] || stop 0 "o orçamento da fase acabou ($used de $budget tokens, SDD_BUDGET_TOKENS)"
   fi
   pr="$(pr_for "$n")"
+  tstart="" tsess=0
+  : > "$tmp/tfiles"
   if [ -z "$pr" ]; then
+    tstart="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     if [ -n "$max" ] && [ "$runs" -ge "$max" ]; then say "--max $max atingido; Próximo: #$n"; exit 0; fi
     task="Trabalhe só o ticket #$n: $deliver" sessions=0
     while :; do
@@ -160,4 +167,21 @@ $(tail -n 40 "$tmp/ci")"
   sh "$here/sdd-wait.sh" --repo "$repo" --interval 5 --timeout "${SDD_RELAY_CLOSE_WAIT:-120}" issue-closed "#$n" > /dev/null 2>&1 \
     || { say "PR #$pr mergeado, mas a issue #$n continua aberta; parei"; exit 1; }
   merged="$merged$n "
+  # 018 FR-6: o custo exato do ticket (só as sessões que o relé abriu para ele), num
+  # comentário da issue que o sdd-report.sh ticket e phase usam no lugar da janela.
+  if [ -n "$tstart" ]; then
+    tend="$(date -u +%Y-%m-%dT%H:%M:%SZ)" u=null
+    if [ -s "$tmp/tfiles" ]; then
+      # shellcheck disable=SC2046 # um --session por arquivo, caminhos sem espaços
+      u="$(sh "$here/sdd-report.sh" tokens $(sed 's/^/--session /' "$tmp/tfiles") --json 2> /dev/null || echo null)"
+    fi
+    [ -n "$u" ] || u=null
+    jq -nc --argjson s "$tsess" --arg a "$tstart" --arg b "$tend" --argjson u "$u" '{sessions: $s, start: $a, end: $b, usage: $u}' > "$tmp/cost"
+    {
+      printf '<!-- sdd-relay-cost %s -->\n' "$(cat "$tmp/cost")"
+      jq -r '"**Custo do ticket pelo relé:** \(.sessions) sessões, " + (if .usage == null then "sem dado de tokens (sessões fora desta máquina)."
+        else "\(.usage.calls) chamadas, \(.usage.read) tokens relidos, \(.usage.created) gravados, \(.usage.output) gerados; contexto médio \(.usage.avg)." end)' "$tmp/cost"
+    } > "$tmp/c"
+    gh api "repos/$repo/issues/$n/comments" -F body=@"$tmp/c" --silent 2> /dev/null || say "aviso: não consegui gravar o custo em #$n"
+  fi
 done

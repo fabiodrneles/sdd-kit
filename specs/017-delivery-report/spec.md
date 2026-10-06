@@ -22,7 +22,7 @@ Cada chamada relê a conversa inteira; a sessão cresce, e o custo total cresce 
 ## Requisitos funcionais
 
 - **FR-1** `sdd-report.sh tokens [--session ARQ | --since DATA]` MUST somar, sem LLM, as chamadas dos arquivos de sessão do Claude Code (sem duplicatas por `message.id`): chamadas, tokens relidos, gravados, de entrada e gerados, contexto médio e máximo por chamada.
-- **FR-2** `sdd-report.sh ticket '#N'` MUST atribuir ao ticket as chamadas feitas entre o primeiro commit da branch do PR que fecha a issue e o último push dele, e imprimir os mesmos totais do FR-1, mais o tempo e se o CI do PR ficou verde na primeira rodada.
+- **FR-2** `sdd-report.sh ticket '#N'` MUST atribuir ao ticket as chamadas das sessões que o relé abriu para ele (spec 018 FR-6) ou, sem relé, as feitas entre o último merge antes do primeiro commit da branch do PR que fecha a issue e o último push dele (o trabalho começa antes do primeiro commit), e imprimir os mesmos totais do FR-1, mais o tempo e se o CI do PR ficou verde na primeira rodada.
 - **FR-3** `sdd-report.sh phase '#ÉPICO'` MUST juntar os tickets do épico numa tabela (uma linha por ticket e o total) e MUST gravá-la num único comentário do épico, editado nas rodadas seguintes, para o número sobreviver ao fim do contêiner.
 - **FR-4** O relatório MUST separar os **despertares sem mensagem do dono** (avisos, fim de tarefas em segundo plano) e o custo deles, porque é gasto que não produz trabalho.
 - **FR-5** O fechamento da fase (`sdd-release.sh`) SHOULD rodar o `sdd-report.sh phase` e citar o total no PR de fechamento.
@@ -41,6 +41,10 @@ Cada chamada relê a conversa inteira; a sessão cresce, e o custo total cresce 
 - **AC-5** Sem arquivo de sessão, quando o relatório roda, então diz "sem dado de tokens" e sai com 0.
 
 ## Mudanças
+
+### Não lançado
+
+- CHANGED FR-2 — a janela sem relé começa no último merge antes do primeiro commit (a de 1.10.0 começava no primeiro commit e subestimava o ticket); com o relé, a medição é exata, pelas sessões que ele abriu (T56, #229).
 
 ### v1.10.0
 

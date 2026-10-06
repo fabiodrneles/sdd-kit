@@ -20,7 +20,9 @@ const usage = `axyn: o sdd-kit no opencode, com o modelo que você tiver
 
 Uso:
   axyn version        mostra a versão
-  axyn help           mostra esta ajuda
+  axyn gate [--base REF] [--max-lines N] [--ci CMD] [--protect CAMINHO]
+                      portões do diff: CI, teste afrouxado, caminhos protegidos e tamanho
+  axyn help         mostra esta ajuda
 `
 
 func main() {
@@ -36,6 +38,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 	case "version", "--version":
 		_, _ = fmt.Fprintf(stdout, "axyn %s\n", version)
 		return exitOK
+	case "gate":
+		return runGate(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
 		_, _ = fmt.Fprint(stdout, usage)
 		return exitOK

@@ -14,12 +14,16 @@ fail() { echo "FALHOU: $*" >&2; exit 1; }
 G="$tmp/gh"; mkdir -p "$G" "$tmp/bin"
 cat > "$tmp/bin/gh" <<'SH'
 #!/bin/sh
-jq=""; url=""
+jq="" url="" body=""
 shift # api
 while [ $# -gt 0 ]; do
-  case "$1" in --jq) jq="$2"; shift 2 ;; --paginate | --silent) shift ;; *) url="$1"; shift ;; esac
+  case "$1" in --jq) jq="$2"; shift 2 ;; -F) body="${2#body=@}"; shift 2 ;; --paginate | --silent) shift ;; *) url="$1"; shift ;; esac
 done
+# POST de comentário no épico: guarda o corpo em $G/posted.
+[ -z "$body" ] || { cat "$body" >> "$G/posted"; exit 0; }
 case "$url" in
+  */issues/5/comments*) f="$G/comments.json" ;;
+  */branches*) f="$G/branches.json" ;;
   *issues\?labels*) f="$G/epics.json" ;;
   */issues/5/sub_issues*) f="$G/view.json"
     for i in "$G"/issue-*.json; do [ -f "$i" ] && [ ! -f "$G/stale-subs" ] || continue; n="${i##*/issue-}"; n="${n%.json}"
@@ -35,7 +39,7 @@ case "$url" in
       echo '{"state":"closed"}' > "$G/issue-$(cat "$G/closes-${url##*/}").json"; fi ;;
   */issues/[0-9]*) n="${url##*/}"; f="$G/issue-$n.json"
     [ -f "$f" ] || f="$G/open.json"
-    jq --argjson n "$n" --slurpfile st "$f" '.[] | select(.number == $n) | . + $st[0]' "$G/subs.json" > "$G/view.json"; f="$G/view.json" ;;
+    jq --argjson n "$n" --slurpfile st "$f" '(map(select(.number == $n)) | .[0] // {}) + $st[0]' "$G/subs.json" > "$G/view.json"; f="$G/view.json" ;;
   *) echo "gh falso: $url" >&2; exit 1 ;;
 esac
 jq -r "$jq" "$f"
@@ -57,12 +61,24 @@ chmod +x "$tmp/bin/agent"
 export PATH="$tmp/bin:$PATH" G SDD_AGENT_CMD=agent
 
 r="$tmp/repo"; mkdir -p "$r/scripts" "$r/specs/018-x"
-cp "$s/sdd-relay.sh" "$s/sdd-context.sh" "$s/sdd-wait.sh" "$s/sdd-ci.sh" "$r/scripts/"
+cp "$s/sdd-relay.sh" "$s/sdd-context.sh" "$s/sdd-wait.sh" "$s/sdd-checkpoint.sh" "$s/sdd-report.sh" "$r/scripts/"
+# sdd-ci.sh falso (o real tem testes próprios): $G/ci-PR lista os códigos, um por
+# rodada (padrão 0, verde).
+cat > "$r/scripts/sdd-ci.sh" <<'SH'
+#!/bin/sh
+for a; do pr="${a#\#}"; done
+f="$G/ci-$pr"
+[ -s "$f" ] || { echo "ok CI"; exit 0; }
+rc="$(head -n 1 "$f")"; sed -i.b 1d "$f"; rm -f "$f.b"
+[ "$rc" -eq 0 ] && echo "ok CI" || echo "FALHA CI: erro de teste"
+exit "$rc"
+SH
 printf '# 018\n\n- **AC-1** Linha do AC-1.\n- **AC-2** Linha do AC-2.\n' > "$r/specs/018-x/spec.md"
 cd "$r"; git init -q
 reset() {
   rm -f "$G"/*.json "$G"/seen-* "$G"/closes-* "$G/calls" "$G/no-pr" "$G/stale-subs"; : > "$G/calls"
-  echo '{"state":"open"}' > "$G/open.json"
+  echo '{"state":"open","created_at":"2026-01-01T00:00:00Z"}' > "$G/open.json"
+  echo '[]' > "$G/comments.json"; echo '[]' > "$G/branches.json"; rm -f "$G/posted" "$G"/ci-*
   echo '[{"number":5}]' > "$G/epics.json"
   echo '[]' > "$G/pulls.json"
   jq -n '[{number: 1, state: "closed", title: "T0", body: ""},
@@ -120,6 +136,59 @@ reset; touch "$G/no-pr"
 rc=0; out="$($relay 2>&1)" || rc=$?
 [ "$rc" -eq 1 ] || fail "sem PR saiu com $rc: $out"
 [ "$(tr '\n' ' ' < "$G/calls")" = "2 " ] || fail "sem PR chamou: $(cat "$G/calls")"
+
+# 018 AC-3: CI vermelho duas vezes no mesmo PR: a primeira vira uma sessão de
+# correção; a segunda para e comenta no épico, sem chamar o agente de novo.
+reset
+printf '1\n1\n' > "$G/ci-102"
+rc=0; out="$($relay 2>&1)" || rc=$?
+[ "$rc" -eq 1 ] || fail "CI vermelho saiu com $rc: $out"
+[ "$(tr '\n' ' ' < "$G/calls")" = "2 2 " ] || fail "CI vermelho chamou: $(cat "$G/calls")"
+grep -qF 'O CI do PR #102 (ticket #2) falhou' "$G/in" || fail "sessão de correção sem o pedido: $(cat "$G/in")"
+grep -qF 'FALHA CI: erro de teste' "$G/in" || fail "sessão de correção sem a saída do CI"
+grep -qF 'o CI do PR #102 falhou duas vezes seguidas' "$G/posted" || fail "sem comentário no épico: $(cat "$G/posted" 2> /dev/null)"
+# Uma falha só: corrige e segue para o merge e o próximo ticket.
+reset
+printf '1\n0\n' > "$G/ci-102"
+out="$($relay 2>&1)" || fail "CI vermelho uma vez falhou: $out"
+[ "$(tr '\n' ' ' < "$G/calls")" = "2 2 3 " ] || fail "CI vermelho uma vez chamou: $(cat "$G/calls")"
+
+# FR-3: o Próximo do checkpoint é perguntar ao dono: para e comenta, sem agente.
+reset
+jq -n '[{id: 1, body: "<!-- sdd-checkpoint -->\n## Checkpoint\n\n- **Próximo:** perguntar ao dono qual fase vem\n"}]' > "$G/comments.json"
+out="$($relay 2>&1)" || fail "parada do dono saiu com erro: $out"
+[ ! -s "$G/calls" ] || fail "parada do dono chamou o agente"
+grep -qF 'perguntar ao dono qual fase vem' "$G/posted" || fail "parada do dono sem comentário: $out"
+
+# FR-3: orçamento. As sessões desde a abertura do épico já gastaram 1100 tokens.
+reset
+mkdir -p "$tmp/sess"
+printf '%s\n' '{"timestamp":"2026-01-02T00:00:00Z","message":{"id":"a","usage":{"input_tokens":100,"cache_read_input_tokens":1000}}}' > "$tmp/sess/s.jsonl"
+out="$(SDD_SESSIONS_DIR="$tmp/sess" SDD_BUDGET_TOKENS=1000 $relay 2>&1)" || fail "orçamento saiu com erro: $out"
+[ ! -s "$G/calls" ] || fail "orçamento esgotado chamou o agente"
+grep -qF 'o orçamento da fase acabou (1100 de 1000 tokens' "$G/posted" || fail "orçamento sem comentário: $out"
+out="$(SDD_SESSIONS_DIR="$tmp/sess" SDD_BUDGET_TOKENS=5000 $relay 2>&1)" || fail "orçamento com folga falhou: $out"
+[ "$(tr '\n' ' ' < "$G/calls")" = "2 3 " ] || fail "orçamento com folga chamou: $(cat "$G/calls")"
+
+# FR-4: a sessão parou no teto sem PR, mas com a branch do ticket: sessão nova a
+# partir do checkpoint; na segunda, o agente abre o PR.
+reset; touch "$G/no-pr"
+echo '[{"name":"feat/2-um"}]' > "$G/branches.json"
+cat > "$tmp/bin/agent2" <<'SH'
+#!/bin/sh
+[ ! -f "$G/calls" ] || [ "$(grep -c . "$G/calls")" -lt 1 ] || rm -f "$G/no-pr"
+exec agent
+SH
+chmod +x "$tmp/bin/agent2"
+out="$(SDD_AGENT_CMD=agent2 $relay 2>&1)" || fail "continuação falhou: $out"
+[ "$(tr '\n' ' ' < "$G/calls")" = "2 2 3 " ] || fail "continuação chamou: $(cat "$G/calls")"
+grep -qF 'Continue o ticket #2 na branch `feat/2-um`' "$G/in-2" || fail "continuação sem a branch: $(cat "$G/in-2")"
+# Sem PR e sem fim: para depois de SDD_RELAY_SESSIONS sessões.
+reset; touch "$G/no-pr"
+echo '[{"name":"feat/2-um"}]' > "$G/branches.json"
+rc=0; out="$(SDD_RELAY_SESSIONS=2 $relay 2>&1)" || rc=$?
+[ "$rc" -eq 1 ] || fail "sessões sem PR saiu com $rc"
+[ "$(tr '\n' ' ' < "$G/calls")" = "2 2 " ] || fail "sessões sem PR chamou: $(cat "$G/calls")"
 
 # Sem épico aberto: Próximo é perguntar ao dono.
 reset; echo '[]' > "$G/epics.json"

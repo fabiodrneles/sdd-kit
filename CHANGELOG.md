@@ -4,6 +4,13 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-10-06
+
+### Corrigido
+
+- never report a still-running check as a failure in sdd-ci.sh (#190)
+- point a fresh session to the next ROADMAP phase after a closing (#192)
+
 ## [1.7.1] - 2026-10-06
 
 Correções achadas no primeiro ciclo completo do motor num projeto adotado (sdd-kit-demo, da fase 2 à release v0.2.0).

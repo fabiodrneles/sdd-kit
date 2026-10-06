@@ -166,7 +166,7 @@ Every PR event (CI, merge, conflict) used to wake the agent's session and reload
 | Last epic ticket closed | `sdd-on-phase-done.yml` | Opens the version's closing PR (`sdd-release.sh`) |
 | Closing PR merged | `sdd-on-release-merge.yml` | Dispatches the version's release exactly once (`sdd-release.sh --tag`) |
 
-All are idempotent, use only the `GITHUB_TOKEN` (or the optional secret below), no LLM secrets, and act only on PRs from the repository itself. `sdd-wait.sh` covers whatever is left to wait for in a shell.
+All are idempotent, use only the `GITHUB_TOKEN` (or the optional secret below), no LLM secrets, and act only on PRs from the repository itself. `sdd-wait.sh` covers whatever is left to wait for in a shell. The sdd-kit itself runs this engine (`make self-sync` generates its workflows from the template and CI fails if they drift).
 
 Repository setup:
 

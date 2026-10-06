@@ -79,6 +79,7 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 - [ ] **T43** Workflow de fechamento mergeado: release disparada — 015 FR-5, NFR-1, NFR-2, AC-5 — #151
 - [ ] **T44** Workflow de `main` alterada: PRs atualizados ou avisados do conflito — 015 FR-6, NFR-1, NFR-2, AC-6 — #152
 - [ ] **T45** `CLAUDE.md` e skill: o agente não espera eventos, o motor faz — 015 FR-7 — #153
+- [x] **T46** O sdd-kit roda o próprio motor (`make self-sync` e checagem de divergência) — 015 FR-8, AC-8 — #167
 
 ## Próximas fases (visão, sem versão)
 

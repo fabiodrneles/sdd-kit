@@ -18,6 +18,7 @@ Na sessão de 2026-10-05, só ler notificações de PR e cancelar assinaturas cu
 - **FR-5** Quando o PR de fechamento (`chore/release-vX.Y.Z`) é mergeado, um workflow MUST disparar a release da versão (o `sdd-release.sh --tag`).
 - **FR-6** Quando a `main` muda, um workflow MUST atualizar a branch dos PRs abertos que estão atrás dela e não têm conflito (REST `update-branch`), e MUST comentar uma vez nos que têm conflito real.
 - **FR-7** O `CLAUDE.md` do template MUST mandar o agente não esperar nem acompanhar eventos de PR: abrir o PR, gravar o checkpoint e encerrar a resposta; o motor faz o resto, e o agente volta só quando há julgamento a fazer.
+- **FR-8** O próprio sdd-kit MUST rodar o motor gerado do template por `make self-sync`, e o CI MUST falhar se a cópia divergir.
 
 ## Requisitos não funcionais
 
@@ -33,6 +34,7 @@ Na sessão de 2026-10-05, só ler notificações de PR e cancelar assinaturas cu
 - **AC-5** Dado o PR de fechamento, quando é mergeado, então a release `vX.Y.Z` é disparada uma única vez.
 - **AC-6** Dados dois PRs abertos atrás da `main`, um limpo e um com conflito, quando a `main` muda, então o limpo é atualizado e o com conflito recebe um único comentário.
 - **AC-7** Dado `SDD_ENGINE=off`, quando qualquer um dos eventos acima acontece, então nenhum workflow escreve nada.
+- **AC-8** Dado um workflow do motor no template alterado sem `make self-sync`, quando o `make ci` roda, então falha nomeando o arquivo; depois do `make self-sync`, passa.
 
 ## Mudanças
 
@@ -45,3 +47,4 @@ Na sessão de 2026-10-05, só ler notificações de PR e cancelar assinaturas cu
 - ADDED FR-5 — `sdd-on-release-merge.yml` dispara a release quando o PR de fechamento é mergeado (T43, #163).
 - ADDED FR-6 — `sdd-update-prs.yml` traz a `main` para os PRs abertos atrás dela e avisa os com conflito (T44, #161).
 - ADDED FR-7 — o `CLAUDE.md` do template manda o agente não esperar eventos de PR; README e skill documentam o motor e a configuração do repositório (T45, #165).
+- ADDED FR-8 — o próprio sdd-kit roda o motor gerado do template por `make self-sync`, e o CI falha se a cópia divergir (T46, #167).

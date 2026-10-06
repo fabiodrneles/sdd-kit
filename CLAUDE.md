@@ -23,6 +23,7 @@ Guia rápido para agentes (Claude Code) trabalharem neste repositório. O proces
 
 ```text
 make ci     # markdownlint + shellcheck + testes (template e actionlint incluídos) (rode antes de todo push)
+make self-sync  # regenera .github/workflows/sdd-*.yml (o motor do próprio kit) a partir do template
 make links  # verificação de links com lychee (se instalado; o CI sempre roda)
 ```
 
@@ -39,6 +40,7 @@ Numa sessão na web, o hook `.claude/hooks/session-start.sh` instala o shellchec
 
 ## Armadilhas
 
+- Depois de mudar um workflow do motor (`sdd-*.yml`) em `template/common/.github/workflows/`, rode `make self-sync` e commite o resultado: o kit roda uma cópia gerada, e o `make ci` (e o CI) falham se ela divergir. Não edite `.github/workflows/sdd-*.yml` à mão.
 - O PR de fechamento sobe a versão no `plugin.json` do `sdd-delivery`, no `KIT_REF` do `adopt.sh`/`adopt.ps1` e no `curl` dos READMEs; o `tests/plugin.sh` exige que batam, e o *Release tag* falha se a tag não bater com o `plugin.json`.
 - Arquivos em `template/` usam marcadores `{{PROJECT}}`, `{{OWNER}}`, `{{REPO}}`; o lint deles roda sobre uma cópia com os marcadores substituídos.
 - Arquivos gerados por ferramentas (ex.: `dotnet new`) podem vir com BOM UTF-8 ou CRLF; o `adopt.ps1` remove o BOM e o teste de adoção compara as árvores. Normalize antes do commit: sem `pwsh` local, esse teste só roda no CI.

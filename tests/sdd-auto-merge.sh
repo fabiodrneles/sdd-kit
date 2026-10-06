@@ -7,6 +7,8 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 fail() { echo "FALHOU: $*" >&2; exit 1; }
+# O runner do CI define estas variáveis; cada caso escolhe as suas.
+unset GITHUB_ACTIONS SDD_ENGINE_TOKEN_SET SDD_AUTO_MERGE
 
 G="$tmp/gh"; mkdir -p "$G" "$tmp/bin" "$tmp/s"
 cp "$root/template/common/scripts/sdd-auto-merge.sh" "$tmp/s/"

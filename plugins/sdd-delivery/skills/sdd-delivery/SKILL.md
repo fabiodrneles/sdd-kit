@@ -200,7 +200,7 @@ The context can end at any time: compaction, a new session or a usage limit. Wor
   - validate with a single command (`make ci`), once, before the push;
   - follow CI with `sh scripts/sdd-ci.sh '#PR'` (one line per check, the end of the failing log only),
     not with PR event subscriptions: if the session subscribes to a PR on its own, unsubscribe right away;
-  - do not wait for or follow PR events (event-driven engine, spec 015): open the PR (`sh scripts/sdd-pr.sh --no-wait`), save the checkpoint and end the reply; the engine's workflows update the checkpoint on merge, summarize red CI in a PR comment, bring `main` into PRs, open the closing PR and dispatch the release, and you come back only for judgment (code, root cause, a real conflict, review); if you must wait in a shell, run `sh scripts/sdd-wait.sh pr-merged|ci|issue-closed TARGET` in the background, never a hand-written loop;
+  - do not wait for or follow PR events (event-driven engine, spec 015): open the PR (`sh scripts/sdd-pr.sh --no-wait`), save the checkpoint and end the reply; the engine's workflows update the checkpoint on merge, summarize red CI in a PR comment, bring `main` into PRs, open the closing PR and dispatch the release, and you come back only for judgment (code, root cause, a real conflict, review); before ending the reply, leave **one** merge watcher in the background, `sh scripts/sdd-wait.sh merged-any` (the last line `sdd-pr.sh` prints, spec 016); when it wakes the session, run `sdd-resume.sh` and do the "Next" step without waiting for the owner; if that step depends on the owner, restart the watcher and end with one line; on timeout, restart it silently; for any other wait in a shell, run `sh scripts/sdd-wait.sh pr-merged|ci|issue-closed TARGET` in the background, never a hand-written loop;
   - make mechanical edits with a script that fails when the text is missing (e.g. a Python
     `assert old in s` before `replace`), instead of reading the file to edit it;
   - mutation check without rereading: copy the file aside, break it, run the test, copy it back;
@@ -220,6 +220,7 @@ When the repository has the template's scripts, call them instead of doing the s
 |---|---|
 | Wait for CI and read only the failures | `sh scripts/sdd-ci.sh [SHA\|#PR\|branch]` |
 | Wait with no LLM for a PR merge, CI or an issue to close (background; one line, exit code 0 held, 1 failed, 2 timed out) | `sh scripts/sdd-wait.sh pr-merged\|ci\|issue-closed TARGET` |
+| Merge watcher: wakes the session when any open PR is merged (background, one at a time) | `sh scripts/sdd-wait.sh merged-any` |
 | Ship the ticket branch (merge main, `make ci`, push, open/reuse the PR, wait for CI, checkpoint) | `sh scripts/sdd-pr.sh [--spec NNN] [--dry-run]` |
 | Check and fix the local environment so `make ci` behaves like CI (even when the session-start hook did not run) | `sh scripts/sdd-doctor.sh [--check]` |
 | Prepare the version's closing PR (version computed by go-release-manager, X.Y.Z only forces it; CHANGELOG draft from merged PRs, version bumps from `.sdd-release`); after the merge, tag it | `sh scripts/sdd-release.sh X.Y.Z [--dry-run]`, then `sh scripts/sdd-release.sh --tag X.Y.Z` |

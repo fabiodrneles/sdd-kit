@@ -87,8 +87,10 @@ for s in sdd-wait sdd-ci-comment sdd-update-prs sdd-on-merge sdd-on-phase-done s
 done
 
 # 015 FR-7: o CLAUDE.md do template manda não esperar eventos de PR e usar o sdd-wait.sh.
-for t in 'sdd-wait.sh' 'sdd-pr.sh --no-wait' 'motor de eventos'; do
+# 016 AC-5: o do template e o do kit têm a regra do vigia do merge.
+for t in 'sdd-wait.sh' 'sdd-pr.sh --no-wait' 'motor de eventos' 'sdd-wait.sh merged-any' 'Vigia do merge'; do
   grep -qF -- "$t" common/CLAUDE.md || err "template/common/CLAUDE.md sem '$t'"
+  grep -qF -- "$t" ../CLAUDE.md || err "CLAUDE.md do kit sem '$t'"
 done
 
 [ -f common/AGENTS.md ] || err "template/common/AGENTS.md não existe"

@@ -12,7 +12,7 @@ on:
 permissions:
   actions: write
   contents: write
-  issues: read
+  issues: write # comentário do sdd-report.sh phase no épico (spec 017 FR-5)
   pull-requests: write
 
 concurrency:

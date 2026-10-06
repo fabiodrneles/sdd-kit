@@ -4,13 +4,18 @@ PYTHON ?= python3
 # Cobertura mínima de linhas exigida pelo make ci (spec 010 do sdd-kit).
 COVERAGE_MIN ?= 80
 
+# Artefatos do make ci (cobertura) ficam dentro de .git/, que o git nunca versiona:
+# nada solto na árvore depois do make ci, sem depender do .gitignore (#180).
+SDD_OUT := $(shell git rev-parse --git-path sdd-out 2>/dev/null || echo .sdd-out)
+
 .DEFAULT_GOAL := ci
 
 .PHONY: ci
 ci: ## Lint, formatação e testes com cobertura mínima (precisa de pytest-cov no extra dev)
 	$(PYTHON) -m ruff check .
 	$(PYTHON) -m ruff format --check .
-	$(PYTHON) -m pytest --cov=. --cov-report=term --cov-fail-under=$(COVERAGE_MIN)
+	@mkdir -p $(SDD_OUT)
+	COVERAGE_FILE=$(SDD_OUT)/.coverage $(PYTHON) -m pytest --cov=. --cov-report=term --cov-fail-under=$(COVERAGE_MIN)
 
 .PHONY: deps
 deps: ## Instala o projeto com as dependências de desenvolvimento

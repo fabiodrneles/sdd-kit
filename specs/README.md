@@ -47,5 +47,6 @@ Convenções: `MUST`/`SHOULD`/`MAY` seguem a RFC 2119. Prioridades: **P0** (bloq
 | 017 | [Relatório de entrega e de custo](017-delivery-report/spec.md) | P1 | Done |
 | 018 | [Relé de sessões curtas](018-short-session-relay/spec.md) | P1 | Done |
 | 019 | [Relé na prática](019-relay-in-practice/spec.md) | P1 | Done |
+| 020 | [Agente enxuto do relé](020-lean-agent/spec.md) | P1 | Approved |
 
 Status possíveis: `Draft` → `Approved` → `In Progress` → `Done`.

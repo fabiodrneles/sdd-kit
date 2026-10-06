@@ -108,6 +108,18 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 - [x] **T60** Despertar ocioso: só o turno sem commit nem push — 019 FR-3, AC-2
 - [x] **T61** Comparação com a Fase 12 e a economia no README — 019 FR-4, AC-3
 
+## Fase 14 — Agente enxuto do relé (P1)
+
+- [ ] **T62** Agente padrão do relé só com as ferramentas da entrega, sem skills e sem MCP; `SDD_AGENT_TOOLS` — 020 FR-1, AC-1
+- [ ] **T63** `sdd-report.sh`: contexto inicial de cada sessão, feito pelo relé — 020 FR-2, AC-2
+- [ ] **T64** `sdd-context.sh`: testes que citam os AC do ticket no pacote, feito pelo relé — 020 FR-3, AC-3
+- [ ] **T66** Modelo por ticket: label `modelo:NOME` ou `SDD_AGENT_MODEL`, e o modelo no custo gravado — 020 FR-5, AC-5
+- [ ] **T65** Comparação com as Fases 13 e 12 e o gráfico do README atualizado — 020 FR-4, AC-4
+
+## Fase 15 — Motor em Go (P2, spec a escrever)
+
+Aprovada pelo dono em 2026-10-06, depois da Fase 14: um binário por sistema no lugar dos scripts (Windows nativo, sem `jq`), com os testes atuais como especificação e tickets em paralelo. Ganho esperado em tempo e robustez, não em tokens.
+
 ## Próximas fases (visão, sem versão)
 
 Ideias aprovadas pelo dono em 2026-10-03, em ordem de impacto. Cada uma vira spec e fase quando chegar a vez.

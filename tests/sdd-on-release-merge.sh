@@ -101,6 +101,7 @@ rc=0; run 10 > /dev/null 2>&1 || rc=$?
 # épico já aberto, não abre outro.
 # shellcheck disable=SC2016 # literal: crases e $ do texto gerado
 printf '#!/bin/sh\necho "$* pre=${SDD_RELEASE_PRE:-}" >> "$G/dispatch"\n' > "$tmp/release.sh"
+# shellcheck disable=SC2016 # literal: crases do ROADMAP
 mkdir -p "$tmp/proj/specs"
 printf '## Fase 1 — A (P0) → `v1.2.3`\n\n- [x] **T1** a\n\n## Fase 2 — B (P1) → `v1.3.0`\n\n- [ ] **T2** b\n' > "$tmp/proj/specs/ROADMAP.md"
 echo "true chore/release-v1.2.4 o/r" > "$G/pr.20"; : > "$G/tags"; echo '{"workflow_runs":[]}' > "$G/runs"; : > "$G/epic"

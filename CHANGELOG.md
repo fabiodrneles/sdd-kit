@@ -4,6 +4,13 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.7.3] - 2026-10-06
+
+### Corrigido
+
+- Retomada com uma regra só: a saída do `sdd-resume.sh` sempre termina numa linha "Próximo:" (do checkpoint, da fase já aprovada no ROADMAP ou "perguntar ao dono"), e a sessão faz esse Próximo e nada além. Uma sessão nova não escolhe mais sozinha uma fase não aprovada (#196).
+- A conversa segue o idioma em que o dono escreve; uma mensagem curta como "continue" não define o idioma (skill e `CLAUDE.md` do template, #193).
+
 ## [1.7.2] - 2026-10-06
 
 ### Corrigido

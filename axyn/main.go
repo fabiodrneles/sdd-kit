@@ -25,7 +25,11 @@ Uso:
                       portões do diff: CI, teste afrouxado, caminhos protegidos e tamanho
   axyn install [--dir DIR]
                       configura o opencode do projeto: servidor MCP, agentes e o comando /axyn
-  axyn mcp            servidor MCP (stdio) para o opencode: axyn_plan, axyn_next, axyn_gate, axyn_ship
+  axyn mcp            servidor MCP (stdio) para o opencode: axyn_run, axyn_status e as ferramentas do laço
+  axyn run [--wait] [--resume] [--model M] "PEDIDO"
+                      o motor conduz o laço: planeja, escolhe o ticket, chama o opencode run para o
+                      código, portões, recuperação e entrega; em segundo plano, a menos de --wait
+  axyn status [ID]    andamento de uma execução: ticket, portões, modelo e tentativas
   axyn help         mostra esta ajuda
 `
 
@@ -46,6 +50,10 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runGate(args[1:], stdout, stderr)
 	case "install":
 		return runInstall(args[1:], stdout, stderr)
+	case "run":
+		return runRunCmd(args[1:], stdout, stderr)
+	case "status":
+		return runStatusCmd(args[1:], stdout, stderr)
 	case "mcp":
 		return runMCP(args[1:], os.Stdin, stdout, stderr)
 	case "help", "-h", "--help":

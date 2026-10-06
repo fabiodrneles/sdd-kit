@@ -145,6 +145,9 @@ func keyHint(m model) string {
 // or no open ticket it does nothing.
 func (s *mcpServer) recordAttempt(green bool, findings []finding, plan []string, ciLog string) (advice string, recovered bool) {
 	models, err := loadModels(s.config)
+	if err == nil && len(models) == 0 && s.fallback {
+		models = []model{{ID: placeholder}}
+	}
 	if err != nil || len(models) == 0 {
 		return "", false
 	}
@@ -203,18 +206,22 @@ func (s *mcpServer) exhausted(t *ticket, models []model) string {
 		}
 		fmt.Fprintf(&b, "  %d. %s%s: %s\n", i+1, a.Model, step, strings.Join(a.Reason, "; "))
 	}
+	b.WriteString(s.saveWIP(t, "escada de modelos esgotada"))
+	return strings.TrimRight(b.String(), "\n")
+}
+
+// saveWIP keeps the work of a ticket in a WIP commit on its branch and says so.
+func (s *mcpServer) saveWIP(t *ticket, why string) string {
 	branch, _ := s.git("rev-parse", "--abbrev-ref", "HEAD")
 	if branch == "main" || branch == "master" || branch == "HEAD" {
 		branch = fmt.Sprintf("feat/%d-wip", t.ID)
 		if out, err := s.git("checkout", "-b", branch); err != nil {
-			return b.String() + "WIP não gravado: " + out
+			return "WIP não gravado: " + out
 		}
 	}
 	_, _ = s.git("add", "-A")
-	if out, err := s.git("commit", "-m", fmt.Sprintf("wip: ticket %d sem resolver (escada de modelos esgotada)", t.ID)); err != nil {
-		b.WriteString("WIP não gravado: " + out + "\n")
-	} else {
-		fmt.Fprintf(&b, "trabalho guardado num commit WIP em %s; falta o portão passar, nada foi quebrado.\n", branch)
+	if out, err := s.git("commit", "-m", fmt.Sprintf("wip: ticket %d sem resolver (%s)", t.ID, why)); err != nil {
+		return "WIP não gravado: " + out
 	}
-	return strings.TrimRight(b.String(), "\n")
+	return fmt.Sprintf("trabalho guardado num commit WIP em %s; falta o portão passar, nada foi quebrado.", branch)
 }

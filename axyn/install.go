@@ -20,13 +20,10 @@ const codePrompt = `Você é o axyn-code. Escreva o código de um único ticket,
 Nunca afrouxe, pule ou apague um teste para o CI passar; se o teste estiver certo, conserte o código.
 Não mexa em caminhos protegidos, nem em workflows, nem na configuração do axyn. Termine quando o ticket estiver pronto.`
 
-const commandTemplate = `Pedido do usuário: $ARGUMENTS
+const commandTemplate = `Chame a ferramenta axyn_run com o pedido do usuário, exatamente como ele escreveu: $ARGUMENTS
 
-Siga o processo do axyn:
-1. Use o agente axyn-plan para gravar a spec e os tickets com axyn_plan.
-2. Para cada ticket: chame axyn_next, use o agente axyn-code para escrever o código, rode axyn_gate e, só com o portão verde, axyn_ship.
-3. Se o portão reprovar, siga o passo de recuperação que o axyn_gate pedir, na ordem, sem trocar de modelo; quando ele pedir uma pergunta, faça-a ao usuário e grave a resposta com axyn_decide.
-4. Se o axyn_gate disser que a escada esgotou, pare e mostre ao usuário o motivo e o que falta.`
+O axyn conduz o resto sozinho (plano, código, portões, recuperação e entrega). Não decida nada do processo e não escreva código: mostre o andamento com axyn_status até ele terminar ou parar.
+Se o axyn_status trouxer uma pergunta, faça-a ao usuário, grave a resposta com axyn_decide e chame axyn_run de novo com resume.`
 
 // axynConfig is what install adds to opencode.json: the MCP server, the two agents
 // and the /axyn command (spec 021 FR-2).

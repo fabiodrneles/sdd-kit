@@ -67,6 +67,18 @@ SDD_RELEASE_PRE=ci sh "$release" --repo "$repo" --tag "$ver" || { echo "sdd-on-r
 # A fase fechou: abre o épico da próxima fase do ROADMAP (já aprovada pelo dono) e
 # grava o checkpoint nele, para um "continue" numa sessão nova achar o próximo passo (#191).
 open_epic="$(gh api "repos/$repo/issues?labels=%C3%A9pico&state=open&per_page=1" --jq '.[0].number // empty' 2> /dev/null || true)"
+# O épico da fase entregue (sem sub-issue aberta) é fechado aqui; antes, ficava aberto
+# e impedia a abertura da próxima fase (#217).
+if [ -n "$open_epic" ]; then
+  left="$(gh api "repos/$repo/issues/$open_epic/sub_issues?per_page=100" --jq '[.[] | select(.state == "open")] | length' 2> /dev/null || echo '?')"
+  if [ "$left" = 0 ]; then
+    gh api -X POST "repos/$repo/issues/$open_epic/comments" -f body="Fase entregue na $tag (PR #$pr); todos os tickets fechados. Épico fechado pelo motor." > /dev/null || true
+    if gh api -X PATCH "repos/$repo/issues/$open_epic" -f state=closed -f state_reason=completed > /dev/null; then
+      echo "épico #$open_epic fechado: fase entregue na $tag"
+      open_epic=""
+    fi
+  fi
+fi
 if [ -n "$open_epic" ]; then
   echo "épico #$open_epic já aberto: próxima fase não aberta"
 elif next="$(sh "$here/sdd-next-phase.sh" 2> /dev/null)"; then

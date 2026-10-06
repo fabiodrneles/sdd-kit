@@ -123,6 +123,17 @@ if (cd "$dc" && sh "$root/template/common/scripts/doc-commands.sh" > out 2>&1); 
   err "doc-commands aceitou um bloco que falha"
 fi
 grep -q '^FALHOU README.md:12' "$dc/out" || err "doc-commands não apontou o bloco que falhou: $(cat "$dc/out")"
+# 011 AC-3: bloco ```sh marcado roda (e reprova se falhar); sem a marca, não.
+# shellcheck disable=SC2016 # crases literais do markdown
+printf '<!-- doc-commands -->\n```sh\ntouch ran-sh\n```\n\n```sh\ntouch ran-unmarked\nexit 1\n```\n' > "$dc/README.md"
+(cd "$dc" && sh "$root/template/common/scripts/doc-commands.sh" > out 2>&1) || err "doc-commands falhou com bloco sh bom: $(cat "$dc/out")"
+[ -f "$dc/ran-sh" ] || err "doc-commands não rodou o bloco sh marcado"
+[ ! -f "$dc/ran-unmarked" ] || err "doc-commands rodou um bloco sh sem marca"
+# shellcheck disable=SC2016 # crases literais do markdown
+printf '\n<!-- doc-commands -->\n```sh\nfalse\n```\n' >> "$dc/README.md"
+if (cd "$dc" && sh "$root/template/common/scripts/doc-commands.sh" > out 2>&1); then
+  err "doc-commands aceitou um bloco sh que falha"
+fi
 # 011 AC-3: make linkcheck em toda linguagem; com o lychee, um link quebrado reprova.
 for lang in go node java python rust dotnet; do
   grep -q '^linkcheck:' "$lang/Makefile" || err "template/$lang/Makefile sem alvo linkcheck"

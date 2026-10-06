@@ -1,9 +1,10 @@
 #!/bin/sh
-# doc-commands: roda os blocos ```bash da documentação marcados com
+# doc-commands: roda os blocos ```bash e ```sh da documentação marcados com
 # <!-- doc-commands --> na linha anterior, para o README não mentir.
 #
 # Uso: sh scripts/doc-commands.sh [ARQUIVO.md ...]   (padrão: README.md)
-# Cada bloco roda com `bash -eo pipefail` na raiz do repositório. Blocos sem a
+# Cada bloco roda na raiz do repositório: `bash -eo pipefail` (```bash) ou
+# `sh -e` (```sh). Blocos sem a
 # marca (instalação, deploy) não rodam. Saída: uma linha por bloco; em falha,
 # o bloco e o fim da saída dele. Códigos: 0 ok (ou nada marcado), 1 falha.
 set -eu
@@ -18,16 +19,16 @@ for f in "$@"; do
   awk -v dir="$tmp" -v file="$f" -v start="$n" '
     on && /^```[[:space:]]*$/ { on = 0; close(out); next }
     on { print > out; next }
-    /^```bash[[:space:]]*$/ && prev ~ /^<!-- doc-commands -->[[:space:]]*$/ {
+    /^```(bash|sh)[[:space:]]*$/ && prev ~ /^<!-- doc-commands -->[[:space:]]*$/ {
       on = 1; start++; out = dir "/" start ".sh"; printf "" > out
-      print start " " file ":" NR + 1 >> (dir "/index")
+      print start " " file ":" NR + 1 " " ($0 ~ /bash/ ? "bash" : "sh") >> (dir "/index")
     }
     { prev = $0 }' "$f"
   [ ! -f "$tmp/index" ] || n="$(tail -n 1 "$tmp/index" | cut -d' ' -f1)"
 done
 [ "$n" -gt 0 ] || { echo "doc-commands: nenhum bloco marcado com <!-- doc-commands -->"; exit 0; }
-while read -r i where; do
-  if bash -eo pipefail "$tmp/$i.sh" > "$tmp/$i.out" 2>&1; then
+while read -r i where shell; do
+  if { if [ "$shell" = bash ]; then bash -eo pipefail "$tmp/$i.sh"; else sh -e "$tmp/$i.sh"; fi; } > "$tmp/$i.out" 2>&1; then
     echo "ok $where"
   else
     failed=$((failed + 1))

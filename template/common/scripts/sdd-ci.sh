@@ -50,18 +50,23 @@ while :; do
   total="${1:-0}" pending="${2:-0}"
   spending="$(statuses '[.statuses[] | select(.state == "pending")] | length')"
   pending=$((pending + ${spending:-0}))
-  if [ "$total" -ge "$min" ] && [ "$pending" -eq 0 ]; then break; fi
+  if [ "$total" -ge "$min" ] && [ "$pending" -eq 0 ]; then
+    # Um check pode nascer entre as duas leituras (ex.: um workflow disparado pelo
+    # próprio merge): confirma que nada está rodando antes de classificar.
+    late="$(runs '[.check_runs[] | select(.status != "completed")] | length')"
+    [ "${late:-0}" -eq 0 ] && break
+  fi
   if [ "$wait" -eq 0 ] || [ $(($(date +%s) - start)) -ge "$timeout" ]; then
     runs '.check_runs[] | "\(if .status != "completed" then "pendente" elif .conclusion == "success" or .conclusion == "skipped" or .conclusion == "neutral" then "ok" else "FALHA" end) \(.name)"'
     statuses '.statuses[] | "\(if .state == "pending" then "pendente" elif .state == "success" then "ok" else "FALHA" end) \(.context) (status)"'
     echo "sdd-ci: $repo@$(printf %.7s "$sha"): $total check(s), $pending pendente(s); tempo esgotado"
     exit 2
   fi
-  sleep 15
+  sleep "${SDD_CI_INTERVAL:-15}"
 done
 
 tab="$(printf '\t')"
-runs '.check_runs[] | [(if .conclusion == "success" or .conclusion == "skipped" or .conclusion == "neutral" then "ok" else "FALHA" end), .name, (.id | tostring), (.app.slug // "")] | @tsv' > "${TMPDIR:-/tmp}/sdd-ci.$$"
+runs '.check_runs[] | [(if .status != "completed" then "pendente" elif .conclusion == "success" or .conclusion == "skipped" or .conclusion == "neutral" then "ok" else "FALHA" end), .name, (.id | tostring), (.app.slug // "")] | @tsv' > "${TMPDIR:-/tmp}/sdd-ci.$$"
 statuses '.statuses[] | [(if .state == "success" then "ok" else "FALHA" end), "\(.context) (status)", "status", (.target_url // "")] | @tsv' >> "${TMPDIR:-/tmp}/sdd-ci.$$"
 trap 'rm -f "${TMPDIR:-/tmp}/sdd-ci.$$"' EXIT
 failed=0

@@ -91,7 +91,13 @@ cat > "$tmp/bin/gh" <<'SH'
 # gh falso: "gh api URL --jq EXPR" aplica EXPR ao JSON de $FAKE_GH/<recurso>.json.
 url="$2"; expr="$4"
 case "$url" in
-  */check-runs*) f=check-runs ;;
+  */check-runs*) f=check-runs
+    # Sequência opcional: check-runs.N.json responde a N-ésima leitura (a última se repete).
+    if [ -f "$FAKE_GH/check-runs.1.json" ]; then
+      n=$(($(cat "$FAKE_GH/calls" 2> /dev/null || echo 0) + 1)); echo "$n" > "$FAKE_GH/calls"
+      while [ "$n" -gt 1 ] && [ ! -f "$FAKE_GH/check-runs.$n.json" ]; do n=$((n - 1)); done
+      f="check-runs.$n"
+    fi ;;
   */status*) f=status ;;
   */commits/*) echo "${url##*/}"; exit 0 ;;
   *) echo "gh falso: $url" >&2; exit 1 ;;
@@ -108,6 +114,18 @@ printf '%s\n' "$out" | grep -q 'https://vercel.example/dpl' || fail "sdd-ci não
 echo '{"statuses":[{"context":"Vercel","state":"success","target_url":""}]}' > "$tmp/gh/status.json"
 out="$(PATH="$tmp/bin:$PATH" FAKE_GH="$tmp/gh" sh "$s/sdd-ci.sh" --repo o/r --no-wait 0123456)" || fail "sdd-ci com tudo verde falhou: $out"
 printf '%s\n' "$out" | grep -qx 'ok Vercel (status)' || fail "sdd-ci não listou o status verde: $out"
+
+# #189: um check que nasce entre as leituras (rodando, sem conclusão) não vira FALHA:
+# o sdd-ci volta a esperar e classifica só quando ele termina.
+done='{"total_count":1,"check_runs":[{"id":1,"name":"make ci","status":"completed","conclusion":"success","app":{"slug":"github-actions"}}]}'
+late='{"total_count":2,"check_runs":[{"id":1,"name":"make ci","status":"completed","conclusion":"success","app":{"slug":"github-actions"}},{"id":2,"name":"Disparar a release","status":"in_progress","conclusion":null,"app":{"slug":"github-actions"}}]}'
+fin='{"total_count":2,"check_runs":[{"id":1,"name":"make ci","status":"completed","conclusion":"success","app":{"slug":"github-actions"}},{"id":2,"name":"Disparar a release","status":"completed","conclusion":"success","app":{"slug":"github-actions"}}]}'
+echo '{"statuses":[]}' > "$tmp/gh/status.json"
+printf '%s' "$done" > "$tmp/gh/check-runs.1.json"; printf '%s' "$late" > "$tmp/gh/check-runs.2.json"
+printf '%s' "$late" > "$tmp/gh/check-runs.3.json"; printf '%s' "$fin" > "$tmp/gh/check-runs.4.json"; rm -f "$tmp/gh/calls"
+out="$(PATH="$tmp/bin:$PATH" FAKE_GH="$tmp/gh" SDD_CI_INTERVAL=0 sh "$s/sdd-ci.sh" --repo o/r --timeout 30 0123456)" || fail "check tardio virou falha: $out"
+printf '%s\n' "$out" | grep -qx 'ok Disparar a release' || fail "sdd-ci não esperou o check tardio: $out"
+rm -f "$tmp/gh"/check-runs.[0-9]*.json "$tmp/gh/calls"
 
 # 009 AC-6: os scripts passam no shellcheck -s sh e a adoção os distribui.
 if command -v shellcheck >/dev/null; then

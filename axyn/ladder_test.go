@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -56,7 +57,10 @@ func TestLadderMovesToSecondModelAndRecords(t *testing.T) {
 	if !strings.Contains(first, "modelo atual openrouter/free-model") || strings.Contains(first, "próximo modelo") {
 		t.Fatalf("first failure stays on the first model: %q", first)
 	}
-	second, _ := s.call("axyn_gate", json.RawMessage("{}"))
+	var second string
+	for i := 1; i < maxFailsPerModel; i++ {
+		second, _ = s.call("axyn_gate", json.RawMessage("{}"))
+	}
 	if !strings.Contains(second, "use o próximo modelo: anthropic/strong-model") {
 		t.Fatalf("second failure should point to the second model: %q", second)
 	}
@@ -64,7 +68,7 @@ func TestLadderMovesToSecondModelAndRecords(t *testing.T) {
 	s.ci = "true"
 	t.Setenv("AXYN_COST_USD", "0.25")
 	notes, err := s.call("axyn_ship", json.RawMessage(`{"message":"feat: z"}`))
-	if err != nil || !strings.Contains(notes, "registro: modelo anthropic/strong-model, 3 tentativa(s)") || !strings.Contains(notes, "0.2500") {
+	if err != nil || !strings.Contains(notes, fmt.Sprintf("registro: modelo anthropic/strong-model, %d tentativa(s)", maxFailsPerModel+1)) || !strings.Contains(notes, "0.2500") {
 		t.Fatalf("ship: %v %q", err, notes)
 	}
 	pl, _, err := s.loadPlan()
@@ -72,7 +76,7 @@ func TestLadderMovesToSecondModelAndRecords(t *testing.T) {
 		t.Fatal(err)
 	}
 	tk := pl.Tickets[0]
-	if !tk.Done || tk.Model != "anthropic/strong-model" || len(tk.Attempts) != 3 || tk.CostUSD != 0.25 || tk.Attempts[0].Model != "openrouter/free-model" || tk.Attempts[0].Green {
+	if !tk.Done || tk.Model != "anthropic/strong-model" || len(tk.Attempts) != maxFailsPerModel+1 || tk.CostUSD != 0.25 || tk.Attempts[0].Model != "openrouter/free-model" || tk.Attempts[0].Green {
 		t.Fatalf("ticket record: %+v", tk)
 	}
 }

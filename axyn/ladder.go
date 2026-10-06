@@ -9,10 +9,6 @@ import (
 
 // The model ladder (spec 021 FR-6) and the per-ticket record (FR-7).
 
-// maxFailsPerModel is how many rejected diffs a model gets before the ladder moves on.
-// The recovery steps of FR-8 (T77) will run inside this budget, before the next model.
-const maxFailsPerModel = 2
-
 // model is one rung of the ladder. KeyEnv names the environment variable that holds the
 // key: the key itself never goes in the file (NFR-2).
 type model struct {
@@ -25,6 +21,8 @@ type attempt struct {
 	Model  string   `json:"model"`
 	Green  bool     `json:"green"`
 	Reason []string `json:"reason,omitempty"`
+	Step   string   `json:"step,omitempty"` // the FR-8 recovery step this attempt ran under
+	Plan   []string `json:"plan,omitempty"`
 }
 
 // defaultConfigPath is ~/.config/axyn/config.yaml, or $XDG_CONFIG_HOME/axyn/config.yaml.
@@ -141,49 +139,57 @@ func keyHint(m model) string {
 	return ""
 }
 
-// recordAttempt adds a gate run to the open ticket and returns the ladder advice for the
-// report. With no ladder, no plan or no open ticket it does nothing.
-func (s *mcpServer) recordAttempt(green bool, findings []finding) string {
+// recordAttempt adds a gate run to the open ticket and returns the advice for the report:
+// the recovery step of FR-8 or the ladder move of FR-6. recovered says the advice already
+// carries the diagnosis, so the report need not repeat the CI log. With no ladder, no plan
+// or no open ticket it does nothing.
+func (s *mcpServer) recordAttempt(green bool, findings []finding, plan []string, ciLog string) (advice string, recovered bool) {
 	models, err := loadModels(s.config)
 	if err != nil || len(models) == 0 {
-		return ""
+		return "", false
 	}
-	pl, planPath, err := s.loadPlan()
-	if err != nil {
-		return ""
-	}
-	var t *ticket
-	for i := range pl.Tickets {
-		if !pl.Tickets[i].Done {
-			t = &pl.Tickets[i]
-			break
-		}
-	}
+	pl, t := s.openTicket()
 	if t == nil {
-		return ""
+		return "", false
 	}
+	_, planPath, _ := s.loadPlan()
 	cur := models[min(ladderState(models, t.Attempts), len(models)-1)]
-	a := attempt{Model: cur.ID, Green: green}
+	before := countFails(t.Attempts, cur.ID)
+	a := attempt{Model: cur.ID, Green: green, Plan: plan}
+	if i, _ := stepFor(before); i >= 0 && i < len(recSteps) {
+		a.Step = recSteps[i].name
+	}
 	for _, f := range findings {
 		a.Reason = append(a.Reason, "["+f.gate+"] "+f.reason)
 	}
 	t.Attempts = append(t.Attempts, a)
 	if green {
 		t.Model = cur.ID
+		switch {
+		case a.Step != "":
+			t.Strategy = a.Step
+		case len(t.Attempts) > 1:
+			t.Strategy = "outro modelo"
+		}
 	}
 	defer func() { _ = s.savePlan(pl, planPath) }()
 	if green {
-		return ""
+		return "", false
 	}
 	idx := ladderState(models, t.Attempts)
 	switch {
 	case idx >= len(models):
-		return s.exhausted(t, models)
+		return s.exhausted(t, models), false
 	case models[idx].ID != cur.ID:
-		return fmt.Sprintf("escada: %s reprovou %d vez(es); use o próximo modelo: %s%s",
-			cur.ID, maxFailsPerModel, models[idx].ID, keyHint(models[idx]))
+		return fmt.Sprintf("escada: %s reprovou %d vez(es), com a recuperação toda; use o próximo modelo: %s%s",
+			cur.ID, maxFailsPerModel, models[idx].ID, keyHint(models[idx])), false
 	}
-	return fmt.Sprintf("escada: modelo atual %s (reprovações: %d de %d)", cur.ID, countFails(t.Attempts, cur.ID), maxFailsPerModel)
+	fails := countFails(t.Attempts, cur.ID)
+	line := fmt.Sprintf("escada: modelo atual %s (reprovações: %d de %d)", cur.ID, fails, maxFailsPerModel)
+	if rec := s.recoveryAdvice(t, fails, ciLog); rec != "" {
+		return line + "\n" + rec, true
+	}
+	return line, false
 }
 
 // exhausted keeps the work in a WIP commit on the ticket branch and says what was tried.
@@ -191,7 +197,11 @@ func (s *mcpServer) exhausted(t *ticket, models []model) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "escada esgotada: %d modelo(s), %d tentativa(s) no ticket %d (%s)\n", len(models), len(t.Attempts), t.ID, t.Title)
 	for i, a := range t.Attempts {
-		fmt.Fprintf(&b, "  %d. %s: %s\n", i+1, a.Model, strings.Join(a.Reason, "; "))
+		step := ""
+		if a.Step != "" {
+			step = " [" + a.Step + "]"
+		}
+		fmt.Fprintf(&b, "  %d. %s%s: %s\n", i+1, a.Model, step, strings.Join(a.Reason, "; "))
 	}
 	branch, _ := s.git("rev-parse", "--abbrev-ref", "HEAD")
 	if branch == "main" || branch == "master" || branch == "HEAD" {

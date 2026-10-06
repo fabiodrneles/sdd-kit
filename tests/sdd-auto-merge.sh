@@ -27,7 +27,7 @@ case "$method $url" in
   "PUT "*/merge) echo "$url" >> "$G/merged"; exit 0 ;;
   "POST "*/dispatches) w="${url%/dispatches}"; echo "${w##*/} $input" >> "$G/dispatched"; exit 0 ;;
   "POST "*/actions/variables | "PATCH "*/actions/variables/*) echo "$method $url $value" >> "$G/vars"; exit 0 ;;
-  "GET "*/actions/variables/*) [ -f "$G/var-exists" ] || exit 1; [ -z "$jq" ] && exit 0; jq -nr --arg v "$(cat "$G/var-value" 2> /dev/null || echo off)" '{value: $v}' | jq -r "$jq"; exit 0 ;;
+  "GET "*/actions/variables/*) [ -f "$G/var-exists" ] || { echo '{"message":"Not Found"}'; exit 1; }; [ -z "$jq" ] && exit 0; jq -nr --arg v "$(cat "$G/var-value" 2> /dev/null || echo off)" '{value: $v}' | jq -r "$jq"; exit 0 ;;
   "POST "*/comments) echo c >> "$G/commented"; exit 0 ;;
   "GET "*/comments*) f="$G/comments.json" ;;
   "GET "*pulls\?state=open*) f="$G/pulls.json" ;;
@@ -58,7 +58,7 @@ grep -qx 'PATCH repos/o/r/actions/variables/SDD_AUTO_MERGE value=off' "$G/vars" 
 echo on > "$G/var-value"
 $am status | grep -qF 'on em o/r' || fail "status não mostrou on"
 rm -f "$G/var-exists"
-$am status | grep -qF 'off em o/r' || fail "status sem a variável não mostrou off"
+[ "$($am status)" = "sdd-auto-merge: off em o/r" ] || fail "status sem a variável: $($am status)"
 rc=0; $am bogus > /dev/null 2>&1 || rc=$?
 [ "$rc" -eq 3 ] || fail "subcomando inválido saiu com $rc"
 

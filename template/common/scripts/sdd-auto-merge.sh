@@ -39,8 +39,9 @@ case "$cmd" in
     else say "desligado em $repo: todo merge é do dono"; fi
     exit 0 ;;
   status)
-    v="$(gh api "$var/SDD_AUTO_MERGE" --jq .value 2> /dev/null || echo off)"
-    say "${v:-off} em $repo"; exit 0 ;;
+    v="$(gh api "$var/SDD_AUTO_MERGE" --jq .value 2> /dev/null)" || v=off
+    case "$v" in on) ;; *) v=off ;; esac
+    say "$v em $repo"; exit 0 ;;
   merge) ;;
   *) usage ;;
 esac

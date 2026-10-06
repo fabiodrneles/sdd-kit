@@ -22,6 +22,7 @@ Uso:
   axyn version        mostra a versão
   axyn gate [--base REF] [--max-lines N] [--ci CMD] [--protect CAMINHO]
                       portões do diff: CI, teste afrouxado, caminhos protegidos e tamanho
+  axyn mcp            servidor MCP (stdio) para o opencode: axyn_plan, axyn_next, axyn_gate, axyn_ship
   axyn help         mostra esta ajuda
 `
 
@@ -40,6 +41,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return exitOK
 	case "gate":
 		return runGate(args[1:], stdout, stderr)
+	case "mcp":
+		return runMCP(os.Stdin, stdout, stderr)
 	case "help", "-h", "--help":
 		_, _ = fmt.Fprint(stdout, usage)
 		return exitOK

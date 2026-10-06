@@ -33,3 +33,9 @@ Limite conhecido: se o contêiner da sessão for reciclado, o vigia morre junto.
 - **AC-3** Sem PR aberto, quando `sdd-wait.sh merged-any` roda, então sai com 3 sem esperar.
 - **AC-4** Dado um PR aberto pelo `sdd-pr.sh --no-wait`, quando ele termina, então a última linha é o comando do vigia.
 - **AC-5** Dados o `CLAUDE.md` do kit e o do template, quando o `make ci` roda, então os dois têm a regra do vigia (um vigia em segundo plano, sem assinar eventos de PR).
+
+## Mudanças
+
+### Não lançado
+
+- ADDED FR-1, FR-2, NFR-1 — `sdd-wait.sh merged-any`: uma consulta à lista de PRs abertos por rodada (60 s por padrão); conclui só com o PR de fato fechado, mesmo se a lista falhar (T47, #204).

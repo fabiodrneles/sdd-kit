@@ -11,7 +11,8 @@
 # divergir da calculada. Sem GRM nem Go, e sem X.Y.Z, falha dizendo como instalar.
 #
 # Preparar (X.Y.Z):
-#   1 recusa árvore suja; cria a branch chore/release-vX.Y.Z a partir de origin/main;
+#   1 recusa árvore suja; cria a branch chore/release-vX.Y.Z a partir de origin/main
+#     (se ela já existe, de uma tentativa anterior, reaproveita e traz a origin/main);
 #   2 CHANGELOG: insere "## [X.Y.Z] - <hoje>" logo abaixo de "## [Unreleased]", move
 #     para ela o que estava em Unreleased e acrescenta um RASCUNHO com os PRs
 #     mesclados na main depois da última tag, agrupados pelo prefixo Conventional
@@ -42,7 +43,7 @@ while [ $# -gt 0 ]; do
     --repo) repo="${2:?}"; shift 2 ;;
     --dry-run) dry=1; shift ;;
     --tag) tagmode=1; shift ;;
-    -h | --help) sed -n '2,31p' "$0"; exit 0 ;;
+    -h | --help) sed -n '2,32p' "$0"; exit 0 ;;
     -*) die "opção desconhecida: $1" ;;
     *) [ -z "$ver" ] || die "versão repetida: $1"; ver="${1#v}"; shift ;;
   esac
@@ -123,7 +124,10 @@ if [ -n "$(git status --porcelain)" ]; then
   git status --short >&2
   die "árvore suja: faça commit (ou WIP) antes"
 fi
-if [ "$dry" -eq 0 ] && git rev-parse -q --verify "refs/heads/$branch" > /dev/null; then die "a branch $branch já existe"; fi
+# Tentativa anterior: a branch já existe (local ou na origin); é reaproveitada.
+reuse=0
+if git ls-remote --exit-code --heads origin "$branch" > /dev/null 2>&1 \
+  || git rev-parse -q --verify "refs/heads/$branch" > /dev/null; then reuse=1; fi
 last="$(git describe --tags --abbrev=0 --match 'v[0-9]*' origin/main 2> /dev/null)" || die "origin/main sem tag vN.N.N anterior"
 old="${last#v}"
 tmp="$(mktemp -d)"
@@ -222,7 +226,18 @@ if [ "$dry" -eq 1 ]; then
   exit 0
 fi
 
-git checkout -q -B "$branch" origin/main
+if [ "$reuse" -eq 1 ]; then
+  echo "sdd-release: $branch já existe; reaproveitando e trazendo a origin/main"
+  if git ls-remote --exit-code --heads origin "$branch" > /dev/null 2>&1; then
+    git fetch -q origin "$branch"
+    git checkout -q -B "$branch" FETCH_HEAD
+  else
+    git checkout -q "$branch"
+  fi
+  git merge -q --no-edit -X theirs origin/main
+else
+  git checkout -q -B "$branch" origin/main
+fi
 cp "$tmp/CHANGELOG.out" CHANGELOG.md
 git add CHANGELOG.md
 i=0
@@ -231,6 +246,10 @@ while read -r path; do
   cp "$tmp/bump.$i" "$path"
   git add "$path"
 done < "$bumps"
-git commit -q -m "chore: release $tag"
+if [ "$reuse" -eq 1 ] && git diff --cached --quiet; then
+  echo "sdd-release: nada novo a commitar em $branch"
+else
+  git commit -q -m "chore: release $tag"
+fi
 echo "sdd-release: $branch pronta (CHANGELOG com rascunho: revise o texto antes do merge)"
 sh "$here/sdd-pr.sh" --repo "$repo" --no-wait --title "chore: release $tag"

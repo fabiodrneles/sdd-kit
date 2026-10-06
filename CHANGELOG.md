@@ -8,11 +8,15 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ### Adicionado
 
-- the relay picks the model per ticket and records it with the cost (#254)
-- sdd-report.sh tokens shows the first call's context of each session (#255)
-- sdd-context.sh lists the tests that cite the ticket's AC (#256)
-- benchmark the same tasks with and without sdd-kit on a real project (#258)
-- context pack with code signatures per language and an offline --task mode (#260)
+- **Agente enxuto do relé (spec 020):** só as ferramentas da entrega, sem skills e sem servidores MCP. O contexto inicial cai de 37 mil para 11 mil tokens, e no mesmo ticket o agente custa 3,2 vezes menos (#253). O relé roda de uma cópia dos scripts, para o agente trocar de branch sem quebrá-lo.
+- Modelo por ticket: o label `modelo:NOME` da issue, ou `SDD_AGENT_MODEL`. O custo gravado na issue diz o modelo. O agente não herda mais as variáveis do relé e nunca pode afrouxar um teste para o CI passar (#254).
+- `sdd-report.sh tokens` mostra o contexto da primeira chamada de cada sessão (#255). O pacote do ticket lista os testes que citam os AC dele (#256) e as assinaturas do código em sh, Go, Python, JS/TS e Rust, com a linha. O `sdd-context.sh --task` monta o pacote sem GitHub (#260).
+- `scripts/benchmark.sh`: as mesmas tarefas num projeto real, com e sem sdd-kit, medidas sem LLM. Os resultados ficam em `docs/benchmark/` (#258).
+- Spec 021 aprovada: o axyn, o sdd-kit dentro do opencode com o modelo que o usuário tiver, inclusive gratuito, entra como Fase 15 do ROADMAP.
+
+### Mudado
+
+- README sem números de custo enquanto o kit não for mais barato que um `claude` comum no benchmark com e sem sdd-kit (#261).
 
 ## [1.12.0] - 2026-10-06
 

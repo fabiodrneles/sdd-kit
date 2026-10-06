@@ -110,13 +110,13 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 
 ## Fase 14 — Agente enxuto do relé (P1)
 
-- [ ] **T62** Agente padrão do relé só com as ferramentas da entrega, sem skills e sem MCP; `SDD_AGENT_TOOLS` — 020 FR-1, AC-1
-- [ ] **T63** `sdd-report.sh`: contexto inicial de cada sessão, feito pelo relé — 020 FR-2, AC-2
-- [ ] **T64** `sdd-context.sh`: testes que citam os AC do ticket no pacote, feito pelo relé — 020 FR-3, AC-3
-- [ ] **T66** Modelo por ticket: label `modelo:NOME` ou `SDD_AGENT_MODEL`, e o modelo no custo gravado — 020 FR-5, AC-5
-- [ ] **T67** Benchmark com e sem sdd-kit no sdd-kit-demo (`scripts/benchmark.sh`) — 020 FR-6, AC-6
-- [ ] **T68** Pacote com as assinaturas do código (Go, Python, JS/TS, Rust) e `sdd-context.sh --task` — 020 FR-7, AC-7
-- [ ] **T65** Comparação com as Fases 13 e 12 e o gráfico do README atualizado — 020 FR-4, AC-4
+- [x] **T62** Agente padrão do relé só com as ferramentas da entrega, sem skills e sem MCP; `SDD_AGENT_TOOLS` — 020 FR-1, AC-1
+- [x] **T63** `sdd-report.sh`: contexto inicial de cada sessão, feito pelo relé — 020 FR-2, AC-2
+- [x] **T64** `sdd-context.sh`: testes que citam os AC do ticket no pacote, feito pelo relé — 020 FR-3, AC-3
+- [x] **T66** Modelo por ticket: label `modelo:NOME` ou `SDD_AGENT_MODEL`, e o modelo no custo gravado — 020 FR-5, AC-5
+- [x] **T67** Benchmark com e sem sdd-kit no sdd-kit-demo (`scripts/benchmark.sh`) — 020 FR-6, AC-6
+- [x] **T68** Pacote com as assinaturas do código (Go, Python, JS/TS, Rust) e `sdd-context.sh --task` — 020 FR-7, AC-7
+- [x] **T65** Comparação com as Fases 13 e 12 e o gráfico do README atualizado — 020 FR-4, AC-4
 
 ## Fase 15 — axyn mínimo (P1)
 

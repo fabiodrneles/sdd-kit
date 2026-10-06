@@ -123,6 +123,9 @@ Repositories adopted by the script get this configuration; if yours already had 
 | Huge PRs that are hard to review | One ticket = one branch = one PR, with a review order in the epic |
 | Red CI "fixed" by disabling tests | Explicit rule: root cause, never skip a test or loosen a gate |
 | Decisions made by the agent behind your back | Stop points: decisions, review, merge and tag belong to the owner |
+| A long session that rereads the whole conversation on every call | **Short-session relay:** one fresh agent per ticket, starting with only the ticket's pack (see below) |
+
+**Measured, not estimated** (`sdd-report.sh phase '#235' --compare '#225'`, 2026-10-06): the three Phase 13 tickets done by the relay cost on average **403 thousand tokens per ticket**, against **6.5 million** per ticket in Phase 12, done in one long session without the relay. That is **16 times less** per ticket and **5.4 times less** context reread per call (43 thousand against 231 thousand). Phase 13 tickets were smaller than Phase 12 ones, so the per-call gain is the fairest measure; each phase's report redoes the math with its own tickets.
 
 ## Why sdd-kit
 

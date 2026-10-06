@@ -30,7 +30,7 @@ Numa sessão na web, o hook `.claude/hooks/session-start.sh` instala as dependê
 
 ## Convenções
 
-- **Idioma:** a conversa com o dono é em português, inclusive a resposta a um "continue"; specs, issues, PRs e documentação em português; commits e código (identificadores) em inglês.
+- **Idioma:** a conversa segue o idioma em que o dono escreve; uma mensagem curta como "continue" não define idioma: siga o das mensagens anteriores do dono ou, numa sessão nova, o deste arquivo; specs, issues, PRs e documentação em português; commits e código (identificadores) em inglês.
 - **Commits:** Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `ci:`, `chore:`; `!` para mudança incompatível).
 - **Branch:** uma por ticket, `<tipo>/<nº-da-issue>-<descrição>`, a partir da `main`.
 - **PR:** começa com `Closes #N · Épico #M · Spec NNN` e segue o template.

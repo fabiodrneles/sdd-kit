@@ -31,7 +31,7 @@ Numa sessão na web, o hook `.claude/hooks/session-start.sh` instala o shellchec
 
 ## Convenções
 
-- **Idioma:** a conversa com o dono é em português, inclusive a resposta a um "continue"; specs, issues, PRs e documentação em português; `README.en.md`, a skill e os comandos de `plugins/` em inglês (a skill escreve no idioma do dono, D12); commits e código em inglês.
+- **Idioma:** a conversa segue o idioma em que o dono escreve (hoje, português); uma mensagem curta como "continue" não define idioma: siga o das mensagens anteriores do dono ou, numa sessão nova, o deste arquivo; specs, issues, PRs e documentação em português; `README.en.md`, a skill e os comandos de `plugins/` em inglês (a skill escreve no idioma do dono, D12); commits e código em inglês.
 - **Commits:** Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `ci:`, `chore:`; `!` para mudança incompatível).
 - **Branch:** uma por ticket, `<tipo>/<nº-da-issue>-<descrição>`.
 - **PR:** começa com `Closes #N · Épico #M · Spec NNN` e segue o template.

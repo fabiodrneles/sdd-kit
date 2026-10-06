@@ -42,7 +42,9 @@ Find the owner's language in this order and stop at the first hit:
 4. None of these: **ask the owner once**, then record the answer in `CLAUDE.md`
    (create it if needed) so nobody has to ask again.
 
-The chat follows the language the owner writes in. The templates in
+The chat follows the language the owner writes in. A message too short to show a language
+("continue", "ok", "go") does not change it: keep the language of the owner's earlier messages
+or, in a new session, the owner's language found above. The templates in
 [references/templates.md](references/templates.md) are in English: translate headings and text.
 Keep machine-read tokens as they are: `Status:` values (`Draft`, `Approved`, `In Progress`, `Done`),
 the IDs (`FR-n`, `NFR-n`, `AC-n`, `Dn`, `Tn`), `MUST`/`SHOULD`/`MAY`, `ADDED`/`MODIFIED`/`REMOVED`,

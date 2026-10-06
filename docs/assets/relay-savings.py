@@ -4,20 +4,20 @@
 import sys
 out=sys.argv[1]
 T={
- 'pt':dict(title='Custo por ticket: sessão longa (padrão) contra o relé do sdd-kit',
+ 'pt':dict(title='Custo por ticket numa fase de trabalho: sessão longa contra o relé',
   h1='menos tokens por ticket', h2='menos contexto relido por chamada',
   c1='Tokens gastos por ticket', c2='Contexto relido a cada chamada',
-  base='Sessão longa (padrão)', kit='sdd-kit com relé',
+  base='Sessão longa de trabalho', kit='sdd-kit com relé',
   v1a='6,50 milhões', v1b='0,40 milhão', v2a='231 mil', v2b='43 mil',
-  foot1='Medido com sdd-report.sh, sem LLM: Fase 12 (4 tickets numa sessão longa) contra Fase 13 (3 tickets, um agente novo por ticket), 2026-10-06.',
+  foot1='Medido com sdd-report.sh, sem LLM: Fase 12 (4 tickets numa sessão com PRs, CI e conversa) contra Fase 13 (3 tickets, um agente por ticket).',
   foot2='Os tickets da Fase 13 eram menores; o contexto por chamada não depende do tamanho do ticket.',
   x16='16×', x54='5,4×'),
- 'en':dict(title='Cost per ticket: one long session (default) vs the sdd-kit relay',
+ 'en':dict(title='Cost per ticket in a work phase: long session vs the relay',
   h1='fewer tokens per ticket', h2='less context reread per call',
   c1='Tokens spent per ticket', c2='Context reread on every call',
-  base='Long session (default)', kit='sdd-kit relay',
+  base='Long working session', kit='sdd-kit relay',
   v1a='6.50 million', v1b='0.40 million', v2a='231 thousand', v2b='43 thousand',
-  foot1='Measured with sdd-report.sh, no LLM: Phase 12 (4 tickets in one long session) vs Phase 13 (3 tickets, one fresh agent each), 2026-10-06.',
+  foot1='Measured with sdd-report.sh, no LLM: Phase 12 (4 tickets in a session with PRs, CI and conversation) vs Phase 13 (3 tickets, one agent each).',
   foot2='Phase 13 tickets were smaller; context per call does not depend on ticket size.',
   x16='16×', x54='5.4×'),
 }
@@ -28,7 +28,7 @@ C={
 W,H=880,500
 def bars(y,label,va,vb,a,b,c,t):
     # a,b in same units; one axis per chart
-    x0,x1=200,700; mx=max(a,b)
+    x0,x1=222,712; mx=max(a,b)
     s=f'<text x="40" y="{y}" font-size="15" font-weight="600" fill="{c["t1"]}">{label}</text>'
     for i,(name,v,val,col) in enumerate(((t['base'],a,va,c['base']),(t['kit'],b,vb,c['kit']))):
         yy=y+18+i*40; w=max(6,(x1-x0)*v/mx)

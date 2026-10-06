@@ -1,0 +1,47 @@
+{
+  "tasks": 3,
+  "without": {
+    "ci_green": true,
+    "commits": 3,
+    "new_tests": 6,
+    "seconds": 57,
+    "usage": {
+      "calls": 13,
+      "read": 505997,
+      "created": 20237,
+      "input": 26,
+      "output": 6242,
+      "first": [
+        32968
+      ],
+      "avg": 40481,
+      "max": 45585,
+      "wakes": 0,
+      "wake_calls": 0,
+      "wake_tokens": 0
+    }
+  },
+  "with": {
+    "ci_green": true,
+    "commits": 3,
+    "new_tests": 6,
+    "seconds": 97,
+    "usage": {
+      "calls": 27,
+      "read": 335007,
+      "created": 30702,
+      "input": 54,
+      "output": 9166,
+      "first": [
+        9959,
+        9936,
+        9978
+      ],
+      "avg": 13546,
+      "max": 17207,
+      "wakes": 0,
+      "wake_calls": 0,
+      "wake_tokens": 0
+    }
+  }
+}

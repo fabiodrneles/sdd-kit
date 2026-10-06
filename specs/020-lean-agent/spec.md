@@ -38,3 +38,4 @@ Medição de 2026-10-06, com `claude -p` na raiz do repositório e só "Responda
 - FIXED FR-1 — o agente não herda as variáveis do relé (`SDD_SCRIPTS_DIR`, `SDD_RELAY_SELF`), que quebravam o `make ci` dele; o pedido manda começar da `origin/main` e proíbe afrouxar teste (achados do T63, #249).
 - ADDED FR-6 — `scripts/benchmark.sh`: as mesmas tarefas (`docs/benchmark/tasks.md`) num projeto real com e sem sdd-kit, medidas pelos arquivos de sessão (T67, #257).
 - ADDED FR-7 — o pacote traz as assinaturas de sh, Go, Python, JS/TS e Rust com a linha; `sdd-context.sh --task ARQ` monta o pacote sem GitHub, e o `benchmark.sh` o usa (T68, #259).
+- ADDED FR-4 — README com o custo medido de cada camada: relé contra sessão longa de trabalho (16 vezes menos), agente enxuto contra o padrão (3,2 vezes menos) e o benchmark com e sem sdd-kit em 10 tarefas, em que o kit ainda custa 22% a mais; resultados brutos e tarefas em `docs/benchmark/` (T65, #252).

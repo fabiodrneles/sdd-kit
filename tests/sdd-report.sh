@@ -36,6 +36,26 @@ printf '%s\n' "$out" | grep -q 'sem dado de tokens' || fail "sem sessão: $out"
 out="$(SDD_SESSIONS_DIR="$tmp/p" sh "$r" tokens --since 2030-01-01)" || fail "período vazio saiu com erro"
 printf '%s\n' "$out" | grep -q 'sem dado de tokens' || fail "período vazio: $out"
 
+# 017 AC-4: wake-ups (turns without a message from the owner) on their own line,
+# with count and tokens; tool results do not start a turn.
+cat > "$tmp/w.jsonl" <<'J'
+{"type":"user","timestamp":"2026-02-01T00:00:00Z","origin":{"kind":"human"},"message":{"content":"continue"}}
+{"type":"assistant","timestamp":"2026-02-01T00:00:01Z","message":{"id":"h1","usage":{"input_tokens":1,"cache_read_input_tokens":100,"output_tokens":9}}}
+{"type":"user","timestamp":"2026-02-01T00:00:02Z","message":{"content":[{"type":"tool_result","content":"ok"}]}}
+{"type":"assistant","timestamp":"2026-02-01T00:00:03Z","message":{"id":"h2","usage":{"input_tokens":1,"cache_read_input_tokens":100,"output_tokens":9}}}
+{"type":"user","timestamp":"2026-02-01T01:00:00Z","origin":{"kind":"task-notification"},"message":{"content":"<task-notification>x</task-notification>"}}
+{"type":"assistant","timestamp":"2026-02-01T01:00:01Z","message":{"id":"w1","usage":{"input_tokens":1,"cache_read_input_tokens":500,"output_tokens":4}}}
+{"type":"user","timestamp":"2026-02-01T01:00:02Z","message":{"content":[{"type":"tool_result","content":"ok"}]}}
+{"type":"assistant","timestamp":"2026-02-01T01:00:03Z","message":{"id":"w2","usage":{"input_tokens":1,"cache_read_input_tokens":600,"output_tokens":4}}}
+{"type":"user","timestamp":"2026-02-01T02:00:00Z","message":{"content":"<task-notification>y</task-notification>"}}
+{"type":"assistant","timestamp":"2026-02-01T02:00:01Z","message":{"id":"w3","usage":{"input_tokens":0,"cache_read_input_tokens":800,"output_tokens":0}}}
+{"type":"user","timestamp":"2026-02-01T03:00:00Z","message":{"content":"obrigado"}}
+{"type":"assistant","timestamp":"2026-02-01T03:00:01Z","message":{"id":"h3","usage":{"input_tokens":1,"cache_read_input_tokens":100,"output_tokens":9}}}
+J
+out="$(sh "$r" tokens --session "$tmp/w.jsonl")" || fail "despertares falhou: $out"
+printf '%s\n' "$out" | grep -qx 'chamadas: 6' || fail "despertares: total errado: $out"
+printf '%s\n' "$out" | grep -qx 'despertares sem mensagem do dono: 2 (3 chamadas, 1910 tokens)' || fail "despertares: $out"
+
 # Fake gh for ticket and phase: GETs come from $G/*.json; POST and PATCH write
 # the report comment to comments.json and count writes in $G/writes.
 G="$tmp/gh"; mkdir -p "$G" "$tmp/bin"
@@ -125,9 +145,9 @@ sh "$r" --repo o/r phase '#9' > /dev/null || fail "phase (2ª) falhou"
 [ "$(jq '[.[] | select(.body | startswith("<!-- sdd-report -->"))] | length' "$G/comments.json")" -eq 1 ] \
   || fail "mais de um comentário de relatório: $(cat "$G/comments.json")"
 b="$(jq -r '.[] | select(.id == 99) | .body' "$G/comments.json")"
-printf '%s\n' "$b" | grep -qF '| #5 T1: a \| b | #20 | 60 | não | 2 | 300 | 10 | 12 |' || fail "linha do #5: $b"
+printf '%s\n' "$b" | grep -qF '| #5 T1: a \| b | #20 | 60 | não | 2 | 300 | 10 | 12 | 0 (0) |' || fail "linha do #5: $b"
 printf '%s\n' "$b" | grep -qF '| #6 T2: c | #22 | 30 | sim | 1 | 50 | 0 | 3 |' || fail "linha do #6: $b"
-printf '%s\n' "$b" | grep -qF '| **Total** | 2 PRs | 90 | 1 de 2 | 3 | 350 | 10 | 15 |' || fail "total: $b"
+printf '%s\n' "$b" | grep -qF '| **Total** | 2 PRs | 90 | 1 de 2 | 3 | 350 | 10 | 15 | 0 (0) |' || fail "total: $b"
 
 # Uso inválido: 3.
 rc=0; sh "$r" bogus > /dev/null 2>&1 || rc=$?

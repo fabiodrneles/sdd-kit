@@ -16,19 +16,19 @@ G="$tmp/gh"; mkdir -p "$G" "$tmp/bin"
 cat > "$tmp/bin/gh" <<'SH'
 #!/bin/sh
 shift # api
-method=GET url="" jq="" title="" args=""
+method=GET url="" jq="" title="" args="" b=/dev/null
 while [ $# -gt 0 ]; do
   case "$1" in
     -X) method="$2"; shift 2 ;;
     --jq) jq="$2"; shift 2 ;;
     -f) args="$args $2"; case "$2" in title=*) title="${2#title=}" ;; esac; method=POST; shift 2 ;;
-    -F) method=POST; shift 2 ;;
+    -F) method=POST; b="${2#body=@}"; shift 2 ;;
     --paginate | --silent) shift ;;
     *) url="$1"; shift ;;
   esac
 done
 case "$method $url" in
-  "POST repos/o/r/pulls") echo w >> "$G/writes"; echo "title=$title" > "$G/created"
+  "POST repos/o/r/pulls") echo w >> "$G/writes"; echo "title=$title" > "$G/created"; cp "$b" "$G/prbody"
     echo '{"number":50,"html_url":"https://github.com/o/r/pull/50"}' | jq -r "$jq"; exit 0 ;;
   "POST repos/o/r/actions/workflows/release-tag.yml/dispatches") echo w >> "$G/writes"; echo "$args" > "$G/dispatch"; exit 0 ;;
   "POST "*) echo w >> "$G/writes"; exit 0 ;;
@@ -66,6 +66,9 @@ JSON
 git init -q --bare -b main "$tmp/origin.git"
 r="$tmp/repo"; mkdir -p "$r/scripts" "$r/.github"
 cp "$s/sdd-release.sh" "$s/sdd-pr.sh" "$s/sdd-ci.sh" "$s/sdd-checkpoint.sh" "$r/scripts/"
+# sdd-report.sh falso: a tabela da fase (o real tem testes próprios).
+# shellcheck disable=SC2016 # o script falso expande $3 e $4 ao rodar
+printf '#!/bin/sh\n[ "$3 $4" = "phase #7" ] || exit 1\necho "<!-- sdd-report -->"\necho "| Ticket |"\necho "| **Total** | 2 PRs |"\n' > "$r/scripts/sdd-report.sh"
 printf 'ci:\n\t@echo CI-OK\n' > "$r/Makefile"
 printf '1.0.0\n' > "$r/VERSION"
 printf 'baixe sdd/v1.0.0/x e v1.0.0 fica; 1.0.0 fica\n' > "$r/README.md"
@@ -132,6 +135,10 @@ out="$($rel 1.1.0 2>&1)" || fail "preparar falhou: $out"
 git ls-remote --exit-code origin chore/release-v1.1.0 > /dev/null || fail "a branch não foi enviada"
 grep -qx 'title=chore: release v1.1.0' "$G/created" || fail "título do PR errado: $(cat "$G/created")"
 printf '%s\n' "$out" | grep -q 'PR #50 aberto' || fail "não abriu o PR: $out"
+# 017 FR-5: o PR de fechamento cita o custo da fase (tabela do sdd-report.sh phase).
+grep -qx '## Custo da fase' "$G/prbody" || fail "PR sem o custo da fase: $(cat "$G/prbody")"
+grep -qF '| **Total** | 2 PRs |' "$G/prbody" || fail "PR sem o total: $(cat "$G/prbody")"
+grep -q 'sdd-report -->' "$G/prbody" && fail "PR com a marca do comentário"
 c="$(cat CHANGELOG.md)"
 today="$(date +%Y-%m-%d)"
 # Unreleased vazio e a versão logo abaixo, com a data de hoje.

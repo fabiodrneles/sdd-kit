@@ -31,17 +31,32 @@ usage_json() {
     files="$(find "${SDD_SESSIONS_DIR:-$HOME/.claude/projects}" -name '*.jsonl' -type f 2> /dev/null || true)"
   fi
   [ -n "$files" ] || { echo null; return; }
+  # Cada linha vira um início de turno (mensagem que não é resultado de ferramenta:
+  # do dono ou um despertar, FR-4) ou uma chamada; a chamada herda o tipo do último
+  # turno do mesmo arquivo. Um despertar é um turno sem origin.kind "human" (ou, sem
+  # origin, um texto que começa por aviso do sistema).
   # shellcheck disable=SC2086 # $files é uma lista de caminhos sem espaços
-  jq -c --arg since "$1" --arg until "$2" 'select(.message.usage and .message.id
-      and ((.timestamp // "") >= $since) and ($until == "" or (.timestamp // "") <= $until))
-    | {id: .message.id, u: .message.usage}' $files 2> /dev/null | jq -cs '
-    unique_by(.id) | map(.u) as $u
-    | if ($u | length) == 0 then null else
+  jq -c --arg since "$1" --arg until "$2" '
+    def inwin: ((.timestamp // "") >= $since) and ($until == "" or (.timestamp // "") <= $until);
+    def text: .message.content | if type == "string" then . elif type == "array"
+      then (map(select(.type == "text") | .text) | first // "") else "" end;
+    if .message.usage and .message.id then {k: "c", f: input_filename, id: .message.id, u: .message.usage, w: inwin}
+    elif .type == "user" and (.message.content | type == "string" or (type == "array" and all(.[]; .type != "tool_result")))
+      then {k: "t", f: input_filename, w: inwin, wake: (if .origin.kind then .origin.kind != "human"
+        else (text | test("^\\s*(<task-notification>|<wake |\\[SYSTEM NOTIFICATION)")) end)}
+    else empty end' $files 2> /dev/null | jq -cs '
+    reduce .[] as $e ({wake: {}, calls: [], turns: 0};
+      if $e.k == "t" then .wake[$e.f] = $e.wake | .turns += (if $e.wake and $e.w then 1 else 0 end)
+      elif $e.w then .calls += [$e + {wake: (.wake[$e.f] // false)}] else . end)
+    | .turns as $turns | (.calls | unique_by(.id)) as $c | ($c | map(.u)) as $u
+    | def tot: map((.cache_read_input_tokens // 0) + (.cache_creation_input_tokens // 0) + (.input_tokens // 0) + (.output_tokens // 0)) | add // 0;
+    if ($u | length) == 0 then null else
       ($u | map((.cache_read_input_tokens // 0) + (.cache_creation_input_tokens // 0) + (.input_tokens // 0))) as $ctx
       | {calls: ($u | length), read: ($u | map(.cache_read_input_tokens // 0) | add),
          created: ($u | map(.cache_creation_input_tokens // 0) | add),
          input: ($u | map(.input_tokens // 0) | add), output: ($u | map(.output_tokens // 0) | add),
-         avg: (($ctx | add) / ($ctx | length) | floor), max: ($ctx | max)} end'
+         avg: (($ctx | add) / ($ctx | length) | floor), max: ($ctx | max),
+         wakes: $turns, wake_calls: ($c | map(select(.wake)) | length), wake_tokens: ($c | map(select(.wake) | .u) | tot)} end'
 }
 
 print_usage() {
@@ -49,7 +64,8 @@ print_usage() {
     echo "sdd-report: sem dado de tokens${2:-}"
   else
     printf '%s\n' "$1" | jq -r '"chamadas: \(.calls)", "relidos do cache: \(.read)", "gravados no cache: \(.created)",
-      "entrada: \(.input)", "gerados: \(.output)", "contexto médio por chamada: \(.avg)", "contexto máximo: \(.max)"'
+      "entrada: \(.input)", "gerados: \(.output)", "contexto médio por chamada: \(.avg)", "contexto máximo: \(.max)",
+      "despertares sem mensagem do dono: \(.wakes) (\(.wake_calls) chamadas, \(.wake_tokens) tokens)"'
   fi
 }
 
@@ -142,10 +158,10 @@ jq -rs --arg m "$marker" --arg e "$n" '
   def tok(f): if .usage == null then "—" else (.usage | f | tostring) end;
   (map(select(.usage != null) | .usage)) as $u
   | $m, "## Relatório da fase (épico #\($e))", "",
-    "| Ticket | PR | Tempo (min) | CI verde na 1ª rodada | Chamadas | Relidos | Gravados | Gerados |",
-    "|---|---|---|---|---|---|---|---|",
-    (.[] | "| #\(.ticket) \(.title | gsub("\\|"; "\\|")) | \(if .pr then "#\(.pr)" else "sem PR" end) | \(.minutes | k) | \(.ci // "—") | \(tok(.calls)) | \(tok(.read)) | \(tok(.created)) | \(tok(.output)) |"),
-    "| **Total** | \(map(select(.pr)) | length) PRs | \(map(.minutes // 0) | add // 0) | \(map(select(.ci == "sim")) | length) de \(map(select(.pr)) | length) | \($u | map(.calls) | add // 0) | \($u | map(.read) | add // 0) | \($u | map(.created) | add // 0) | \($u | map(.output) | add // 0) |",
+    "| Ticket | PR | Tempo (min) | CI verde na 1ª rodada | Chamadas | Relidos | Gravados | Gerados | Despertares (tokens) |",
+    "|---|---|---|---|---|---|---|---|---|",
+    (.[] | "| #\(.ticket) \(.title | gsub("\\|"; "\\|")) | \(if .pr then "#\(.pr)" else "sem PR" end) | \(.minutes | k) | \(.ci // "—") | \(tok(.calls)) | \(tok(.read)) | \(tok(.created)) | \(tok(.output)) | \(if .usage == null then "—" else "\(.usage.wakes) (\(.usage.wake_tokens))" end) |"),
+    "| **Total** | \(map(select(.pr)) | length) PRs | \(map(.minutes // 0) | add // 0) | \(map(select(.ci == "sim")) | length) de \(map(select(.pr)) | length) | \($u | map(.calls) | add // 0) | \($u | map(.read) | add // 0) | \($u | map(.created) | add // 0) | \($u | map(.output) | add // 0) | \($u | map(.wakes) | add // 0) (\($u | map(.wake_tokens) | add // 0)) |",
     "",
     (if ($u | length) < (map(select(.pr)) | length) then "Tickets sem dado de tokens (outro contêiner ou outro agente) aparecem com —." else empty end),
     "Gerado por `sdd-report.sh phase` (spec 017), sem LLM; uma rodada nova edita este comentário."' "$tmp/rows" > "$tmp/body"

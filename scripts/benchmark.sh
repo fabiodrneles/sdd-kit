@@ -30,7 +30,7 @@ while [ $# -gt 0 ]; do
     --tasks) tasks="${2:?}"; shift 2 ;;
     --out) out="${2:?}"; shift 2 ;;
     --dry-run) dry=1; shift ;;
-    -h | --help) sed -n '2,21p' "$0"; exit 0 ;;
+    -h | --help) sed -n '2,19p' "$0"; exit 0 ;;
     *) echo "benchmark: opção desconhecida: $1" >&2; exit 3 ;;
   esac
 done

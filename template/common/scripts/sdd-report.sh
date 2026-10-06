@@ -151,14 +151,15 @@ ticket_json() {
     | sed -n 's/^<!-- sdd-relay-cost \(.*\) -->$/\1/p' | tail -n 1)" || relay=""
   if [ -n "$relay" ] && printf '%s' "$relay" | jq -e .usage > /dev/null 2>&1; then
     measure="relé" from="$(printf '%s' "$relay" | jq -r .start)"
+    model="$(printf '%s' "$relay" | jq -r '.model // empty')"
     u="$(printf '%s' "$relay" | jq -c .usage)"
   else
     [ -s "$tmp/merged" ] || { pages "repos/$repo/pulls?state=closed" '.merged_at // empty' > "$tmp/merged" || : > "$tmp/merged"; echo >> "$tmp/merged"; }
     from="$(jq -Rsr --arg s "$start" 'split("\n") | map(select(. != "" and . < $s)) | max // $s' "$tmp/merged")"
-    measure="janela" u="$(usage_json "$from" "$end")"
+    measure="janela" model="" u="$(usage_json "$from" "$end")"
   fi
-  jq -nc --argjson n "$1" --argjson pr "$num" --argjson w "$win" --arg ci "$ci" --argjson u "$u" --arg m "$measure" --arg f "$from" \
-    '{ticket: $n, pr: $pr, start: $w.start, end: $w.end, from: $f, measure: $m, ci: $ci, usage: $u,
+  jq -nc --argjson n "$1" --argjson pr "$num" --argjson w "$win" --arg ci "$ci" --argjson u "$u" --arg m "$measure" --arg f "$from" --arg mo "$model" \
+    '{ticket: $n, pr: $pr, start: $w.start, end: $w.end, from: $f, measure: $m, model: (if $mo == "" then null else $mo end), ci: $ci, usage: $u,
       minutes: ((($w.end | fromdateiso8601) - ($w.start | fromdateiso8601)) / 60 | floor)}'
 }
 
@@ -196,7 +197,7 @@ jq -rs --arg m "$marker" --arg e "$n" --arg c "$cmp" --slurpfile cr "$tmp/crows"
   | $m, "## Relatório da fase (épico #\($e))", "",
     "| Ticket | PR | Medição | Tempo (min) | CI verde na 1ª rodada | Chamadas | Relidos | Gravados | Gerados | Despertares (tokens) |",
     "|---|---|---|---|---|---|---|---|---|---|",
-    (.[] | "| #\(.ticket) \(.title | gsub("\\|"; "\\|")) | \(if .pr then "#\(.pr)" else "sem PR" end) | \(.measure // "—") | \(.minutes | k) | \(.ci // "—") | \(tok(.calls)) | \(tok(.read)) | \(tok(.created)) | \(tok(.output)) | \(if .usage == null then "—" else "\(.usage.wakes) (\(.usage.wake_tokens))" end) |"),
+    (.[] | "| #\(.ticket) \(.title | gsub("\\|"; "\\|")) | \(if .pr then "#\(.pr)" else "sem PR" end) | \(.measure // "—")\(if .model and .model != "padrão" then " (\(.model))" else "" end) | \(.minutes | k) | \(.ci // "—") | \(tok(.calls)) | \(tok(.read)) | \(tok(.created)) | \(tok(.output)) | \(if .usage == null then "—" else "\(.usage.wakes) (\(.usage.wake_tokens))" end) |"),
     "| **Total** | \(map(select(.pr)) | length) PRs | | \(map(.minutes // 0) | add // 0) | \(map(select(.ci == "sim")) | length) de \(map(select(.pr)) | length) | \($u | map(.calls) | add // 0) | \($u | map(.read) | add // 0) | \($u | map(.created) | add // 0) | \($u | map(.output) | add // 0) | \($u | map(.wakes) | add // 0) (\($u | map(.wake_tokens) | add // 0)) |",
     "",
     # 018 AC-5: o custo médio por ticket com e sem relé, lado a lado.

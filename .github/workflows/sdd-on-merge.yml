@@ -8,6 +8,13 @@ name: sdd-kit on merge
 on:
   pull_request:
     types: [closed]
+  # Disparado pelo sdd-auto-merge depois de um merge feito pelo GITHUB_TOKEN, que
+  # não gera o evento acima.
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Número do PR mesclado
+        required: true
 
 permissions:
   contents: read
@@ -22,19 +29,19 @@ jobs:
   checkpoint:
     name: Atualizar o checkpoint do épico
     if: >-
-      vars.SDD_ENGINE != 'off' &&
+      vars.SDD_ENGINE != 'off' && (github.event_name == 'workflow_dispatch' || (
       github.event.pull_request.merged &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      !startsWith(github.event.pull_request.head.ref, 'chore/release-v')
+      !startsWith(github.event.pull_request.head.ref, 'chore/release-v')))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.pull_request.base.ref }}
+          ref: ${{ github.event.pull_request.base.ref || github.ref }}
           persist-credentials: false
       - name: Atualizar o checkpoint
         env:
           GH_TOKEN: ${{ secrets.SDD_ENGINE_TOKEN || github.token }}
           SDD_ENGINE: ${{ vars.SDD_ENGINE }}
-          PR: ${{ github.event.pull_request.number }}
+          PR: ${{ inputs.pr || github.event.pull_request.number }}
         run: sh template/common/scripts/sdd-on-merge.sh --repo "$GITHUB_REPOSITORY" --pr "$PR"

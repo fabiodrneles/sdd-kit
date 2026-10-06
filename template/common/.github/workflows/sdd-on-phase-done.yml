@@ -8,6 +8,13 @@ name: sdd-kit phase done
 on:
   issues:
     types: [closed]
+  # Disparado pelo sdd-auto-merge: a issue fechada por um merge do GITHUB_TOKEN não
+  # gera o evento acima.
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: Número da issue fechada
+        required: true
 
 permissions:
   actions: write
@@ -37,7 +44,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.SDD_ENGINE_TOKEN || github.token }}
           SDD_ENGINE: ${{ vars.SDD_ENGINE }}
-          ISSUE: ${{ github.event.issue.number }}
+          ISSUE: ${{ inputs.issue || github.event.issue.number }}
           SDD_ENGINE_TOKEN_SET: ${{ secrets.SDD_ENGINE_TOKEN != '' && '1' || '' }}
           SDD_CI_WORKFLOW: ${{ vars.SDD_CI_WORKFLOW }}
         run: |

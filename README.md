@@ -233,6 +233,8 @@ Configuração do repositório:
 3. **Desligar:** a variável de repositório `SDD_ENGINE=off` desliga todos os workflows do motor (nenhum lê nem escreve nada).
 4. **Nome do CI:** o resumo escuta o workflow chamado `CI`. Se o projeto o renomeou, volte o nome ou ajuste `workflows:` em `sdd-ci-summary.yml`.
 
+**Merge automático:** `sh scripts/sdd-auto-merge.sh on` liga, `off` desliga (padrão) e `status` mostra; ou peça ao agente. Ligado, todo PR com o CI verde e sem conflito é mesclado sozinho, inclusive os do relé, e o motor segue com o checkpoint, a fase e a release.
+
 ## Atualização automática
 
 A adoção grava `.sdd-kit.json` (versão do kit e o hash de cada arquivo gerenciado). Toda segunda-feira, o workflow `sdd-kit sync` compara com a última release e abre **um PR** com as atualizações:

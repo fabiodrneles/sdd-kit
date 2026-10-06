@@ -38,7 +38,7 @@ Numa sessão na web, o hook `.claude/hooks/session-start.sh` instala as dependê
 - **Branch:** uma por ticket, `<tipo>/<nº-da-issue>-<descrição>`, a partir da `main`.
 - **PR:** começa com `Closes #N · Épico #M · Spec NNN` e segue o template.
 - **Arquivos de status** (status das specs, checkboxes do ROADMAP, CHANGELOG) só mudam no PR de fechamento da fase.
-- **Merge, tag e release** são do dono, salvo delegação explícita para uma rodada (ex.: `sh scripts/sdd-relay.sh --auto-merge` mescla os PRs do relé com o CI verde).
+- **Merge, tag e release** são do dono, salvo delegação: `sh scripts/sdd-auto-merge.sh on` liga o merge automático (todo PR com o CI verde e sem conflito, inclusive os do relé), `off` desliga e `status` mostra. Quando o dono pedir para ligar ou desligar, rode o comando.
 - **Comandos do README:** um bloco ```` ```bash ```` com `<!-- doc-commands -->` na linha anterior roda no CI (`sh scripts/doc-commands.sh`); marque os exemplos que devem continuar funcionando.
 
 ## Armadilhas já conhecidas

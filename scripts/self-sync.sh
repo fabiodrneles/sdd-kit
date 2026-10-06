@@ -15,7 +15,7 @@
 # release-tag.yml e o .sdd-release do kit são próprios e não são gerados.
 set -eu
 
-ENGINE="sdd-ci-summary sdd-update-prs sdd-on-merge sdd-on-phase-done sdd-on-release-merge"
+ENGINE="sdd-ci-summary sdd-update-prs sdd-on-merge sdd-on-phase-done sdd-on-release-merge sdd-auto-merge"
 SCRIPTS_FROM="sh scripts/"
 SCRIPTS_TO="sh template/common/scripts/"
 PROJECT="sdd-kit"

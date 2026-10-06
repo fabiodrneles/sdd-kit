@@ -62,7 +62,9 @@ fi
 out() { if [ -n "$summary" ]; then cat >> "$summary"; else cat; fi; }
 [ -z "$summary" ] || : > "$summary"
 
-if [ "$version" = "$current" ] && [ "$only_wf" = 0 ]; then
+# Com SKIP_WORKFLOWS a execução continua na mesma versão: workflows deixados de
+# fora antes seguem pendentes (o estado não registra o hash deles) e voltam à lista.
+if [ "$version" = "$current" ] && [ "$only_wf" = 0 ] && [ "${SDD_SYNC_SKIP_WORKFLOWS:-}" != 1 ]; then
   echo "sdd-sync: já na versão $current; nada a fazer"
   exit 0
 fi
@@ -92,10 +94,13 @@ while IFS= read -r rel; do
   if [ "$only_wf" = 1 ]; then
     case "$rel" in .github/workflows/*) ;; *) continue ;; esac
     jq -e --arg f "$rel" '.files | has($f)' "$tmp/new/.sdd-kit.json" > /dev/null || continue
-    ! cmp -s "$new" "$rel" || continue
-    mkdir -p "$(dirname "$rel")"
-    cp -p "$new" "$rel"
-    echo "$rel" >> "$tmp/updated"
+    if ! cmp -s "$new" "$rel"; then
+      mkdir -p "$(dirname "$rel")"
+      cp -p "$new" "$rel"
+      echo "$rel" >> "$tmp/updated"
+    fi
+    # Registra o hash do kit: o arquivo deixa de estar pendente na próxima sincronização.
+    jq --arg f "$rel" --arg h "$(hash "$new")" '.files[$f] = $h' "$state" > "$tmp/state" && cp "$tmp/state" "$state"
     continue
   fi
   # Spec 012 FR-2: gerenciado é só o que a adoção da versão alvo registra; os
@@ -110,8 +115,8 @@ while IFS= read -r rel; do
   fi
   old_hash="$(jq -r --arg f "$rel" '.files[$f] // empty' "$state")"
   if [ ! -e "$rel" ]; then
-    echo "$rel" >> "$tmp/managed"
     if skip_wf "$rel"; then echo "$rel" >> "$tmp/skipped"; continue; fi
+    echo "$rel" >> "$tmp/managed"
     mkdir -p "$(dirname "$rel")"
     cp -p "$new" "$rel"
     echo "$rel" >> "$tmp/created"
@@ -137,6 +142,7 @@ if [ "$only_wf" = 1 ]; then
   exit 0
 fi
 
+cp "$state" "$tmp/oldstate"
 # Novo estado: versão alvo e o hash do conteúdo do kit (não do arquivo local),
 # para que uma alteração local continue detectável na próxima sincronização.
 {
@@ -144,7 +150,9 @@ fi
     "$version" "$lang" "$project" "$owner" "$repo"
   sep=""
   while IFS= read -r rel; do
-    printf '%s\n    "%s": "%s"' "$sep" "$rel" "$(hash "$tmp/new/$rel")"
+    # Workflow deixado de fora mantém o hash anterior: segue pendente até ser aplicado.
+    if grep -qxF "$rel" "$tmp/skipped"; then h="$(jq -r --arg f "$rel" '.files[$f]' "$tmp/oldstate")"; else h="$(hash "$tmp/new/$rel")"; fi
+    printf '%s\n    "%s": "%s"' "$sep" "$rel" "$h"
     sep=","
   done < "$tmp/managed"
   printf '\n  }\n}\n'

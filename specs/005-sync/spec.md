@@ -22,7 +22,7 @@ D3 (a): melhorias na skill e nos modelos precisam chegar aos repositórios que j
 - **AC-1** Dado um repositório na versão anterior sem alterações locais, quando o workflow roda, então abre um PR com a atualização.
 - **AC-2** Dado um repositório já na última versão, quando o workflow roda, então nenhum PR é aberto.
 - **AC-3** Dado um arquivo gerenciado alterado localmente, quando o workflow roda, então o PR lista o arquivo como conflito.
-- **AC-4** Dada uma versão nova que muda ou cria um workflow e um token sem a permissão `workflows` (`SDD_SYNC_SKIP_WORKFLOWS=1`), quando a sincronização roda, então os demais arquivos são atualizados, o workflow não é escrito e a descrição o lista; e `--only-workflows` aplica depois só os workflows gerenciados.
+- **AC-4** Dada uma versão nova que muda ou cria um workflow e um token sem a permissão `workflows` (`SDD_SYNC_SKIP_WORKFLOWS=1`), quando a sincronização roda, então os demais arquivos são atualizados, o workflow não é escrito e a descrição o lista; o estado não registra o hash do que ficou de fora, então a sincronização seguinte (mesmo na mesma versão) o lista de novo; e `--only-workflows` aplica só os workflows gerenciados e os registra no estado.
 - **AC-5** Dado um repositório que não permite ao Actions criar PRs, quando o workflow roda, então a branch fica enviada, o resumo traz o link para abrir o PR e a configuração, e o job termina com `::warning::`.
 
 ## Fora de escopo

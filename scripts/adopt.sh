@@ -3,7 +3,7 @@
 # template/common e template/<lang> sem sobrescrever o que já existe, e os
 # modelos do projeto (template/seed) só quando faltam.
 #
-# Uso: adopt.sh --lang go|node|java|python|rust|dotnet [--project NOME] [--owner DONO]
+# Uso: adopt.sh --lang go|node|java|python|rust|dotnet|web [--project NOME] [--owner DONO]
 #               [--repo REPO] [--dry-run] [--force] [--skeleton] [DESTINO]
 #
 # Sem o template ao lado do script (ex.: curl … | sh -s -- …), baixa o da
@@ -11,11 +11,11 @@
 set -eu
 
 KIT_REF="${SDD_KIT_REF:-v1.13.0}"
-LANGS="go node java python rust dotnet"
+LANGS="go node java python rust dotnet web"
 
 usage() {
   cat >&2 <<USAGE
-uso: adopt.sh --lang go|node|java|python|rust|dotnet [opções] [DESTINO]
+uso: adopt.sh --lang go|node|java|python|rust|dotnet|web [opções] [DESTINO]
 
   --lang LING      linguagem do repositório (obrigatório): $LANGS
   --project NOME   nome do projeto (padrão: nome do diretório de destino)

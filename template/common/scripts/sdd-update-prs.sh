@@ -12,12 +12,12 @@
 # O mergeable_state do GitHub é calculado sob demanda: se vier vazio, espera
 # SDD_UPDATE_WAIT segundos (padrão 3) e lê de novo, até 4 vezes.
 #
-# Limitação: um push feito com o GITHUB_TOKEN não dispara outros workflows, então o
-# CI do PR NÃO roda sozinho depois do update-branch. Se o PR exige CI verde, defina
-# o segredo SDD_ENGINE_TOKEN (token fine-grained com Contents e Pull requests em
-# leitura e escrita neste repositório): quando presente, o workflow o usa no lugar
-# do GITHUB_TOKEN (em GH_TOKEN) e o CI do PR dispara. Sem ele, empurre um commit
-# ou reexecute o CI do PR.
+# CI depois do update-branch: um push feito com o GITHUB_TOKEN não dispara o
+# pull_request, então, sem o segredo SDD_ENGINE_TOKEN (SDD_ENGINE_TOKEN_SET vazio),
+# o script espera a cabeça do PR mudar (até 10 leituras, SDD_UPDATE_WAIT entre elas)
+# e dispara o workflow de CI (SDD_CI_WORKFLOW, padrão ci.yml) na branch do PR por
+# workflow_dispatch, que roda mesmo com o GITHUB_TOKEN; os checks caem na cabeça e
+# aparecem no PR. Com o SDD_ENGINE_TOKEN, o push dele já dispara o CI (#174).
 # Códigos: 0 ok; 1 algum PR falhou ao atualizar; 3 uso.
 set -eu
 
@@ -35,14 +35,15 @@ if [ "${SDD_ENGINE:-}" = "off" ]; then echo "SDD_ENGINE=off: nada a fazer"; exit
 [ -n "$repo" ] || die "informe --repo DONO/REPO (ou GITHUB_REPOSITORY)"
 marker='<!-- sdd-update-prs:conflict -->'
 wait_s="${SDD_UPDATE_WAIT:-3}"
+ci_wf="${SDD_CI_WORKFLOW:-ci.yml}"
 failf="$(mktemp)"
 rm -f "$failf"
 
 # Número, SHA da cabeça e repositório da cabeça (- se apagado) dos PRs abertos.
 prs="$(gh api --paginate "repos/$repo/pulls?state=open&base=$base&per_page=100" \
-  --jq '.[] | "\(.number) \(.head.sha) \(.head.repo.full_name // "-")"')"
+  --jq '.[] | "\(.number) \(.head.sha) \(.head.repo.full_name // "-") \(.head.ref)"')"
 
-printf '%s\n' "$prs" | while read -r n sha hrepo; do
+printf '%s\n' "$prs" | while read -r n sha hrepo ref; do
   [ -n "$n" ] || continue
   [ "$hrepo" = "$repo" ] || { echo "ignorado #$n (branch de fork)"; continue; }
   # O GET do PR dispara o cálculo de mergeabilidade; releia enquanto vier vazio.
@@ -63,7 +64,20 @@ A \`$base\` mudou e este PR tem conflito com ela. Resolva localmente: \`git merg
   if [ "${behind:-0}" -eq 0 ]; then echo "em dia #$n"; continue; fi
   # Merge da main na branch, só se a cabeça ainda é a que lemos.
   if gh api -X PUT "repos/$repo/pulls/$n/update-branch" --silent -f expected_head_sha="$sha"; then
-    echo "atualizado #$n"
+    if [ -n "${SDD_ENGINE_TOKEN_SET:-}" ]; then echo "atualizado #$n"; continue; fi
+    # O update-branch é assíncrono: espera a cabeça nova para o CI rodar nela.
+    moved=""
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+      [ "$(gh api "repos/$repo/pulls/$n" --jq '.head.sha')" != "$sha" ] && { moved=1; break; }
+      sleep "$wait_s"
+    done
+    note=""
+    [ -n "$moved" ] || note=", cabeça ainda não mudou"
+    if err="$(gh api -X POST "repos/$repo/actions/workflows/$ci_wf/dispatches" --silent -f ref="$ref" 2>&1)"; then
+      echo "atualizado #$n (CI disparado$note)"
+    else
+      echo "atualizado #$n (CI não disparado: $(printf '%s' "$err" | head -n 1))"
+    fi
   else
     echo "falhou #$n (update-branch)"
     : > "$failf"

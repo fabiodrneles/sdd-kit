@@ -4,6 +4,15 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-10-06
+
+### Adicionado
+
+- sdd-context.sh builds a capped ticket context pack without LLM (#230)
+- sdd-relay.sh runs one fresh agent per ticket and waits for each merge (#231)
+- the relay stops for the owner, a twice-red CI or the phase budget, and caps each session's context (#232)
+- one session per ticket in the docs, and exact relay cost per ticket in the report (#233)
+
 ## [1.10.0] - 2026-10-06
 
 ### Adicionado

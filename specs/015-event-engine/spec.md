@@ -33,3 +33,15 @@ Na sessão de 2026-10-05, só ler notificações de PR e cancelar assinaturas cu
 - **AC-5** Dado o PR de fechamento, quando é mergeado, então a release `vX.Y.Z` é disparada uma única vez.
 - **AC-6** Dados dois PRs abertos atrás da `main`, um limpo e um com conflito, quando a `main` muda, então o limpo é atualizado e o com conflito recebe um único comentário.
 - **AC-7** Dado `SDD_ENGINE=off`, quando qualquer um dos eventos acima acontece, então nenhum workflow escreve nada.
+
+## Mudanças
+
+### Não lançado
+
+- ADDED FR-1 — `sdd-wait.sh` espera PR mergeado, CI ou issue fechada, sem LLM (T39, #158).
+- ADDED FR-2 — `sdd-on-merge.yml` atualiza o checkpoint do épico quando um PR de ticket é mergeado (T40, #162).
+- ADDED FR-3 — `sdd-ci-summary.yml` mantém um único comentário de resumo do CI no PR (T41, #160).
+- ADDED FR-4 — `sdd-on-phase-done.yml` abre o PR de fechamento quando o último ticket do épico fecha (T42, #164).
+- ADDED FR-5 — `sdd-on-release-merge.yml` dispara a release quando o PR de fechamento é mergeado (T43, #163).
+- ADDED FR-6 — `sdd-update-prs.yml` traz a `main` para os PRs abertos atrás dela e avisa os com conflito (T44, #161).
+- ADDED FR-7 — o `CLAUDE.md` do template manda o agente não esperar eventos de PR; README e skill documentam o motor e a configuração do repositório (T45, #165).

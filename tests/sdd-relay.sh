@@ -2,6 +2,8 @@
 # Testes do sdd-relay.sh (spec 018) com um gh falso e um agente falso.
 # shellcheck disable=SC2016 # os scripts falsos expandem as variáveis ao rodar
 set -eu
+# Hermético: o relé (ou quem chama) pode deixar estas variáveis no ambiente.
+unset SDD_SCRIPTS_DIR SDD_RELAY_SELF
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 s="$root/template/common/scripts"
@@ -54,6 +56,7 @@ n="$(sed -n '1s/^# Ticket #\([0-9]*\):.*/\1/p' "$G/in")"
 cp "$G/in" "$G/in-$n"; echo "$n" >> "$G/calls"
 echo "${CLAUDE_CODE_SESSION_ID:-sem}" > "$G/env-session"
 echo "${SDD_AGENT_MODEL:-}" > "$G/model-$n"
+echo "${SDD_SCRIPTS_DIR:-sem}" > "$G/env-scripts"
 # O agente troca de branch na pasta do relé: aqui, apaga o script de que o relé veio.
 [ ! -f "$G/clobber" ] || : > scripts/sdd-relay.sh
 # A sessão do agente: um arquivo novo, com 1000×N tokens relidos.
@@ -103,6 +106,7 @@ grep -qF -- '- **AC-1** Linha do AC-1.' "$G/in-2" || fail "pacote do #2 sem o AC
 grep -qF 'AC-2' "$G/in-2" && fail "pacote do #2 com o AC-2 de outro ticket"
 grep -qF -- '- **AC-2** Linha do AC-2.' "$G/in-3" || fail "pacote do #3 sem o AC-2"
 grep -qF 'Trabalhe só o ticket #3' "$G/in-3" || fail "sem a instrução do ticket: $(cat "$G/in-3")"
+grep -qF 'Nunca afrouxe, pule ou apague um teste' "$G/in-3" || fail "pedido sem a regra dos testes"
 # O pacote cita os scripts do repositório, não os da cópia de onde o relé roda.
 grep -qF 'sh scripts/sdd-pr.sh --spec 018 --no-wait' "$G/in-3" || fail "pacote com o caminho da cópia: $(grep sdd-pr "$G/in-3")"
 printf '%s\n' "$out" | tail -n 1 | grep -qF 'Próximo: PR de fechamento da fase' || fail "sem o Próximo da fase: $out"
@@ -211,6 +215,7 @@ rc=0; out="$(SDD_RELAY_SESSIONS=2 $relay 2>&1)" || rc=$?
 reset
 CLAUDE_CODE_SESSION_ID=pai $relay --max 1 > /dev/null 2>&1 || fail "relé com sessão pai falhou"
 [ "$(cat "$G/env-session")" = sem ] || fail "o agente herdou CLAUDE_CODE_SESSION_ID: $(cat "$G/env-session")"
+[ "$(cat "$G/env-scripts")" = sem ] || fail "o agente herdou SDD_SCRIPTS_DIR: $(cat "$G/env-scripts")"
 reset
 out="$(env -u SDD_AGENT_CMD sh scripts/sdd-relay.sh --repo o/r --dry-run 2>&1)" || fail "dry-run padrão falhou"
 printf '%s\n' "$out" | grep -qF "chamaria 'claude -p --permission-mode acceptEdits --tools" || fail "agente padrão sem o modo de permissão: $out"

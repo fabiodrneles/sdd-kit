@@ -2,6 +2,8 @@
 # shellcheck disable=SC2016 # as crases são do Markdown esperado, não expansão
 # Testes do sdd-context.sh (spec 018 FR-1) com um gh falso e um repositório de teste.
 set -eu
+# Hermético: o relé (ou quem chama) pode deixar estas variáveis no ambiente.
+unset SDD_SCRIPTS_DIR SDD_RELAY_SELF
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 tmp="$(mktemp -d)"

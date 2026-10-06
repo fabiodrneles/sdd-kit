@@ -105,7 +105,10 @@ run_agent() {
   sessions_now > "$tmp/before"
   # Sem as variáveis da sessão que chamou o relé: rodado de dentro do Claude Code, o
   # agente herdaria o id dela e gravaria no mesmo arquivo de sessão (019 FR-1).
+  # Nem as variáveis do próprio relé: o make ci do agente roda os testes do kit, que
+  # não podem ver SDD_SCRIPTS_DIR (020, achado no T63).
   env -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_REMOTE_SESSION_ID \
+    -u SDD_SCRIPTS_DIR -u SDD_RELAY_SELF \
     SDD_SESSION_MAX_TOKENS="${SDD_SESSION_MAX_TOKENS:-150000}" SDD_AGENT_MODEL="$model" sh -c "$cmd" < "$tmp/prompt" \
     || say "aviso: o agente saiu com erro no ticket #$n"
   sessions_now | comm -13 "$tmp/before" - >> "$tmp/tfiles"
@@ -117,7 +120,7 @@ spent() {
     | awk -F ': ' '/^(relidos do cache|gravados no cache|entrada|gerados): / { s += $2 } END { print s + 0 }'
 }
 
-deliver="implemente, rode \`make ci\`, abra o PR com \`sdd-pr.sh --no-wait\` e termine. Não espere o merge nem comece outro ticket: o relé (sdd-relay.sh) cuida disso."
+deliver="comece da \`origin/main\`, implemente, rode \`make ci\`, abra o PR com \`sdd-pr.sh --no-wait\` e termine. Não espere o merge nem comece outro ticket: o relé (sdd-relay.sh) cuida disso. Nunca afrouxe, pule ou apague um teste para o CI passar: se ele falhar por algo fora do ticket, abra o PR assim mesmo e explique a falha no corpo dele."
 runs=0 merged=" "
 while :; do
   epic="$(gh api "repos/$repo/issues?labels=%C3%A9pico&state=open&per_page=1" --jq '.[0].number // empty')"

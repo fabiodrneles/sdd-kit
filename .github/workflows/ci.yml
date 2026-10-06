@@ -32,6 +32,9 @@ jobs:
           v="$(sed -n 's/^ACTIONLINT_VERSION *:\?= *//p' Makefile)"
           curl -fsSL "https://github.com/rhysd/actionlint/releases/download/$v/actionlint_${v#v}_linux_amd64.tar.gz" | tar -xz -C "$RUNNER_TEMP" actionlint
           echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: axyn/go.mod
       - run: make ci
 
   links:

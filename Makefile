@@ -11,7 +11,7 @@ help: ## Lista os alvos
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-8s %s\n", $$1, $$2}'
 
 .PHONY: ci
-ci: md sh test sdd-check ## Tudo o que o CI verifica sem rede (rode antes de todo push; 001 AC-1, 003 AC-3)
+ci: md sh test go sdd-check ## Tudo o que o CI verifica sem rede (rode antes de todo push; 001 AC-1, 003 AC-3)
 
 .PHONY: md
 md: ## markdownlint em todos os .md
@@ -25,6 +25,11 @@ sh: ## shellcheck em todos os scripts (versionados ou novos)
 .PHONY: test
 test: ## Testes dos scripts (tests/*.sh)
 	@set -e; for t in tests/*.sh; do [ -e "$$t" ] || continue; echo "== $$t"; sh "$$t"; done
+
+.PHONY: go
+go: ## axyn (Go): gofmt, go vet e testes com o race detector (spec 021)
+	@cd axyn && fmt="$$(gofmt -l .)" && { [ -z "$$fmt" ] || { echo "gofmt: $$fmt"; exit 1; }; }
+	cd axyn && go vet ./... && go test -race -count=1 ./...
 
 .PHONY: sdd-check
 sdd-check: ## Rastreabilidade specs × testes × ROADMAP do próprio kit (estrita: 007 AC-1)

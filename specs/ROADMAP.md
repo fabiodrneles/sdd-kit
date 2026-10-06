@@ -95,10 +95,10 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 
 ## Fase 12 — Relé de sessões curtas (P1)
 
-- [ ] **T53** `sdd-context.sh`: pacote de contexto do ticket com teto de tamanho — 018 FR-1, AC-1
-- [ ] **T54** `sdd-relay.sh`: um agente novo por ticket, vigia e próximo ticket — 018 FR-2, NFR-1, AC-2, AC-4
-- [ ] **T55** Paradas do relé (dono, CI vermelho duas vezes, orçamento) e teto de contexto por sessão — 018 FR-3, FR-4, AC-3
-- [ ] **T56** `CLAUDE.md` e skill: uma sessão, um ticket; custo por ticket no épico, com e sem relé — 018 FR-5, FR-6, NFR-2, AC-5
+- [x] **T53** `sdd-context.sh`: pacote de contexto do ticket com teto de tamanho — 018 FR-1, AC-1
+- [x] **T54** `sdd-relay.sh`: um agente novo por ticket, vigia e próximo ticket — 018 FR-2, NFR-1, AC-2, AC-4
+- [x] **T55** Paradas do relé (dono, CI vermelho duas vezes, orçamento) e teto de contexto por sessão — 018 FR-3, FR-4, AC-3
+- [x] **T56** `CLAUDE.md` e skill: uma sessão, um ticket; custo por ticket no épico, com e sem relé — 018 FR-5, FR-6, NFR-2, AC-5
 
 ## Próximas fases (visão, sem versão)
 

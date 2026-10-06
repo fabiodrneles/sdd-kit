@@ -4,6 +4,19 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-10-06
+
+### Adicionado
+
+- **Relé de sessões curtas (spec 018):** `sdd-relay.sh` trabalha o épico aberto ticket a ticket, sem LLM no meio: abre um agente novo por ticket (`SDD_AGENT_CMD`, padrão `claude -p`), espera o merge pelo `sdd-wait.sh` e segue para o próximo. Não guarda estado: interrompido, retoma do GitHub sem refazer ticket mesclado. Uma trava para o relé se um ticket mesclado voltar aberto (#231).
+- `sdd-context.sh '#N'` monta o pacote de uma sessão nova: a issue, só as linhas dos FR/NFR/AC citados, as decisões citadas, os arquivos prováveis com as assinaturas, as armadilhas desses arquivos e os comandos de entrega, com teto em `SDD_CONTEXT_MAX` (#230).
+- O relé para e avisa o dono no épico quando o Próximo é "perguntar ao dono", quando o CI do PR fica vermelho duas vezes seguidas (a primeira falha ganha uma sessão de correção) e quando o orçamento `SDD_BUDGET_TOKENS` acaba. O hook `sdd-session-guard.sh` faz a sessão gravar WIP e terminar no teto `SDD_SESSION_MAX_TOKENS`, e o relé abre outra a partir do checkpoint (#232).
+- Uma sessão, um ticket: `CLAUDE.md` (kit e template) e skill. O relé grava na issue o custo exato do ticket (só as sessões que abriu para ele), e o `sdd-report.sh phase` mostra a medição de cada ticket e o custo médio com e sem relé (#233).
+
+### Mudado
+
+- `sdd-report.sh ticket`: sem relé, a janela começa no último merge antes do primeiro commit, não mais no primeiro commit, que subestimava o ticket (017 FR-2, #233).
+
 ## [1.10.0] - 2026-10-06
 
 ### Adicionado

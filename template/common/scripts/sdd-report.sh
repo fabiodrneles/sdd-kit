@@ -3,7 +3,7 @@
 #
 # Uso: sdd-report.sh [--repo DONO/REPO] tokens [--session ARQ]... [--json] [--since DATA] [--until DATA]
 #      sdd-report.sh [--repo DONO/REPO] ticket '#N'
-#      sdd-report.sh [--repo DONO/REPO] phase '#ÉPICO'
+#      sdd-report.sh [--repo DONO/REPO] phase '#ÉPICO' [--compare '#OUTRO']
 #   tokens: lê os arquivos de sessão do Claude Code (*.jsonl em $SDD_SESSIONS_DIR,
 #   padrão ~/.claude/projects), conta cada chamada uma vez (por message.id) e imprime:
 #   chamadas, tokens relidos e gravados no cache, de entrada e gerados, e o
@@ -94,6 +94,13 @@ if [ "$cmd" = tokens ]; then
   exit 0
 fi
 
+# phase --compare '#M': o custo médio por ticket ao lado do de outro épico (019 FR-4).
+cmp=""
+if [ "$cmd" = phase ] && [ "${2:-}" = --compare ]; then
+  cmp="${3:-}"; cmp="${cmp#\#}"
+  case "$cmp" in '' | *[!0-9]*) usage ;; esac
+  set -- "$1"
+fi
 [ $# -eq 1 ] || usage
 n="${1#\#}"
 case "$n" in '' | *[!0-9]*) usage ;; esac
@@ -166,17 +173,23 @@ if [ "$cmd" = ticket ]; then
 fi
 
 # phase: uma linha por sub-issue, o total e um único comentário no épico.
-subs="$(pages "repos/$repo/issues/$n/sub_issues?" '"\(.number)\t\(.title)"')" \
-  || { echo "sdd-report: falha ao ler as sub-issues de #$n" >&2; exit 1; }
-: > "$tmp/rows"
-t="$(printf '\t')"
-printf '%s\n' "$subs" | while IFS="$t" read -r num title; do
-  [ -n "$num" ] || continue
-  j="$(ticket_json "$num")" || j=null
-  jq -nc --argjson n "$num" --arg title "$title" --argjson j "$j" '{ticket: $n, title: $title} + ($j // {})' >> "$tmp/rows"
-done
+# Uma linha JSON por sub-issue do épico $1 em $2.
+rows_for() {
+  subs="$(pages "repos/$repo/issues/$1/sub_issues?" '"\(.number)\t\(.title)"')" \
+    || { echo "sdd-report: falha ao ler as sub-issues de #$1" >&2; exit 1; }
+  : > "$2"
+  t="$(printf '\t')"
+  printf '%s\n' "$subs" | while IFS="$t" read -r num title; do
+    [ -n "$num" ] || continue
+    j="$(ticket_json "$num")" || j=null
+    jq -nc --argjson n "$num" --arg title "$title" --argjson j "$j" '{ticket: $n, title: $title} + ($j // {})' >> "$2"
+  done
+}
+rows_for "$n" "$tmp/rows"
+: > "$tmp/crows"
+[ -z "$cmp" ] || rows_for "$cmp" "$tmp/crows"
 marker='<!-- sdd-report -->'
-jq -rs --arg m "$marker" --arg e "$n" '
+jq -rs --arg m "$marker" --arg e "$n" --arg c "$cmp" --slurpfile cr "$tmp/crows" '
   def k: if . == null then "—" else tostring end;
   def tok(f): if .usage == null then "—" else (.usage | f | tostring) end;
   (map(select(.usage != null) | .usage)) as $u
@@ -192,6 +205,18 @@ jq -rs --arg m "$marker" --arg e "$n" '
      (avg("relé")) as $r | (avg("janela")) as $w
      | if $r == null and $w == null then empty else
        "Custo médio por ticket (tokens relidos + gravados + entrada + gerados): \(if $r then "com relé \($r.avg) (\($r.n) tickets)" else "com relé —" end); \(if $w then "sem relé \($w.avg) (\($w.n) tickets)" else "sem relé —" end)." end),
+    # 019 FR-4: este épico ao lado de outro (ex.: a fase com relé contra uma sem).
+    (def tot: (.read + .created + .input + .output);
+     def stats: map(select(.usage != null) | .usage) | if length == 0 then null else
+       {n: length, avg: (map(tot) | add / length | floor),
+        ctx: ((map(.read + .created + .input) | add) / (map(.calls) | add) | floor)} end;
+     if $c == "" then empty else
+       # Daqui, só os tickets do relé, se houver: são eles que a comparação mede.
+       (if any(.[]; .measure == "relé") then map(select(.measure == "relé")) else . end) as $here
+       | ($here | stats) as $a | ($cr | stats) as $b
+       | (if any(.[]; .measure == "relé") then "com relé" else "todos" end) as $lab
+       | if $a == null or $b == null then "Comparação com o épico #\($c): sem dado de tokens num dos dois." else
+         "Comparação com o épico #\($c): custo médio por ticket \($a.avg) aqui (\($a.n) tickets, \($lab)) contra \($b.avg) lá (\($b.n) tickets), \(($b.avg / $a.avg * 10 | floor) / 10) vezes menos; contexto médio por chamada \($a.ctx) contra \($b.ctx) (\(($b.ctx / $a.ctx * 10 | floor) / 10) vezes menos)." end end),
     (if ($u | length) < (map(select(.pr)) | length) then "Tickets sem dado de tokens (outro contêiner ou outro agente) aparecem com —." else empty end),
     "Gerado por `sdd-report.sh phase` (spec 017), sem LLM; uma rodada nova edita este comentário."' "$tmp/rows" > "$tmp/body"
 cat "$tmp/body"

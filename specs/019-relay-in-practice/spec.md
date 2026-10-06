@@ -27,3 +27,5 @@ Medição de 2026-10-06: um `claude -p` novo começa com cerca de 32 mil tokens 
 ### Não lançado
 
 - ADDED FR-1, FR-2 — agente padrão do relé sem prompts de permissão (`--permission-mode acceptEdits` e só os comandos da entrega) e com sessão própria (sem `CLAUDE_CODE_SESSION_ID` herdado); README com a seção do relé (T57, #236).
+- ADDED FR-3 — despertar ocioso: só o turno sem `git commit`, `git push` nem `sdd-pr.sh` (T60, #239).
+- ADDED FR-4 — `sdd-report.sh phase '#ÉPICO' --compare '#OUTRO'`: custo médio por ticket (só os do relé, se houver) e contexto por chamada ao lado de outro épico; README com a economia medida: 16 vezes menos por ticket e 5,4 vezes menos contexto por chamada, Fase 13 com relé contra Fase 12 sem (T61, #240).

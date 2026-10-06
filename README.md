@@ -140,6 +140,9 @@ Repositórios adotados pelo script já recebem essa configuração; se o seu já
 | CI vermelho "resolvido" desligando teste | Regra explícita: causa raiz, nunca pular teste ou afrouxar gate |
 | Decisões tomadas pelo agente sem você saber | Pontos de parada: decisões, revisão, merge e tag são do dono |
 | Ferramentas instaladas no meio do trabalho | Hook de sessão instala as ferramentas do CI na versão certa |
+| Sessão longa que relê a conversa inteira a cada chamada | **Relé de sessões curtas:** um agente novo por ticket, que começa só com o pacote do ticket (veja abaixo) |
+
+**Medido, não estimado** (`sdd-report.sh phase '#235' --compare '#225'`, 2026-10-06): os três tickets da Fase 13 feitos pelo relé custaram em média **403 mil tokens por ticket**, contra **6,5 milhões** por ticket na Fase 12, feita numa sessão longa sem relé. São **16 vezes menos** por ticket e **5,4 vezes menos** contexto relido por chamada (43 mil contra 231 mil). Os tickets da Fase 13 eram menores que os da Fase 12, então o ganho por chamada é a medida mais justa; o relatório de cada fase refaz a conta com os seus próprios tickets.
 
 ## Por que o sdd-kit
 

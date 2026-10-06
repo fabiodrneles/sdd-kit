@@ -91,7 +91,17 @@ if [ "$tagmode" -eq 1 ]; then
     || die "a origin/main não tem '## [$ver]' no CHANGELOG: o PR de fechamento já foi mesclado?"
   sha="$(git rev-parse origin/main)"
   wf=".github/workflows/release-tag.yml"
-  if [ -f scripts/sdd-release-check.sh ]; then
+  if [ "${SDD_RELEASE_PRE:-}" = ci ]; then
+    # No motor (runner sem as ferramentas do projeto): a verificação é o CI da main
+    # verde exatamente no commit que vai receber a tag.
+    if [ "$dry" -eq 1 ]; then
+      echo "[dry-run] sh $here/sdd-ci.sh $sha (CI da main antes da tag)"
+    else
+      echo "sdd-release: esperando o CI da main em $(printf '%s' "$sha" | cut -c1-7) antes da tag"
+      sh "$here/sdd-ci.sh" --repo "$repo" --timeout "${SDD_RELEASE_CI_TIMEOUT:-1800}" "$sha" \
+        || { echo "sdd-release: o CI da main não está verde em $(printf '%s' "$sha" | cut -c1-7); nada foi criado" >&2; exit 1; }
+    fi
+  elif [ -f scripts/sdd-release-check.sh ]; then
     if [ "$dry" -eq 1 ]; then
       echo "[dry-run] sh scripts/sdd-release-check.sh pre $tag"
     else

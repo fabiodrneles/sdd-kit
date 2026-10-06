@@ -61,4 +61,5 @@ if [ -n "$runs" ]; then
 fi
 
 echo "disparando a release $tag (PR #$pr)"
-sh "$release" --repo "$repo" --tag "$ver" || { echo "sdd-on-release-merge: o sdd-release.sh falhou" >&2; exit 1; }
+# O runner não tem as ferramentas do projeto: a checagem antes da tag é o CI da main (#184).
+SDD_RELEASE_PRE=ci sh "$release" --repo "$repo" --tag "$ver" || { echo "sdd-on-release-merge: o sdd-release.sh falhou" >&2; exit 1; }

@@ -40,7 +40,7 @@ chmod +x "$tmp/bin/gh"
 # sdd-release.sh falso: registra os argumentos de cada chamada.
 cat > "$tmp/release.sh" <<'SH'
 #!/bin/sh
-echo "$*" >> "$G/dispatch"
+echo "$* pre=${SDD_RELEASE_PRE:-}" >> "$G/dispatch"
 SH
 export PATH="$tmp/bin:$PATH" G SDD_RELEASE_SH="$tmp/release.sh"
 
@@ -54,7 +54,7 @@ count() { wc -l < "$G/dispatch" | tr -d ' '; }
 
 # 015 AC-5: o PR de fechamento mesclado dispara a release da versão, uma vez.
 out="$(run 10)" || fail "PR de fechamento saiu com erro: $out"
-[ "$(cat "$G/dispatch")" = "--repo o/r --tag 1.2.3" ] || fail "disparo errado: $(cat "$G/dispatch")"
+[ "$(cat "$G/dispatch")" = "--repo o/r --tag 1.2.3 pre=ci" ] || fail "disparo errado (#184: com SDD_RELEASE_PRE=ci): $(cat "$G/dispatch")"
 
 # 015 AC-5 (NFR-2): com a tag criada, rodar de novo não dispara outra vez.
 echo "v1.2.3" > "$G/tags"

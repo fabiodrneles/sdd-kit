@@ -16,7 +16,9 @@ on:
 
 permissions:
   actions: write
+  checks: read
   contents: read
+  statuses: read
 
 concurrency:
   group: sdd-on-release-merge

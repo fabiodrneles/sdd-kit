@@ -52,13 +52,17 @@ cat > "$tmp/bin/agent" <<'SH'
 cat > "$G/in"
 n="$(sed -n '1s/^# Ticket #\([0-9]*\):.*/\1/p' "$G/in")"
 cp "$G/in" "$G/in-$n"; echo "$n" >> "$G/calls"
+# A sessão do agente: um arquivo novo, com 1000×N tokens relidos.
+printf '{"timestamp":"%s","message":{"id":"s%s-%s","usage":{"input_tokens":1,"cache_read_input_tokens":%s,"output_tokens":5}}}\n' \
+  "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$n" "$(grep -c . "$G/calls")" "$((1000 * n))" > "$SDD_SESSIONS_DIR/agent-$n-$(grep -c . "$G/calls").jsonl"
 [ ! -f "$G/no-pr" ] || exit 0
 jq --argjson n "$n" '. + [{number: (100 + $n), body: "Closes #\($n) · Épico #5"}]' "$G/pulls.json" > "$G/p" && mv "$G/p" "$G/pulls.json"
 echo '{"state":"closed","merged_at":"2026-01-01T00:00:00Z"}' > "$G/pr-$((100 + n)).json"
 echo '{"state":"closed","merged_at":null}' > "$G/issue-$n.json"
 SH
 chmod +x "$tmp/bin/agent"
-export PATH="$tmp/bin:$PATH" G SDD_AGENT_CMD=agent
+mkdir -p "$tmp/sessions"
+export PATH="$tmp/bin:$PATH" G SDD_AGENT_CMD=agent SDD_SESSIONS_DIR="$tmp/sessions"
 
 r="$tmp/repo"; mkdir -p "$r/scripts" "$r/specs/018-x"
 cp "$s/sdd-relay.sh" "$s/sdd-context.sh" "$s/sdd-wait.sh" "$s/sdd-checkpoint.sh" "$s/sdd-report.sh" "$r/scripts/"
@@ -76,7 +80,7 @@ SH
 printf '# 018\n\n- **AC-1** Linha do AC-1.\n- **AC-2** Linha do AC-2.\n' > "$r/specs/018-x/spec.md"
 cd "$r"; git init -q
 reset() {
-  rm -f "$G"/*.json "$G"/seen-* "$G"/closes-* "$G/calls" "$G/no-pr" "$G/stale-subs"; : > "$G/calls"
+  rm -f "$tmp"/sessions/*.jsonl; rm -f "$G"/*.json "$G"/seen-* "$G"/closes-* "$G/calls" "$G/no-pr" "$G/stale-subs"; : > "$G/calls"
   echo '{"state":"open","created_at":"2026-01-01T00:00:00Z"}' > "$G/open.json"
   echo '[]' > "$G/comments.json"; echo '[]' > "$G/branches.json"; rm -f "$G/posted" "$G"/ci-*
   echo '[{"number":5}]' > "$G/epics.json"
@@ -96,6 +100,12 @@ grep -qF 'AC-2' "$G/in-2" && fail "pacote do #2 com o AC-2 de outro ticket"
 grep -qF -- '- **AC-2** Linha do AC-2.' "$G/in-3" || fail "pacote do #3 sem o AC-2"
 grep -qF 'Trabalhe só o ticket #3' "$G/in-3" || fail "sem a instrução do ticket: $(cat "$G/in-3")"
 printf '%s\n' "$out" | tail -n 1 | grep -qF 'Próximo: PR de fechamento da fase' || fail "sem o Próximo da fase: $out"
+# 018 FR-6: o custo exato de cada ticket (só a sessão dele) num comentário da issue.
+c2="$(sed -n 's/^<!-- sdd-relay-cost \(.*\) -->$/\1/p' "$G/posted" | sed -n 1p)"
+c3="$(sed -n 's/^<!-- sdd-relay-cost \(.*\) -->$/\1/p' "$G/posted" | sed -n 2p)"
+[ "$(printf '%s' "$c2" | jq -c '[.sessions, .usage.calls, .usage.read]')" = '[1,1,2000]' ] || fail "custo do #2: $c2"
+[ "$(printf '%s' "$c3" | jq -c '[.sessions, .usage.calls, .usage.read]')" = '[1,1,3000]' ] || fail "custo do #3: $c3"
+grep -qF '**Custo do ticket pelo relé:** 1 sessões, 1 chamadas, 2000 tokens relidos' "$G/posted" || fail "custo sem o resumo: $(cat "$G/posted")"
 
 # 018 AC-4: retomada. O #2 já foi mergeado e o #3 tem PR aberto: o relé espera esse
 # merge sem chamar o agente, e não refaz o #2.

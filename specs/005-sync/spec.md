@@ -48,4 +48,4 @@ D3 (a): melhorias na skill e nos modelos precisam chegar aos repositórios que j
 
 ### Não lançado
 
-- ADDED FR-5, AC-4, AC-5 — a sincronização não se perde quando a versão nova traz workflows nem quando o Actions não pode criar PRs (#169, PR #PR).
+- ADDED FR-5, AC-4, AC-5 — a sincronização não se perde quando a versão nova traz workflows nem quando o Actions não pode criar PRs (#169, PR #171).

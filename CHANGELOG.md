@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.7.3] - 2026-10-06
+
+### Corrigido
+
+- resume always ends in one Próximo line; ask the owner when there is none (#196)
+
 ## [1.7.2] - 2026-10-06
 
 ### Corrigido

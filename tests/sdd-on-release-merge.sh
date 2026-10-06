@@ -16,15 +16,23 @@ G="$tmp/gh"; mkdir -p "$G" "$tmp/bin"
 cat > "$tmp/bin/gh" <<'SH'
 #!/bin/sh
 shift # api
-jq="" url=""
+jq="" url="" method=GET
 while [ $# -gt 0 ]; do
   case "$1" in
     --jq) jq="$2"; shift 2 ;;
+    -X) method="$2"; shift 2 ;;
+    -f | -F) shift 2 ;;
     *) url="$1"; shift ;;
   esac
 done
 echo "$url" >> "$G/calls"
+case "$method $url" in
+  "POST repos/o/r/issues/"*/comments) echo "${url%/comments}" >> "$G/commented"; exit 0 ;;
+  "PATCH repos/o/r/issues/"*) echo "${url##*/}" >> "$G/closed"; exit 0 ;;
+esac
 case "$url" in
+  repos/o/r/issues/*/sub_issues*)
+    jq -r "$jq" < "$G/subs" ;;
   repos/o/r/pulls/*)
     n="${url##*/}"; read -r merged ref repo < "$G/pr.$n"
     jq -n --arg m "$merged" --arg r "$ref" --arg p "$repo" \
@@ -48,7 +56,7 @@ SH
 # shellcheck disable=SC2016 # literal: crases e $ do texto gerado
 printf '#!/bin/sh\necho "$*" >> "$G/epic"\n' > "$tmp/epic.sh"
 export PATH="$tmp/bin:$PATH" G SDD_RELEASE_SH="$tmp/release.sh" SDD_EPIC_SH="$tmp/epic.sh"
-echo '[]' > "$G/epics"; : > "$G/epic"
+echo '[]' > "$G/epics"; : > "$G/epic"; : > "$G/closed"; echo '[{"state":"open"}]' > "$G/subs"
 
 echo "true chore/release-v1.2.3 o/r" > "$G/pr.10"
 echo "true feat/9-algo o/r" > "$G/pr.11"
@@ -112,4 +120,10 @@ out="$(cd "$tmp/proj" && run 20 2>&1)" || fail "fechamento com próxima fase fal
 echo '[{"number":5}]' > "$G/epics"; : > "$G/epic"; echo "true chore/release-v1.2.5 o/r" > "$G/pr.21"
 out="$(cd "$tmp/proj" && run 21 2>&1)" || fail "fechamento com épico aberto falhou: $out"
 [ ! -s "$G/epic" ] || fail "abriu outra fase com épico aberto: $(cat "$G/epic")"
+[ ! -s "$G/closed" ] || fail "fechou um épico com ticket aberto"
+# #217: épico aberto sem ticket aberto (a fase entregue): o motor o fecha e abre a próxima fase.
+echo '[{"state":"closed"},{"state":"closed"}]' > "$G/subs"; : > "$G/epic"; echo "true chore/release-v1.2.6 o/r" > "$G/pr.22"
+out="$(cd "$tmp/proj" && run 22 2>&1)" || fail "fechamento com épico entregue falhou: $out"
+[ "$(cat "$G/closed")" = 5 ] || fail "não fechou o épico entregue #5: $out"
+[ "$(cat "$G/epic")" = "--repo o/r 2" ] || fail "não abriu a Fase 2 depois de fechar o épico: $(cat "$G/epic") / $out"
 echo "sdd-on-release-merge: ok"

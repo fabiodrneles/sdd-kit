@@ -38,6 +38,10 @@ Na sessão de 2026-10-05, só ler notificações de PR e cancelar assinaturas cu
 
 ## Mudanças
 
+### Não lançado
+
+- MODIFIED FR-5 — depois de disparar a release, o motor fecha o épico da fase entregue (sem sub-issue aberta) e então abre a próxima fase; antes, o épico ficava aberto e a próxima fase não abria, como na v1.9.0 com o #203 (#217).
+
 ### v1.7.1
 
 - MODIFIED FR-5 — antes da tag, o motor espera o CI da `main` verde no commit que vai receber a tag (`SDD_RELEASE_PRE=ci`), em vez do `sdd-release-check.sh pre` local, que falha num runner sem as ferramentas do projeto: visto no sdd-kit-demo com o merge do #24 (#184).

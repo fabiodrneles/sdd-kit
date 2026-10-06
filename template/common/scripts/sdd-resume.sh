@@ -25,7 +25,16 @@ fi
 out="$(sh "$here/sdd-checkpoint.sh" --repo "$repo" show 2>/dev/null)" || true
 printf '%s\n' "$out"
 epic="$(printf '%s\n' "$out" | sed -n '1s/^[^#]*#\([0-9][0-9]*\) (.*$/\1/p')"
-[ -n "$epic" ] || exit 0
+if [ -z "$epic" ]; then
+  # Sem épico aberto (a fase anterior fechou): o próximo passo vem do ROADMAP (#191).
+  if next="$(sh "$here/sdd-next-phase.sh" 2> /dev/null)"; then
+    t="$(printf '\t')"; n="${next%%"$t"*}"
+    echo "Próximo: abrir a ${next#*"$t"} (já aprovada no ROADMAP): sh scripts/sdd-epic.sh $n"
+  elif [ -f specs/ROADMAP.md ]; then
+    echo "Próximo: o ROADMAP não tem fase com tarefa aberta; escolher com o dono um item de \"Próximas fases\" e escrever a spec e a fase"
+  fi
+  exit 0
+fi
 
 # 2. Branch do checkpoint.
 if ! git rev-parse --git-dir >/dev/null 2>&1; then

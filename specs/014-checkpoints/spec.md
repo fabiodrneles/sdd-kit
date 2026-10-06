@@ -25,6 +25,10 @@ O "Estado da fase" do épico só é escrito nos marcos, e quando o agente lembra
 
 ## Mudanças
 
+### Não lançado
+
+- MODIFIED FR-2 — sem épico aberto, o `sdd-resume.sh` aponta a próxima fase do ROADMAP com tarefa aberta (`sdd-next-phase.sh`), e o motor abre o épico dessa fase depois da release do fechamento: um "continue" numa sessão nova achava "nada a fazer" depois da v0.2.0 do demo (#191).
+
 ### v1.5.0
 
 - MODIFIED FR-2 — o hook de início de sessão chama `sdd-resume.sh`: checkpoint, branch do checkpoint, PRs abertos com o CI e sub-issues do épico (#136).

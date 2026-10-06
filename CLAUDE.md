@@ -4,7 +4,7 @@ Guia rápido para agentes (Claude Code) trabalharem neste repositório. O proces
 
 ## Retomar o trabalho (sessão nova ou contexto perdido)
 
-1. Rode `sh template/common/scripts/sdd-resume.sh` (o hook de início de sessão já o roda): mostra o **checkpoint** do épico aberto, entra na branch dele (árvore limpa), lista os **PRs abertos** com o CI de cada um e as **issues abertas** do épico. Continue do "Próximo" do checkpoint, sem esperar instrução. Sem checkpoint, leia o comentário "Estado da fase" mais recente do épico.
+1. Rode `sh template/common/scripts/sdd-resume.sh` (o hook de início de sessão já o roda): mostra o **checkpoint** do épico aberto, entra na branch dele (árvore limpa), lista os **PRs abertos** com o CI de cada um e as **issues abertas** do épico. Continue do "Próximo" do checkpoint, sem esperar instrução. Sem checkpoint, leia o comentário "Estado da fase" mais recente do épico. **Sem épico aberto** (a fase anterior fechou), o `sdd-resume.sh` diz a próxima fase do ROADMAP: abra-a com `sh template/common/scripts/sdd-epic.sh N` e comece o primeiro ticket; "continue" nunca termina em "nada a fazer" enquanto o ROADMAP tiver tarefa aberta.
 2. Continue do próximo passo registrado. Não refaça análise que já está em specs, issues ou PRs.
 
 ## O projeto
@@ -31,7 +31,7 @@ Numa sessão na web, o hook `.claude/hooks/session-start.sh` instala o shellchec
 
 ## Convenções
 
-- **Idioma:** specs, issues, PRs e documentação em português; `README.en.md`, a skill e os comandos de `plugins/` em inglês (a skill escreve no idioma do dono, D12); commits e código em inglês.
+- **Idioma:** a conversa com o dono é em português, inclusive a resposta a um "continue"; specs, issues, PRs e documentação em português; `README.en.md`, a skill e os comandos de `plugins/` em inglês (a skill escreve no idioma do dono, D12); commits e código em inglês.
 - **Commits:** Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `ci:`, `chore:`; `!` para mudança incompatível).
 - **Branch:** uma por ticket, `<tipo>/<nº-da-issue>-<descrição>`.
 - **PR:** começa com `Closes #N · Épico #M · Spec NNN` e segue o template.

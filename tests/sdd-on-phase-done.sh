@@ -30,6 +30,7 @@ done
 case "$method $url" in
   "POST repos/o/r/pulls") echo w >> "$G/writes"; echo "title=$title" >> "$G/created"
     echo '{"number":50,"html_url":"https://github.com/o/r/pull/50"}' | jq -r "$jq"; exit 0 ;;
+  "POST "*/dispatches) echo w >> "$G/writes"; echo "$url" >> "$G/dispatched"; exit 0 ;;
   "POST "*) echo w >> "$G/writes"; exit 0 ;;
   "GET "*pulls\?state=open\&head=*) exit 0 ;;
   "GET "*pulls\?state=open*) jq -r "$jq" "$G/open.json"; exit 0 ;;
@@ -52,7 +53,9 @@ echo '[]' > "$G/open.json"
 git init -q --bare -b main "$tmp/origin.git"
 r="$tmp/repo"; mkdir -p "$r/scripts"
 cp "$s/sdd-on-phase-done.sh" "$s/sdd-release.sh" "$s/sdd-pr.sh" "$s/sdd-ci.sh" "$s/sdd-checkpoint.sh" "$r/scripts/"
-printf 'ci:\n\t@echo CI-OK\n' > "$r/Makefile"
+# #182: no motor o make ci local é pulado (o runner não tem as ferramentas): um ci
+# que falha não pode impedir o PR de fechamento.
+printf 'ci:\n\t@echo sem-ferramentas; exit 127\n' > "$r/Makefile"
 printf '# Changelog\n\n## [Unreleased]\n\n### Adicionado\n\n- item\n\n## [1.0.0] - 2026-01-01\n\nPrimeira.\n' > "$r/CHANGELOG.md"
 cd "$r"
 git init -q -b main
@@ -101,6 +104,9 @@ git ls-remote --exit-code origin chore/release-v1.1.0 > /dev/null || fail "a bra
 grep -qx 'title=chore: release v1.1.0' "$G/created" || fail "título do PR errado: $(cat "$G/created")"
 [ "$(created)" -eq 1 ] || fail "abriu $(created) PRs"
 grep -q '^## \[1.1.0\]' CHANGELOG.md || fail "CHANGELOG sem a versão"
+# #182: make ci local pulado e, sem SDD_ENGINE_TOKEN, o CI disparado na branch do PR.
+printf '%s\n' "$out" | grep -q 'make ci local pulado' || fail "não pulou o make ci local: $out"
+grep -q 'actions/workflows/ci.yml/dispatches' "$G/dispatched" || fail "não disparou o CI do PR de fechamento"
 
 # Segunda execução (agora o PR existe): nada novo.
 echo '[{"number":50,"head":{"ref":"chore/release-v1.1.0"}}]' > "$G/open.json"

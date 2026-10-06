@@ -68,6 +68,9 @@ fi
 # 3. CI local.
 if [ "$dry" -eq 1 ]; then
   echo "[dry-run] make ci > $log"
+elif [ -n "${SDD_PR_NO_CI:-}" ]; then
+  # No motor (workflow sem as ferramentas do projeto), quem verifica é o CI do PR.
+  echo "sdd-pr: make ci local pulado (SDD_PR_NO_CI); o CI do PR verifica"
 elif ! make ci > "$log" 2>&1; then
   tail -n 30 "$log"
   echo "sdd-pr: make ci falhou (log completo em $log)" >&2
@@ -132,6 +135,15 @@ fi
 if [ "$dry" -eq 1 ]; then
   echo "[dry-run] esperaria o CI do PR #$pr e gravaria o checkpoint"
   exit 0
+fi
+# Push e PR feitos com o GITHUB_TOKEN não disparam o pull_request: o motor pede o
+# CI da branch por workflow_dispatch (SDD_PR_DISPATCH_CI, workflow SDD_CI_WORKFLOW).
+if [ -n "${SDD_PR_DISPATCH_CI:-}" ]; then
+  if gh api -X POST "repos/$repo/actions/workflows/${SDD_CI_WORKFLOW:-ci.yml}/dispatches" --silent -f ref="$branch"; then
+    echo "sdd-pr: CI disparado na branch $branch"
+  else
+    echo "sdd-pr: aviso: não consegui disparar o CI na branch $branch" >&2
+  fi
 fi
 
 # 6. CI do PR.

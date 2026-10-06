@@ -38,6 +38,10 @@ Na sessão de 2026-10-05, só ler notificações de PR e cancelar assinaturas cu
 
 ## Mudanças
 
+### Não lançado
+
+- MODIFIED FR-4 — o PR de fechamento aberto pelo motor pula o `make ci` local (o runner não tem as ferramentas do projeto; quem verifica é o CI do PR) e, sem `SDD_ENGINE_TOKEN`, dispara o CI na branch do PR: visto no sdd-kit-demo, onde o motor parou no `golangci-lint` ausente (#182).
+
 ### v1.7.0
 
 - MODIFIED FR-6 — sem `SDD_ENGINE_TOKEN`, o `sdd-update-prs` espera a cabeça nova do PR e dispara o CI na branch dele: visto no #173, que ficou sem nenhum check depois de o motor trazer a `main` (#174).

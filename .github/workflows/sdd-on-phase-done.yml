@@ -11,6 +11,7 @@ on:
     types: [closed]
 
 permissions:
+  actions: write
   contents: write
   issues: read
   pull-requests: write
@@ -38,6 +39,8 @@ jobs:
           GH_TOKEN: ${{ secrets.SDD_ENGINE_TOKEN || github.token }}
           SDD_ENGINE: ${{ vars.SDD_ENGINE }}
           ISSUE: ${{ github.event.issue.number }}
+          SDD_ENGINE_TOKEN_SET: ${{ secrets.SDD_ENGINE_TOKEN != '' && '1' || '' }}
+          SDD_CI_WORKFLOW: ${{ vars.SDD_CI_WORKFLOW }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

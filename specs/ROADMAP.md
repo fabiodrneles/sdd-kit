@@ -129,6 +129,7 @@ O motor em Go como cérebro do opencode, com o modelo que o usuário tiver (spec
 - [ ] **T74** Template `web` e preparo de repositório vazio — 021 FR-4, AC-4
 - [ ] **T75** Escada de modelos e registro do modelo, das tentativas e do custo — 021 FR-6, FR-7, AC-2
 - [ ] **T77** Recuperação sem trocar de modelo: diagnóstico exato, mais contexto, várias tentativas, ticket dividido, plano antes do código e pergunta ao usuário — 021 FR-8, AC-6
+- [ ] **T78** O motor conduz o laço: /axyn chama só axyn_run, e o axyn usa o opencode run para o código — 021 FR-9, AC-7
 - [ ] **T76** Instalação por um comando e o teste de aceitação do dono (landing page com modelo gratuito; e2e com agente falso no CI) — 021 FR-1, AC-5
 
 ## Próximas fases (visão, sem versão)

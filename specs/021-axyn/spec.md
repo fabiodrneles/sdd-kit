@@ -31,6 +31,7 @@ A divisão do axyn: **o motor faz tudo o que é determinístico** (estado, specs
 - **FR-6** Escada de modelos: a configuração (`~/.config/axyn/config.yaml`) MUST listar os modelos em ordem, com as chaves só em variáveis de ambiente, nunca no repositório (OpenRouter, Gemini, Groq, Ollama, Anthropic, OpenAI e o que o opencode aceitar); um outro modelo só entra depois da recuperação do FR-8 com o modelo atual; esgotada a escada, o trabalho fica num commit WIP na branch do ticket, e o axyn mostra o que falta e o que já foi tentado, sem quebrar nada.
 - **FR-8** Recuperação sem trocar de modelo (D18): diff reprovado MUST passar, em ordem e com teto de tentativas e de tokens por passo, por: (1) diagnóstico exato, sem LLM (o teste que falhou, a linha do lint e o trecho de código, no lugar do log inteiro); (2) mais contexto, só o que o erro aponta (o arquivo de teste, o trecho em volta, os usos da função); (3) várias tentativas do mesmo diff, das quais vale a primeira que passa nos portões; (4) o ticket dividido em passos menores validados pelo motor (o teste que falha, a implementação mínima, o ajuste); (5) plano antes do código, conferido pelo motor (só os arquivos do ticket); (6) uma pergunta objetiva ao usuário, com opções, quando o ticket é ambíguo ou o modelo dá sinais de não entender (planos contraditórios, arquivos fora do ticket), e a resposta vira uma decisão na spec; só então (7) outro modelo, se houver.
 - **FR-7** Cada ticket entregue MUST registrar o modelo, as tentativas, a estratégia do FR-8 que resolveu e o custo; `axyn eval` MUST dar a nota de cada modelo configurado por tipo de tarefa, com a bateria do `benchmark.sh`.
+- **FR-9** O motor MUST conduzir o laço (planejar, escolher o ticket, chamar o agente de código sem interação, portões, recuperação e entrega); o modelo principal do opencode só chama `axyn_run` e mostra o andamento (`axyn_status`).
 
 ## Requisitos não funcionais
 
@@ -46,6 +47,7 @@ A divisão do axyn: **o motor faz tudo o que é determinístico** (estado, specs
 - **AC-4** Dado um repositório vazio, quando o axyn prepara o projeto web, então o `make ci` dele roda e reprova um HTML inválido.
 - **AC-6** (D18) Dado um único modelo e um agente falso que só acerta quando recebe o diagnóstico exato, quando o ticket falha na primeira tentativa, então o axyn reenvia o diagnóstico e entrega o ticket, sem pedir outro modelo, e o ticket registra a estratégia que resolveu; dado um agente que nunca acerta, então o axyn passa pelos passos em ordem, respeita os tetos, faz a pergunta ao usuário e termina com um commit WIP e o motivo.
 - **AC-5** (D17) Dado o opencode com um modelo gratuito e o axyn instalado num repositório clonado, quando o usuário pede `/axyn crie uma landing page`, então há uma spec, tickets e um PR por ticket com CI verde, ou o axyn para com o motivo, sem quebrar o projeto; no CI, o mesmo fluxo roda com um agente falso.
+- **AC-7** Dado um agente de código falso e um pedido com dois tickets, quando `axyn run` roda, então os dois tickets passam pelos portões e viram commits na ordem, sem decisão do modelo principal; com o agente falso apagando um teste, o ticket não é entregue.
 
 ## Fora do escopo do axyn mínimo
 
@@ -54,3 +56,5 @@ Interface própria de terminal, tickets em paralelo, lote adaptativo, GitLab. En
 ## Mudanças
 
 ### Não lançado
+
+- O motor conduz o laço (`axyn run`, `axyn_run`, `axyn_status`): o `/axyn` é uma instrução só e o código vem do `opencode run --agent axyn-code` (FR-9, AC-7).

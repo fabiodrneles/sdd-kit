@@ -70,6 +70,7 @@ type mcpServer struct {
 	base     string
 	maxLines int
 	config   string // model ladder file (FR-6); empty or missing means no ladder
+	fallback bool   // the run loop (FR-9) counts attempts even with no ladder configured
 }
 
 func obj(props map[string]any, required ...string) map[string]any {
@@ -100,6 +101,13 @@ var mcpTools = []toolDef{
 			"question": str("a pergunta feita ao usuário"),
 			"answer":   str("a resposta do usuário"),
 		}, "question", "answer")},
+	{"axyn_run", "Inicia em segundo plano o laço inteiro do axyn (planejar, código, portões, recuperação, entrega) e devolve um id. Não decide nada do processo: depois só mostre o andamento com axyn_status.",
+		obj(map[string]any{
+			"request": str("o pedido do usuário, como foi escrito"),
+			"resume":  map[string]any{"type": "boolean", "description": "retoma o plano aberto, sem planejar de novo (depois de axyn_decide)"},
+		})},
+	{"axyn_status", "Mostra o andamento de uma execução do axyn_run: ticket atual, portões, modelo e tentativas.",
+		obj(map[string]any{"id": str("id devolvido pelo axyn_run; vazio é a última execução")})},
 	{"axyn_ship", "Commit, push e PR do diff atual, só se o portão estiver verde; recusa se reprovar.",
 		obj(map[string]any{
 			"message": str("mensagem do commit (Conventional Commits)"),
@@ -201,6 +209,23 @@ func (s *mcpServer) call(name string, raw json.RawMessage) (string, error) {
 			return "", err
 		}
 		return s.toolDecide(a.Question, a.Answer)
+	case "axyn_run":
+		var a struct {
+			Request string `json:"request"`
+			Resume  bool   `json:"resume"`
+		}
+		if err := json.Unmarshal(raw, &a); err != nil {
+			return "", err
+		}
+		return s.toolRun(a.Request, a.Resume)
+	case "axyn_status":
+		var a struct {
+			ID string `json:"id"`
+		}
+		if err := json.Unmarshal(raw, &a); err != nil {
+			return "", err
+		}
+		return s.toolStatus(a.ID)
 	case "axyn_ship":
 		var a struct {
 			gateArgs
@@ -443,6 +468,13 @@ func (s *mcpServer) toolShip(a gateArgs, msg string) (string, error) {
 	if !green {
 		return "", fmt.Errorf("ship recusado: o portão reprovou o diff\n%s", report)
 	}
+	return s.deliver(msg, false)
+}
+
+// deliver commits, pushes and opens the PR for a diff that already passed the gates.
+// newBranch starts a branch for the ticket even when HEAD is already on one (the run
+// loop delivers one ticket after the other).
+func (s *mcpServer) deliver(msg string, newBranch bool) (string, error) {
 
 	var t *ticket
 	pl, planPath, perr := s.loadPlan()
@@ -456,7 +488,7 @@ func (s *mcpServer) toolShip(a gateArgs, msg string) (string, error) {
 	}
 
 	branch, _ := s.git("rev-parse", "--abbrev-ref", "HEAD")
-	if branch == "main" || branch == "master" || branch == "HEAD" {
+	if newBranch || branch == "main" || branch == "master" || branch == "HEAD" {
 		subject := msg
 		if i := strings.Index(subject, ":"); i > 0 && i < 12 {
 			subject = subject[i+1:]

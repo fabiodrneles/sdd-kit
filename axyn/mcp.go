@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -52,8 +53,15 @@ type plan struct {
 	Tickets []ticket `json:"tickets"`
 }
 
+// mcpServer holds the gate settings. They come from how the engine started the
+// server (axyn mcp flags), never from the tool call: the caller is the model whose
+// diff is being judged, and it must not be able to pick an empty CI, a huge limit or
+// a base that empties the diff (021 FR-5, NFR-2).
 type mcpServer struct {
-	dir string
+	dir      string
+	ci       string
+	base     string
+	maxLines int
 }
 
 func obj(props map[string]any, required ...string) map[string]any {
@@ -76,18 +84,24 @@ var mcpTools = []toolDef{
 		obj(map[string]any{})},
 	{"axyn_gate", "Roda os portões (CI, teste afrouxado, caminhos protegidos, tamanho) sobre o diff atual.",
 		obj(map[string]any{
-			"base": str("referência do git (padrão HEAD)"), "max_lines": map[string]any{"type": "integer"},
-			"ci": str("comando do CI (padrão make ci)"),
+			"max_lines": map[string]any{"type": "integer", "description": "limite menor que o do projeto (nunca maior)"},
 		})},
 	{"axyn_ship", "Commit, push e PR do diff atual, só se o portão estiver verde; recusa se reprovar.",
 		obj(map[string]any{
 			"message": str("mensagem do commit (Conventional Commits)"),
-			"base":    str("referência do git (padrão HEAD)"), "ci": str("comando do CI (padrão make ci)"),
 		}, "message")},
 }
 
-func runMCP(in io.Reader, out, errw io.Writer) int {
-	s := &mcpServer{dir: "."}
+func runMCP(args []string, in io.Reader, out, errw io.Writer) int {
+	fs := flag.NewFlagSet("axyn mcp", flag.ContinueOnError)
+	fs.SetOutput(errw)
+	ci := fs.String("ci", defaultCICmd, "comando do CI do projeto")
+	base := fs.String("base", "HEAD", "referência do git contra a qual o diff é medido")
+	maxLines := fs.Int("max-lines", defaultMaxLines, "limite de linhas alteradas por ticket")
+	if err := fs.Parse(args); err != nil {
+		return exitUsage
+	}
+	s := &mcpServer{dir: ".", ci: *ci, base: *base, maxLines: *maxLines}
 	sc := bufio.NewScanner(in)
 	sc.Buffer(make([]byte, 1<<20), 1<<26)
 	enc := json.NewEncoder(out)
@@ -144,9 +158,7 @@ func runMCP(in io.Reader, out, errw io.Writer) int {
 }
 
 type gateArgs struct {
-	Base     string  `json:"base"`
-	MaxLines int     `json:"max_lines"`
-	CI       *string `json:"ci"`
+	MaxLines int `json:"max_lines"`
 }
 
 // call runs one tool. A gate that fails is a normal answer (text, not an error);
@@ -182,18 +194,13 @@ func (s *mcpServer) call(name string, raw json.RawMessage) (string, error) {
 
 // gate runs the FR-5 gates and renders the report; green is true when nothing failed.
 func (s *mcpServer) gate(a gateArgs) (bool, string, error) {
-	if a.Base == "" {
-		a.Base = "HEAD"
-	}
-	if a.MaxLines == 0 {
-		a.MaxLines = defaultMaxLines
-	}
-	ci := defaultCICmd
-	if a.CI != nil {
-		ci = *a.CI
+	// The caller may only make the size limit stricter, never looser.
+	maxLines := s.maxLines
+	if a.MaxLines > 0 && a.MaxLines < maxLines {
+		maxLines = a.MaxLines
 	}
 	var ciLog bytes.Buffer
-	n, findings, err := evalGate(s.dir, a.Base, a.MaxLines, ci, nil, &ciLog)
+	n, findings, err := evalGate(s.dir, s.base, maxLines, s.ci, nil, &ciLog)
 	if err != nil {
 		return false, "", fmt.Errorf("git diff falhou: %v", err)
 	}

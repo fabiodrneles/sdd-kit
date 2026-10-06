@@ -10,7 +10,7 @@ import (
 // rpc sends requests to the server in dir and returns the tool text and isError of each tools/call.
 func callTool(t *testing.T, dir, tool string, args map[string]any) (string, bool) {
 	t.Helper()
-	s := &mcpServer{dir: dir}
+	s := &mcpServer{dir: dir, ci: "true", base: "HEAD", maxLines: defaultMaxLines}
 	raw, _ := json.Marshal(args)
 	text, err := s.call(tool, raw)
 	if err != nil {
@@ -27,7 +27,7 @@ func TestMCPProtocol(t *testing.T) {
 		`{"jsonrpc":"2.0","id":3,"method":"bogus"}`,
 	}, "\n") + "\n"
 	var out, errb bytes.Buffer
-	if code := runMCP(strings.NewReader(in), &out, &errb); code != exitOK {
+	if code := runMCP(nil, strings.NewReader(in), &out, &errb); code != exitOK {
 		t.Fatalf("code %d", code)
 	}
 	lines := strings.Split(strings.TrimSpace(out.String()), "\n")
@@ -49,13 +49,13 @@ func TestMCPGateFailsAndShipRefuses(t *testing.T) {
 	dir := repo(t)
 	write(t, dir, "x_test.go", strings.Replace(twoTests, "func TestB", "func helperB", 1))
 
-	text, isErr := callTool(t, dir, "axyn_gate", map[string]any{"ci": ""})
+	text, isErr := callTool(t, dir, "axyn_gate", map[string]any{})
 	if isErr || !strings.Contains(text, "reprovado [tests]") || !strings.Contains(text, "teste(s) a menos") {
 		t.Fatalf("gate: isErr %v, %q", isErr, text)
 	}
 
 	before, _ := (&mcpServer{dir: dir}).git("rev-parse", "HEAD")
-	text, isErr = callTool(t, dir, "axyn_ship", map[string]any{"message": "feat: x", "ci": ""})
+	text, isErr = callTool(t, dir, "axyn_ship", map[string]any{"message": "feat: x"})
 	if !isErr || !strings.Contains(text, "ship recusado") || !strings.Contains(text, "teste(s) a menos") {
 		t.Fatalf("ship: isErr %v, %q", isErr, text)
 	}
@@ -68,7 +68,7 @@ func TestMCPGateFailsAndShipRefuses(t *testing.T) {
 func TestMCPShipGreen(t *testing.T) {
 	dir := repo(t)
 	write(t, dir, "y.go", "package x\n")
-	text, isErr := callTool(t, dir, "axyn_ship", map[string]any{"message": "feat: add y", "ci": ""})
+	text, isErr := callTool(t, dir, "axyn_ship", map[string]any{"message": "feat: add y"})
 	if isErr || !strings.Contains(text, "commit em feat/add-y") {
 		t.Fatalf("isErr %v, %q", isErr, text)
 	}
@@ -101,11 +101,32 @@ func TestMCPPlanAndNext(t *testing.T) {
 	}
 
 	write(t, dir, "z.go", "package x\n")
-	if text, isErr := callTool(t, dir, "axyn_ship", map[string]any{"message": "feat: z", "ci": ""}); isErr {
+	if text, isErr := callTool(t, dir, "axyn_ship", map[string]any{"message": "feat: z"}); isErr {
 		t.Fatalf("ship: %q", text)
 	}
 	text, _ = callTool(t, dir, "axyn_next", nil)
 	if !strings.Contains(text, "Ticket 2: segundo") {
 		t.Fatalf("next depois do ship: %q", text)
+	}
+}
+
+// 021 FR-5, NFR-2: the model that calls the tools cannot loosen the gates. The CI,
+// the base and the size limit come from the server; only a stricter limit is taken.
+func TestMCPGateSettingsComeFromTheServer(t *testing.T) {
+	dir := repo(t)
+	write(t, dir, "x.go", "package x\n"+strings.Repeat("// c\n", 10))
+	s := &mcpServer{dir: dir, ci: "false", base: "HEAD", maxLines: 5}
+	raw, _ := json.Marshal(map[string]any{"message": "feat: x", "ci": "true", "base": "HEAD~1", "max_lines": 100000})
+	if _, err := s.call("axyn_ship", raw); err == nil || !strings.Contains(err.Error(), "ship recusado") {
+		t.Fatalf("ship should refuse with the server's CI and limit: %v", err)
+	}
+	text, _ := s.call("axyn_gate", raw)
+	if !strings.Contains(text, "[ci]") || !strings.Contains(text, "limite de 5") {
+		t.Fatalf("gate used the caller's settings: %q", text)
+	}
+	s.ci, s.maxLines = "true", 1000
+	raw, _ = json.Marshal(map[string]any{"max_lines": 3})
+	if text, _ := s.call("axyn_gate", raw); !strings.Contains(text, "limite de 3") {
+		t.Fatalf("a stricter limit from the caller should apply: %q", text)
 	}
 }

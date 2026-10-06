@@ -42,7 +42,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 	case "gate":
 		return runGate(args[1:], stdout, stderr)
 	case "mcp":
-		return runMCP(os.Stdin, stdout, stderr)
+		return runMCP(args[1:], os.Stdin, stdout, stderr)
 	case "help", "-h", "--help":
 		_, _ = fmt.Fprint(stdout, usage)
 		return exitOK

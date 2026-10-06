@@ -127,7 +127,7 @@ spent() {
     | awk -F ': ' '/^(relidos do cache|gravados no cache|entrada|gerados): / { s += $2 } END { print s + 0 }'
 }
 
-deliver="comece da \`origin/main\`, implemente, rode \`make ci\`, abra o PR com \`sdd-pr.sh --no-wait\` e termine. Não espere o merge nem comece outro ticket: o relé (sdd-relay.sh) cuida disso. Nunca afrouxe, pule ou apague um teste para o CI passar: se ele falhar por algo fora do ticket, abra o PR assim mesmo e explique a falha no corpo dele."
+deliver="comece da \`origin/main\`, implemente, rode \`make ci\`, abra o PR com \`sdd-pr.sh --no-wait\` e termine. Não espere o merge nem comece outro ticket: o relé (sdd-relay.sh) cuida disso. Nunca afrouxe, pule ou apague um teste para o CI passar: se ele falhar por algo fora do ticket, abra o PR assim mesmo e explique a falha no corpo dele. Não use \`git stash\` (a pilha é compartilhada com outras sessões): para guardar trabalho, faça um commit WIP na branch do ticket; para descartar sobras que não são suas, \`git restore\`."
 runs=0 merged=" "
 while :; do
   epic="$(gh api "repos/$repo/issues?labels=%C3%A9pico&state=open&per_page=1" --jq '.[0].number // empty')"

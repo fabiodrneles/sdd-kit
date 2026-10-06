@@ -17,6 +17,20 @@ for lang in go node java python rust dotnet; do
   grep -q 'cancel-in-progress: true' "$lang/.github/workflows/ci.yml" && err "template/$lang: o CI cancela rodadas fora de PRs (#178)"
 done
 
+# #180: num repositório git, o make ci grava os artefatos de cobertura dentro de .git/
+# (Go, Node, Python, .NET) e nunca apaga um caminho absoluto: SDD_OUT vazio por ordem
+# de definição virou "rm -rf /coverage" no template .NET.
+mk="$(mktemp -d)"
+for lang in go node python dotnet java rust; do
+  rm -rf "$mk/$lang"; mkdir -p "$mk/$lang"; cp "$lang/Makefile" "$mk/$lang/"
+  out="$(cd "$mk/$lang" && git init -q && make -n ci 2>&1)" || err "template/$lang: make -n ci falhou: $out"
+  printf '%s\n' "$out" | grep -q 'rm -rf /' && err "template/$lang: make ci apagaria um caminho absoluto: $(printf '%s\n' "$out" | grep 'rm -rf /')"
+  case "$lang" in go | node | python | dotnet)
+    printf '%s\n' "$out" | grep -q '\.git/sdd-out' || err "template/$lang: a cobertura não vai para .git/sdd-out (#180)" ;;
+  esac
+done
+rm -rf "$mk"
+
 # Outros agentes leem AGENTS.md (spec 006 FR-5).
 # 010 AC-3: o template Java também atende projetos Gradle.
 [ -f java/scripts/jacoco.init.gradle ] || err "template/java/scripts/jacoco.init.gradle não existe"

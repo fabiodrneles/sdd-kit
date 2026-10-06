@@ -4,7 +4,10 @@
 DOTNET ?= dotnet
 # Cobertura mínima de linhas exigida pelo make ci (spec 010 do sdd-kit).
 COVERAGE_MIN ?= 80
-COVERAGE_DIR := .coverage
+# Artefatos do make ci (cobertura) ficam dentro de .git/, que o git nunca versiona:
+# nada solto na árvore depois do make ci, sem depender do .gitignore (#180).
+SDD_OUT := $(shell git rev-parse --git-path sdd-out 2>/dev/null || echo .sdd-out)
+COVERAGE_DIR := $(SDD_OUT)/coverage
 
 .DEFAULT_GOAL := ci
 
@@ -12,6 +15,7 @@ COVERAGE_DIR := .coverage
 ci: ## Formatação, build sem avisos e testes com cobertura mínima
 	$(DOTNET) format --verify-no-changes
 	$(DOTNET) build -warnaserror
+	@case "$(COVERAGE_DIR)" in /coverage | "" ) echo "COVERAGE_DIR inválido: $(COVERAGE_DIR)" >&2; exit 1 ;; esac
 	rm -rf $(COVERAGE_DIR)
 	$(DOTNET) test --no-build --collect:"XPlat Code Coverage" --results-directory $(COVERAGE_DIR)
 	sh scripts/coverage.sh $(COVERAGE_DIR) $(COVERAGE_MIN)

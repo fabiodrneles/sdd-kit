@@ -15,8 +15,13 @@ rm -rf "$d"
 cp -R "$root/tests/fixtures/$lang" "$d"
 sh "$root/scripts/adopt.sh" --lang "$adopt_lang" --project demo --owner acme --repo demo "$d" > /dev/null
 cd "$d"
+git init -q # como num projeto real: os artefatos do make ci vão para dentro de .git/ (#180)
 if grep -q '^deps:' Makefile; then make deps; fi
 make ci
+# #180: o make ci não deixa artefato de cobertura solto na árvore.
+for f in coverage.out .coverage coverage .sdd-out; do
+  [ ! -e "$f" ] || { echo "FALHOU: make ci deixou $f na árvore (#180)" >&2; exit 1; }
+done
 # 011 AC-6: com A11Y_PAGES, uma violação de acessibilidade derruba o make ci e
 # aparece na saída; corrigida, passa. O script do axe não conta na cobertura (o
 # make ci acima passou com ele no projeto).
@@ -89,7 +94,7 @@ if [ "$lang" = go ]; then
       cat "$work/cache172.log" >&2
       return 1
     fi
-    (cd "$cv" && GOTOOLCHAIN=auto go tool cover -func=coverage.out | awk '/^total:/ { print $3 }')
+    (cd "$cv" && GOTOOLCHAIN=auto go tool cover -func="$(git rev-parse --git-path sdd-out)/coverage.out" | awk '/^total:/ { print $3 }')
   }
   cover_total "$work/gocache" > /dev/null
   { printf '// shifted\n// shifted\n'; cat "$cv/main.go"; } > "$cv/main.go.new" && mv "$cv/main.go.new" "$cv/main.go"

@@ -44,5 +44,7 @@ Convenções: `MUST`/`SHOULD`/`MAY` seguem a RFC 2119. Prioridades: **P0** (bloq
 | 014 | [Checkpoints de retomada](014-checkpoints/spec.md) | P1 | Done |
 | 015 | [Motor orientado a eventos](015-event-engine/spec.md) | P1 | Done |
 | 016 | [Merge percebido sem tokens](016-merge-watch/spec.md) | P1 | Approved |
+| 017 | [Relatório de entrega e de custo](017-delivery-report/spec.md) | P1 | Approved |
+| 018 | [Relé de sessões curtas](018-short-session-relay/spec.md) | P1 | Approved |
 
 Status possíveis: `Draft` → `Approved` → `In Progress` → `Done`.

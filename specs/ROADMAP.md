@@ -87,6 +87,19 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 - [ ] **T48** `sdd-pr.sh` e `sdd-release.sh` imprimem o comando do vigia — 016 FR-3, AC-4
 - [ ] **T49** `CLAUDE.md` (kit e template) e skill: um vigia em segundo plano, sem assinar eventos de PR — 016 FR-4, FR-5, NFR-2, AC-5
 
+## Fase 11 — Relatório de entrega e de custo (P1)
+
+- [ ] **T50** `sdd-report.sh tokens`: totais de uma sessão sem LLM — 017 FR-1, NFR-1, NFR-2, AC-1, AC-5
+- [ ] **T51** `sdd-report.sh ticket` e `phase`: custo por ticket e comentário único no épico — 017 FR-2, FR-3, AC-2, AC-3
+- [ ] **T52** Despertares sem mensagem do dono separados; total no PR de fechamento — 017 FR-4, FR-5, AC-4
+
+## Fase 12 — Relé de sessões curtas (P1)
+
+- [ ] **T53** `sdd-context.sh`: pacote de contexto do ticket com teto de tamanho — 018 FR-1, AC-1
+- [ ] **T54** `sdd-relay.sh`: um agente novo por ticket, vigia e próximo ticket — 018 FR-2, NFR-1, AC-2, AC-4
+- [ ] **T55** Paradas do relé (dono, CI vermelho duas vezes, orçamento) e teto de contexto por sessão — 018 FR-3, FR-4, AC-3
+- [ ] **T56** `CLAUDE.md` e skill: uma sessão, um ticket; custo por ticket no épico, com e sem relé — 018 FR-5, FR-6, NFR-2, AC-5
+
 ## Próximas fases (visão, sem versão)
 
 Ideias aprovadas pelo dono em 2026-10-03, em ordem de impacto. Cada uma vira spec e fase quando chegar a vez.

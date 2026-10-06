@@ -35,14 +35,14 @@ usage_json() {
   # do dono ou um despertar, FR-4) ou uma chamada; a chamada herda o tipo do último
   # turno do mesmo arquivo. Um despertar é um turno sem origin.kind "human" (ou, sem
   # origin, um texto que começa por aviso do sistema); só é ocioso (019 FR-3) se
-  # nenhuma chamada do turno roda git commit ou git push.
+  # nenhuma chamada do turno roda git commit, git push ou o sdd-pr.sh (que faz o push).
   # shellcheck disable=SC2086 # $files é uma lista de caminhos sem espaços
   jq -c --arg since "$1" --arg until "$2" '
     def inwin: ((.timestamp // "") >= $since) and ($until == "" or (.timestamp // "") <= $until);
     def text: .message.content | if type == "string" then . elif type == "array"
       then (map(select(.type == "text") | .text) | first // "") else "" end;
     def shipped: [.message.content | arrays | .[] | select(.type == "tool_use") | .input.command? // empty
-      | strings | select(test("git[[:space:]]+(commit|push)([[:space:]]|$)"))] | length > 0;
+      | strings | select(test("git[[:space:]]+(commit|push)([[:space:]]|$)|sdd-pr\\.sh"))] | length > 0;
     (if .type == "assistant" and shipped then {k: "g", f: input_filename} else empty end),
     (if .message.usage and .message.id then {k: "c", f: input_filename, id: .message.id, u: .message.usage, w: inwin}
     elif .type == "user" and (.message.content | type == "string" or (type == "array" and all(.[]; .type != "tool_result")))

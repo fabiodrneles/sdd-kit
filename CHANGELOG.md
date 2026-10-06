@@ -8,7 +8,7 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ### Adicionado
 
-- version always comes from go-release-manager; ROADMAP phases carry no fixed version (#199)
+- A versão é sempre a do go-release-manager, calculada pelos commits: as fases do ROADMAP não fixam versão, e o fechamento (`sdd-mark.sh close`) acha a fase pela tarefa aberta e grava `→ vX.Y.Z` no cabeçalho dela como registro. A adoção não numera mais as fases a partir da última tag, e uma versão forçada (`release-as`) só vale a pedido explícito do dono (#199).
 
 ## [1.7.3] - 2026-10-06
 

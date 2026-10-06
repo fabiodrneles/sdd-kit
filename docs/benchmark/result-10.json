@@ -1,0 +1,54 @@
+{
+  "tasks": 10,
+  "without": {
+    "ci_green": true,
+    "commits": 10,
+    "new_tests": 20,
+    "seconds": 120,
+    "usage": {
+      "calls": 22,
+      "read": 1104980,
+      "created": 41598,
+      "input": 44,
+      "output": 15723,
+      "first": [
+        33576
+      ],
+      "avg": 52119,
+      "max": 66946,
+      "wakes": 0,
+      "wake_calls": 0,
+      "wake_tokens": 0
+    }
+  },
+  "with": {
+    "ci_green": true,
+    "commits": 10,
+    "new_tests": 19,
+    "seconds": 336,
+    "usage": {
+      "calls": 85,
+      "read": 1255384,
+      "created": 130659,
+      "input": 170,
+      "output": 31929,
+      "first": [
+        10174,
+        10207,
+        10193,
+        10414,
+        10106,
+        10192,
+        10195,
+        10235,
+        10191,
+        10212
+      ],
+      "avg": 16308,
+      "max": 21121,
+      "wakes": 0,
+      "wake_calls": 0,
+      "wake_tokens": 0
+    }
+  }
+}

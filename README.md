@@ -12,26 +12,6 @@
 
 *A adoção num repositório vazio e o primeiro `make ci`, com a saída real ([como foi gerado](docs/demo/demo.sh)).*
 
-## 16 vezes menos tokens por ticket, medido
-
-<!-- markdownlint-disable MD033 -->
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/relay-savings-pt-dark.svg">
-  <img alt="Custo por ticket: 6,50 milhões de tokens numa sessão longa contra 0,40 milhão com o relé do sdd-kit (16 vezes menos); contexto relido por chamada: 231 mil contra 43 mil (5,4 vezes menos)" src="docs/assets/relay-savings-pt-light.svg" width="880">
-</picture>
-<!-- markdownlint-enable MD033 -->
-
-O jeito padrão de usar um agente é uma sessão longa: ela cresce a cada ticket, e cada chamada relê a conversa inteira. O sdd-kit troca isso por um **relé**: um agente novo por ticket, que começa só com o que o ticket precisa. Os números saem do próprio `sdd-report.sh`, que lê os arquivos de sessão sem chamar a LLM:
-
-| Ticket | Como | Chamadas | Tokens no total | Contexto por chamada |
-|---|---|---|---|---|
-| Fase 12 (4 tickets) | uma sessão longa | 112 | 6,50 milhões por ticket | 231 mil |
-| T58 [#237](https://github.com/fabiodrneles/sdd-kit/issues/237) | relé | 9 | 383 mil | 42 mil |
-| T59 [#238](https://github.com/fabiodrneles/sdd-kit/issues/238) | relé | 10 | 426 mil | 43 mil |
-| T60 [#239](https://github.com/fabiodrneles/sdd-kit/issues/239) | relé | 9 | 395 mil | 43 mil |
-
-Cada issue tem o comentário com o custo exato gravado pelo relé. [Como rodar o relé](#relé-de-sessões-curtas) e [como medir](#onde-está-o-ganho).
-
 O kit nasceu do [cv-craft](https://github.com/fabiodrneles/cv-craft), que saiu de protótipo para `v1.x` com esse processo ([estudo de caso](docs/case-study.md)), e o próprio sdd-kit é desenvolvido com ele ([specs](specs/README.md), [épico #1](https://github.com/fabiodrneles/sdd-kit/issues/1)). Para ver o processo num projeto criado do zero, com épico, tickets, PRs e release, abra o [sdd-kit-demo](https://github.com/fabiodrneles/sdd-kit-demo).
 
 ## Sumário
@@ -161,8 +141,6 @@ Repositórios adotados pelo script já recebem essa configuração; se o seu já
 | Decisões tomadas pelo agente sem você saber | Pontos de parada: decisões, revisão, merge e tag são do dono |
 | Ferramentas instaladas no meio do trabalho | Hook de sessão instala as ferramentas do CI na versão certa |
 | Sessão longa que relê a conversa inteira a cada chamada | **Relé de sessões curtas:** um agente novo por ticket, que começa só com o pacote do ticket (veja abaixo) |
-
-**Medido, não estimado** (`sdd-report.sh phase '#235' --compare '#225'`, 2026-10-06): os três tickets da Fase 13 feitos pelo relé custaram em média **403 mil tokens por ticket**, contra **6,5 milhões** por ticket na Fase 12, feita numa sessão longa sem relé. São **16 vezes menos** por ticket e **5,4 vezes menos** contexto relido por chamada (43 mil contra 231 mil). Os tickets da Fase 13 eram menores que os da Fase 12, então o ganho por chamada é a medida mais justa; o relatório de cada fase refaz a conta com os seus próprios tickets.
 
 ## Por que o sdd-kit
 

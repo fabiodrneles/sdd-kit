@@ -12,26 +12,6 @@
 
 *Adoption in an empty repository and the first `make ci`, with real output ([how it was generated](docs/demo/demo.sh)).*
 
-## 16 times fewer tokens per ticket, measured
-
-<!-- markdownlint-disable MD033 -->
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/relay-savings-en-dark.svg">
-  <img alt="Cost per ticket: 6.50 million tokens in one long session against 0.40 million with the sdd-kit relay (16 times fewer); context reread per call: 231 thousand against 43 thousand (5.4 times less)" src="docs/assets/relay-savings-en-light.svg" width="880">
-</picture>
-<!-- markdownlint-enable MD033 -->
-
-The default way to use an agent is one long session: it grows with every ticket, and every call rereads the whole conversation. sdd-kit replaces it with a **relay**: one fresh agent per ticket, starting with only what the ticket needs. The numbers come from `sdd-report.sh` itself, which reads the session files without calling the LLM:
-
-| Ticket | How | Calls | Total tokens | Context per call |
-|---|---|---|---|---|
-| Phase 12 (4 tickets) | one long session | 112 | 6.50 million per ticket | 231 thousand |
-| T58 [#237](https://github.com/fabiodrneles/sdd-kit/issues/237) | relay | 9 | 383 thousand | 42 thousand |
-| T59 [#238](https://github.com/fabiodrneles/sdd-kit/issues/238) | relay | 10 | 426 thousand | 43 thousand |
-| T60 [#239](https://github.com/fabiodrneles/sdd-kit/issues/239) | relay | 9 | 395 thousand | 43 thousand |
-
-Each issue carries the exact-cost comment written by the relay. [How to run the relay](#short-session-relay) and [how it is measured](#where-the-gain-is).
-
 The kit comes from [cv-craft](https://github.com/fabiodrneles/cv-craft), which went from prototype to `v1.x` with this process ([case study](docs/case-study.en.md)), and sdd-kit itself is built with it ([specs](specs/README.md), [epic #1](https://github.com/fabiodrneles/sdd-kit/issues/1)). To see the process in a project built from scratch, with epic, tickets, PRs and a release, open [sdd-kit-demo](https://github.com/fabiodrneles/sdd-kit-demo). This repository's specs, issues and pull requests are written in Portuguese; code and commits are in English. The skill itself is in English and writes specs, issues and PRs in the owner's language, read from `CLAUDE.md`/`AGENTS.md` or asked once.
 
 ## What is in the kit
@@ -144,8 +124,6 @@ Repositories adopted by the script get this configuration; if yours already had 
 | Red CI "fixed" by disabling tests | Explicit rule: root cause, never skip a test or loosen a gate |
 | Decisions made by the agent behind your back | Stop points: decisions, review, merge and tag belong to the owner |
 | A long session that rereads the whole conversation on every call | **Short-session relay:** one fresh agent per ticket, starting with only the ticket's pack (see below) |
-
-**Measured, not estimated** (`sdd-report.sh phase '#235' --compare '#225'`, 2026-10-06): the three Phase 13 tickets done by the relay cost on average **403 thousand tokens per ticket**, against **6.5 million** per ticket in Phase 12, done in one long session without the relay. That is **16 times less** per ticket and **5.4 times less** context reread per call (43 thousand against 231 thousand). Phase 13 tickets were smaller than Phase 12 ones, so the per-call gain is the fairest measure; each phase's report redoes the math with its own tickets.
 
 ## Why sdd-kit
 

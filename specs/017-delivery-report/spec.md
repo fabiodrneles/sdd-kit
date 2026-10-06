@@ -1,7 +1,7 @@
 # 017 — Relatório de entrega e de custo (`sdd-report`)
 
 - **Prioridade:** P1
-- **Status:** Approved — pedida pelo dono em 2026-10-06
+- **Status:** Done — entregue na `v1.10.0`
 - **Código afetado:** `template/common/scripts/sdd-report.sh` (novo), `template/common/CLAUDE.md`, `CLAUDE.md`
 - **Resolve:** não sabemos quanto cada ticket custa em tokens nem onde o gasto está; sem número, não dá para provar economia
 
@@ -42,7 +42,7 @@ Cada chamada relê a conversa inteira; a sessão cresce, e o custo total cresce 
 
 ## Mudanças
 
-### Não lançado
+### v1.10.0
 
 - ADDED FR-1, NFR-1, NFR-2 — `sdd-report.sh tokens [--session ARQ | --since DATA]`: totais das sessões do Claude Code sem LLM, cada chamada contada uma vez por `message.id` (T50, #214).
 - ADDED FR-2, FR-3 — `sdd-report.sh ticket '#N'` (totais na janela do PR que fecha a issue, tempo e CI verde na primeira rodada) e `sdd-report.sh phase '#ÉPICO'` (uma linha por ticket e o total, num único comentário do épico) (T51, #215).

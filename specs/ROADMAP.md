@@ -89,9 +89,9 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 
 ## Fase 11 — Relatório de entrega e de custo (P1)
 
-- [ ] **T50** `sdd-report.sh tokens`: totais de uma sessão sem LLM — 017 FR-1, NFR-1, NFR-2, AC-1, AC-5
-- [ ] **T51** `sdd-report.sh ticket` e `phase`: custo por ticket e comentário único no épico — 017 FR-2, FR-3, AC-2, AC-3
-- [ ] **T52** Despertares sem mensagem do dono separados; total no PR de fechamento — 017 FR-4, FR-5, AC-4
+- [x] **T50** `sdd-report.sh tokens`: totais de uma sessão sem LLM — 017 FR-1, NFR-1, NFR-2, AC-1, AC-5
+- [x] **T51** `sdd-report.sh ticket` e `phase`: custo por ticket e comentário único no épico — 017 FR-2, FR-3, AC-2, AC-3
+- [x] **T52** Despertares sem mensagem do dono separados; total no PR de fechamento — 017 FR-4, FR-5, AC-4
 
 ## Fase 12 — Relé de sessões curtas (P1)
 

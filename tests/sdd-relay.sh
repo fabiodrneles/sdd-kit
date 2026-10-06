@@ -103,7 +103,7 @@ grep -qF 'AC-2' "$G/in-2" && fail "pacote do #2 com o AC-2 de outro ticket"
 grep -qF -- '- **AC-2** Linha do AC-2.' "$G/in-3" || fail "pacote do #3 sem o AC-2"
 grep -qF 'Trabalhe só o ticket #3' "$G/in-3" || fail "sem a instrução do ticket: $(cat "$G/in-3")"
 # O pacote cita os scripts do repositório, não os da cópia de onde o relé roda.
-grep -qF 'sdd-pr.sh --spec 018 --no-wait' "$G/in-3" || fail "pacote com o caminho da cópia: $(grep sdd-pr "$G/in-3")"
+grep -qF 'sh scripts/sdd-pr.sh --spec 018 --no-wait' "$G/in-3" || fail "pacote com o caminho da cópia: $(grep sdd-pr "$G/in-3")"
 printf '%s\n' "$out" | tail -n 1 | grep -qF 'Próximo: PR de fechamento da fase' || fail "sem o Próximo da fase: $out"
 # 018 FR-6: o custo exato de cada ticket (só a sessão dele) num comentário da issue.
 c2="$(sed -n 's/^<!-- sdd-relay-cost \(.*\) -->$/\1/p' "$G/posted" | sed -n 1p)"

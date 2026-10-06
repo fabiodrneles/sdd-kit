@@ -53,6 +53,7 @@ usage_json() {
       if $e.k == "t" then .cur[$e.f] = (.ts | length) | .ts += [{wake: $e.wake, w: $e.w, git: false}]
       elif $e.k == "g" then (if .cur[$e.f] != null then .ts[.cur[$e.f]].git = true else . end)
       elif $e.w then .calls += [$e + {t: .cur[$e.f]}] else . end)
+    | (.calls | group_by(.f) | map(.[0].u | (.cache_read_input_tokens // 0) + (.cache_creation_input_tokens // 0) + (.input_tokens // 0))) as $first
     | (.ts | map(.wake and .w and (.git | not)) ) as $idle
     | ($idle | map(select(.)) | length) as $turns
     | (.calls | unique_by(.id) | map(. + {wake: (.t != null and $idle[.t])})) as $c | ($c | map(.u)) as $u
@@ -62,6 +63,7 @@ usage_json() {
       | {calls: ($u | length), read: ($u | map(.cache_read_input_tokens // 0) | add),
          created: ($u | map(.cache_creation_input_tokens // 0) | add),
          input: ($u | map(.input_tokens // 0) | add), output: ($u | map(.output_tokens // 0) | add),
+         first: $first,
          avg: (($ctx | add) / ($ctx | length) | floor), max: ($ctx | max),
          wakes: $turns, wake_calls: ($c | map(select(.wake)) | length), wake_tokens: ($c | map(select(.wake) | .u) | tot)} end'
 }
@@ -71,7 +73,8 @@ print_usage() {
     echo "sdd-report: sem dado de tokens${2:-}"
   else
     printf '%s\n' "$1" | jq -r '"chamadas: \(.calls)", "relidos do cache: \(.read)", "gravados no cache: \(.created)",
-      "entrada: \(.input)", "gerados: \(.output)", "contexto médio por chamada: \(.avg)", "contexto máximo: \(.max)",
+      "entrada: \(.input)", "gerados: \(.output)", (if (.first // []) | length == 0 then empty else "contexto inicial (primeira chamada): \(if (.first | length) == 1 then .first[0] else "\(.first | join(", ")) por sessão (média \((.first | add / length | floor)))" end)" end),
+      "contexto médio por chamada: \(.avg)", "contexto máximo: \(.max)",
       "despertares sem mensagem do dono: \(.wakes) (\(.wake_calls) chamadas, \(.wake_tokens) tokens)"'
   fi
 }

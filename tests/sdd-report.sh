@@ -24,6 +24,8 @@ for l in 'chamadas: 2' 'relidos do cache: 4000' 'gravados no cache: 100' 'entrad
   'contexto médio por chamada: 2053' 'contexto máximo: 3004'; do
   printf '%s\n' "$out" | grep -qx "$l" || fail "sem '$l': $out"
 done
+# 020 AC-2: o contexto da primeira chamada (1000+100+2) aparece à parte.
+printf '%s\n' "$out" | grep -qx 'contexto inicial (primeira chamada): 1102' || fail "sem contexto inicial: $out"
 # Pelo diretório de sessões, e com --since cortando a primeira chamada.
 out="$(SDD_SESSIONS_DIR="$tmp/p" sh "$r" tokens --since 2026-01-02)" || fail "--since falhou"
 printf '%s\n' "$out" | grep -qx 'chamadas: 1' || fail "--since não cortou: $out"

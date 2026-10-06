@@ -7,12 +7,15 @@
 # Só leitura no GitHub (REST). Nunca descarta alterações locais: com árvore suja
 # ou commits não enviados na branch, não troca de branch e diz por quê.
 # Sem gh, sem rede ou sem épico aberto, avisa e sai com 0: nunca bloqueia a sessão.
+# A saída sempre tem uma linha "Próximo:" (#195): a do checkpoint, a fase já aprovada
+# no ROADMAP ou "perguntar ao dono". A sessão faz o Próximo e nada além.
 set -u
 
 repo=""
 [ "${1:-}" != --repo ] || { repo="${2:?}"; shift 2; }
 [ $# -eq 0 ] || { sed -n '2,9p' "$0"; exit 2; }
 here="$(cd "$(dirname "$0")" && pwd)"
+ask="Próximo: perguntar ao dono o que fazer (nenhuma fase aprovada em aberto); não comece nada antes da resposta"
 
 command -v gh >/dev/null 2>&1 || { echo "sdd-resume: gh ausente"; exit 0; }
 if [ -z "$repo" ]; then
@@ -30,8 +33,8 @@ if [ -z "$epic" ]; then
   if next="$(sh "$here/sdd-next-phase.sh" 2> /dev/null)"; then
     t="$(printf '\t')"; n="${next%%"$t"*}"
     echo "Próximo: abrir a ${next#*"$t"} (já aprovada no ROADMAP): sh scripts/sdd-epic.sh $n"
-  elif [ -f specs/ROADMAP.md ]; then
-    echo "Próximo: o ROADMAP não tem fase com tarefa aberta; escolher com o dono um item de \"Próximas fases\" e escrever a spec e a fase"
+  else
+    echo "$ask"
   fi
   exit 0
 fi
@@ -88,4 +91,6 @@ fi
 echo "Issues abertas do épico #$epic:"
 subs="$(gh api "repos/$repo/issues/$epic/sub_issues?per_page=100" --jq '.[] | select(.state == "open") | "  #\(.number) \(.title)"' 2>/dev/null || true)"
 printf '%s\n' "${subs:-  nenhuma}"
+# Checkpoint sem "Próximo" (ou épico sem checkpoint): perguntar, nunca adivinhar.
+printf '%s\n' "$out" | grep -q 'Próximo' || echo "$ask"
 exit 0

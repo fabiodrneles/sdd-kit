@@ -4,8 +4,11 @@ Guia rápido para agentes (Claude Code) trabalharem neste repositório. O proces
 
 ## Retomar o trabalho (sessão nova ou contexto perdido)
 
-1. Rode `sh template/common/scripts/sdd-resume.sh` (o hook de início de sessão já o roda): mostra o **checkpoint** do épico aberto, entra na branch dele (árvore limpa), lista os **PRs abertos** com o CI de cada um e as **issues abertas** do épico. Continue do "Próximo" do checkpoint, sem esperar instrução. Sem checkpoint, leia o comentário "Estado da fase" mais recente do épico. **Sem épico aberto** (a fase anterior fechou), o `sdd-resume.sh` diz a próxima fase do ROADMAP: abra-a com `sh template/common/scripts/sdd-epic.sh N` e comece o primeiro ticket; "continue" nunca termina em "nada a fazer" enquanto o ROADMAP tiver tarefa aberta.
-2. Continue do próximo passo registrado. Não refaça análise que já está em specs, issues ou PRs.
+Uma regra só: **faça o "Próximo" que o `sh template/common/scripts/sdd-resume.sh` imprime** (o hook de início de sessão já o roda), sem esperar instrução e sem escolher outra coisa. "Continue" quer dizer exatamente isso.
+
+- O "Próximo" vem do checkpoint do épico aberto (o motor o atualiza a cada merge) ou, sem épico, da fase já aprovada no ROADMAP.
+- Se o "Próximo" é "perguntar ao dono", pergunte e pare: não escreva spec, não abra épico nem fase por conta própria.
+- Não refaça análise que já está em specs, issues ou PRs.
 
 ## O projeto
 

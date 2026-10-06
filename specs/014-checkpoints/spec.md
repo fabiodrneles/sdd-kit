@@ -25,6 +25,10 @@ O "Estado da fase" do épico só é escrito nos marcos, e quando o agente lembra
 
 ## Mudanças
 
+### Não lançado
+
+- MODIFIED FR-2 — a saída do `sdd-resume.sh` sempre tem uma linha "Próximo:": a do checkpoint, a fase já aprovada no ROADMAP ou "perguntar ao dono". A sessão faz o Próximo e nada além; sem ele, pergunta e não começa nada. Uma sessão nova escolheu sozinha uma fase não aprovada (#195).
+
 ### v1.7.2
 
 - MODIFIED FR-2 — sem épico aberto, o `sdd-resume.sh` aponta a próxima fase do ROADMAP com tarefa aberta (`sdd-next-phase.sh`), e o motor abre o épico dessa fase depois da release do fechamento: um "continue" numa sessão nova achava "nada a fazer" depois da v0.2.0 do demo (#191).

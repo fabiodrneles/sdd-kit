@@ -14,7 +14,7 @@
 # Códigos: 0 ok; 1 falha do gh; 3 uso. Requer gh e jq.
 set -eu
 
-usage() { sed -n '2,14p' "$0"; exit 3; }
+usage() { sed -n '3,14p' "$0"; exit 3; }
 repo=""
 [ "${1:-}" != --repo ] || { repo="${2:?}"; shift 2; }
 [ $# -eq 1 ] || usage

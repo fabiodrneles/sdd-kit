@@ -39,3 +39,4 @@ Limite conhecido: se o contêiner da sessão for reciclado, o vigia morre junto.
 ### Não lançado
 
 - ADDED FR-1, FR-2, NFR-1 — `sdd-wait.sh merged-any`: uma consulta à lista de PRs abertos por rodada (60 s por padrão); conclui só com o PR de fato fechado, mesmo se a lista falhar (T47, #204).
+- ADDED FR-3 — o `sdd-pr.sh` termina com o comando do vigia (`vigia: sh scripts/sdd-wait.sh merged-any`); o `sdd-release.sh` o herda, porque termina chamando o `sdd-pr.sh` (T48, #205).

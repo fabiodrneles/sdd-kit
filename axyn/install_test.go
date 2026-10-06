@@ -120,3 +120,31 @@ func TestInstallRefusesNonObjectSection(t *testing.T) {
 		t.Fatalf("code %d, file %q", code, got)
 	}
 }
+
+// 021 FR-5: the coding agent cannot commit or push by itself; only axyn_ship does.
+func TestInstallCodeAgentCannotShip(t *testing.T) {
+	dir := t.TempDir()
+	if _, err := installOpencode(dir); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(filepath.Join(dir, "opencode.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var cfg struct {
+		Agent map[string]struct {
+			Permission struct {
+				Bash map[string]string `json:"bash"`
+			} `json:"permission"`
+		} `json:"agent"`
+	}
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		t.Fatal(err)
+	}
+	bash := cfg.Agent["axyn-code"].Permission.Bash
+	for _, c := range []string{"git commit *", "git push *", "gh *"} {
+		if bash[c] != "deny" {
+			t.Fatalf("axyn-code can run %q: %v", c, bash)
+		}
+	}
+}

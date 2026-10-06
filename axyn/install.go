@@ -56,6 +56,14 @@ func axynConfig() map[string]map[string]any {
 					"axyn_*": false, "read": true, "glob": true, "grep": true, "list": true,
 					"write": true, "edit": true, "bash": true,
 				},
+				// Only the engine commits and pushes, after the gates (axyn_ship); the
+				// coding agent may run the build and tests, never ship by itself.
+				"permission": map[string]any{
+					"bash": map[string]any{
+						"git commit *": "deny", "git push *": "deny", "git reset *": "deny",
+						"git checkout *": "deny", "git rebase *": "deny", "gh *": "deny",
+					},
+				},
 			},
 		},
 		"command": {

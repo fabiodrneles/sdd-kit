@@ -34,21 +34,28 @@ usage_json() {
   # Cada linha vira um início de turno (mensagem que não é resultado de ferramenta:
   # do dono ou um despertar, FR-4) ou uma chamada; a chamada herda o tipo do último
   # turno do mesmo arquivo. Um despertar é um turno sem origin.kind "human" (ou, sem
-  # origin, um texto que começa por aviso do sistema).
+  # origin, um texto que começa por aviso do sistema); só é ocioso (019 FR-3) se
+  # nenhuma chamada do turno roda git commit ou git push.
   # shellcheck disable=SC2086 # $files é uma lista de caminhos sem espaços
   jq -c --arg since "$1" --arg until "$2" '
     def inwin: ((.timestamp // "") >= $since) and ($until == "" or (.timestamp // "") <= $until);
     def text: .message.content | if type == "string" then . elif type == "array"
       then (map(select(.type == "text") | .text) | first // "") else "" end;
-    if .message.usage and .message.id then {k: "c", f: input_filename, id: .message.id, u: .message.usage, w: inwin}
+    def shipped: [.message.content | arrays | .[] | select(.type == "tool_use") | .input.command? // empty
+      | strings | select(test("git[[:space:]]+(commit|push)([[:space:]]|$)"))] | length > 0;
+    (if .type == "assistant" and shipped then {k: "g", f: input_filename} else empty end),
+    (if .message.usage and .message.id then {k: "c", f: input_filename, id: .message.id, u: .message.usage, w: inwin}
     elif .type == "user" and (.message.content | type == "string" or (type == "array" and all(.[]; .type != "tool_result")))
       then {k: "t", f: input_filename, w: inwin, wake: (if .origin.kind then .origin.kind != "human"
         else (text | test("^\\s*(<task-notification>|<wake |\\[SYSTEM NOTIFICATION)")) end)}
-    else empty end' $files 2> /dev/null | jq -cs '
-    reduce .[] as $e ({wake: {}, calls: [], turns: 0};
-      if $e.k == "t" then .wake[$e.f] = $e.wake | .turns += (if $e.wake and $e.w then 1 else 0 end)
-      elif $e.w then .calls += [$e + {wake: (.wake[$e.f] // false)}] else . end)
-    | .turns as $turns | (.calls | unique_by(.id)) as $c | ($c | map(.u)) as $u
+    else empty end)' $files 2> /dev/null | jq -cs '
+    reduce .[] as $e ({cur: {}, ts: [], calls: []};
+      if $e.k == "t" then .cur[$e.f] = (.ts | length) | .ts += [{wake: $e.wake, w: $e.w, git: false}]
+      elif $e.k == "g" then (if .cur[$e.f] != null then .ts[.cur[$e.f]].git = true else . end)
+      elif $e.w then .calls += [$e + {t: .cur[$e.f]}] else . end)
+    | (.ts | map(.wake and .w and (.git | not)) ) as $idle
+    | ($idle | map(select(.)) | length) as $turns
+    | (.calls | unique_by(.id) | map(. + {wake: (.t != null and $idle[.t])})) as $c | ($c | map(.u)) as $u
     | def tot: map((.cache_read_input_tokens // 0) + (.cache_creation_input_tokens // 0) + (.input_tokens // 0) + (.output_tokens // 0)) | add // 0;
     if ($u | length) == 0 then null else
       ($u | map((.cache_read_input_tokens // 0) + (.cache_creation_input_tokens // 0) + (.input_tokens // 0))) as $ctx

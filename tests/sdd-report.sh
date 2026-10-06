@@ -56,6 +56,16 @@ out="$(sh "$r" tokens --session "$tmp/w.jsonl")" || fail "despertares falhou: $o
 printf '%s\n' "$out" | grep -qx 'chamadas: 6' || fail "despertares: total errado: $out"
 printf '%s\n' "$out" | grep -qx 'despertares sem mensagem do dono: 2 (3 chamadas, 1910 tokens)' || fail "despertares: $out"
 
+# 019 AC-2: of two wake-up turns, the one with a git push is not idle.
+cat > "$tmp/i.jsonl" <<'J'
+{"type":"user","timestamp":"2026-02-01T01:00:00Z","origin":{"kind":"task-notification"},"message":{"content":"<task-notification>x</task-notification>"}}
+{"type":"assistant","timestamp":"2026-02-01T01:00:01Z","message":{"id":"p1","content":[{"type":"tool_use","name":"Bash","input":{"command":"git push -u origin x"}}],"usage":{"input_tokens":1,"cache_read_input_tokens":500,"output_tokens":4}}}
+{"type":"user","timestamp":"2026-02-01T02:00:00Z","origin":{"kind":"task-notification"},"message":{"content":"<task-notification>y</task-notification>"}}
+{"type":"assistant","timestamp":"2026-02-01T02:00:01Z","message":{"id":"p2","content":[{"type":"tool_use","name":"Bash","input":{"command":"git status"}}],"usage":{"input_tokens":1,"cache_read_input_tokens":800,"output_tokens":0}}}
+J
+out="$(sh "$r" tokens --session "$tmp/i.jsonl")" || fail "ocioso falhou: $out"
+printf '%s\n' "$out" | grep -qx 'despertares sem mensagem do dono: 1 (1 chamadas, 801 tokens)' || fail "ocioso: $out"
+
 # Fake gh for ticket and phase: GETs come from $G/*.json; POST and PATCH write
 # the report comment to comments.json and count writes in $G/writes.
 G="$tmp/gh"; mkdir -p "$G" "$tmp/bin"

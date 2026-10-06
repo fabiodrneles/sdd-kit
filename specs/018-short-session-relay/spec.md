@@ -50,3 +50,4 @@ Estimativa, a ser confirmada pela spec 017 e nunca anunciada antes disso: um tic
 ### Não lançado
 
 - ADDED FR-1 — `sdd-context.sh '#N'`: o pacote do ticket sem LLM (issue, só as linhas dos FR/NFR/AC citados, decisões, arquivos prováveis com assinaturas, armadilhas desses arquivos e comandos de entrega), com teto em `SDD_CONTEXT_MAX` (T53, #226).
+- ADDED FR-2, NFR-1 — `sdd-relay.sh`: um agente novo por ticket (`SDD_AGENT_CMD`, padrão `claude -p`) com o pacote do `sdd-context.sh` na entrada, espera do merge pelo `sdd-wait.sh` e próximo ticket do épico; sem estado próprio, retoma do GitHub; para se o agente terminar sem PR, se o PR fechar sem merge ou se um ticket voltar aberto depois do merge (T54, #227).

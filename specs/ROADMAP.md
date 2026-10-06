@@ -118,9 +118,17 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 - [ ] **T68** Pacote com as assinaturas do código (Go, Python, JS/TS, Rust) e `sdd-context.sh --task` — 020 FR-7, AC-7
 - [ ] **T65** Comparação com as Fases 13 e 12 e o gráfico do README atualizado — 020 FR-4, AC-4
 
-## Fase 15 — Motor em Go (P2, spec a escrever)
+## Fase 15 — axyn mínimo (P1)
 
-Aprovada pelo dono em 2026-10-06, depois da Fase 14: um binário por sistema no lugar dos scripts (Windows nativo, sem `jq`), com os testes atuais como especificação e tickets em paralelo. Ganho esperado em tempo e robustez, não em tokens.
+O motor em Go como cérebro do opencode, com o modelo que o usuário tiver (spec 021, aprovada em 2026-10-06).
+
+- [ ] **T70** `axyn/`: esqueleto em Go, `axyn version`, `make ci` e CI do kit cobrindo o Go — 021 FR-1
+- [ ] **T71** `axyn gate`: CI do projeto, teste afrouxado, caminhos protegidos e limite de diff — 021 FR-5, AC-1
+- [ ] **T72** `axyn mcp`: `axyn_plan`, `axyn_next`, `axyn_gate` e `axyn_ship` — 021 FR-3, AC-1
+- [ ] **T73** `axyn install`: servidor MCP, agentes e o comando `/axyn` no opencode, sem apagar o que existe — 021 FR-2, AC-3
+- [ ] **T74** Template `web` e preparo de repositório vazio — 021 FR-4, AC-4
+- [ ] **T75** Escada de modelos e registro do modelo, das tentativas e do custo — 021 FR-6, FR-7, AC-2
+- [ ] **T76** Instalação por um comando e o teste de aceitação do dono (landing page com modelo gratuito; e2e com agente falso no CI) — 021 FR-1, AC-5
 
 ## Próximas fases (visão, sem versão)
 

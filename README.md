@@ -23,6 +23,7 @@ O kit nasceu do [cv-craft](https://github.com/fabiodrneles/cv-craft), que saiu d
 - [Onde está o ganho](#onde-está-o-ganho)
 - [Por que o sdd-kit](#por-que-o-sdd-kit)
 - [Comandos e verificações](#comandos-e-verificações)
+- [Motor orientado a eventos](#motor-orientado-a-eventos)
 - [Atualização automática](#atualização-automática)
 - [Instalar a skill](#instalar-a-skill)
 - [Script de adoção](#script-de-adoção)
@@ -184,6 +185,7 @@ A adoção também traz scripts para os passos mecânicos do processo. O agente 
 | Script | Faz |
 |---|---|
 | `scripts/sdd-ci.sh [#PR\|SHA]` | Espera o CI e mostra só o fim do log dos checks que falharam |
+| `scripts/sdd-wait.sh pr-merged\|ci\|issue-closed ALVO` | Espera, sem LLM, um PR ser mergeado, o CI terminar ou uma issue fechar; uma linha no fim e código de saída (0 valeu, 1 falhou, 2 tempo esgotado). Para esperar em segundo plano, nunca um laço à mão |
 | `scripts/sdd-pr.sh [--spec NNN] [--dry-run]` | Entrega a branch do ticket: merge da `main`, `make ci`, push, PR (ou reaproveita o aberto), CI do PR e checkpoint |
 | `scripts/sdd-doctor.sh [--check]` | Confere e conserta o ambiente local para o `make ci` valer como o CI (ferramentas nas versões do Makefile, `covdata`, `golangci-lint` ofuscado no PATH, locale UTF-8); uma linha por item, `--check` só relata |
 | `scripts/sdd-release.sh [X.Y.Z] [--dry-run]` | PR de fechamento da versão (versão calculada pelo go-release-manager; X.Y.Z só força): rascunho do CHANGELOG pelos PRs mesclados, versões do `.sdd-release`, commit e PR; `--tag` depois do merge dispara o *Release tag* ou cria a tag |
@@ -194,6 +196,27 @@ A adoção também traz scripts para os passos mecânicos do processo. O agente 
 | `scripts/sdd-checkpoint.sh save\|show` | Checkpoint de retomada no épico: uma sessão nova continua sozinha de onde a anterior parou |
 | `scripts/sdd-resume.sh` | Retomada em um comando: checkpoint, branch, PRs abertos com CI e issues abertas do épico |
 | `scripts/sdd-release-check.sh pre\|post vX.Y.Z` | Go: simula o release antes da tag e confere a release publicada |
+
+## Motor orientado a eventos
+
+Cada evento de PR que acordava a sessão do agente (CI, merge, conflito) recarregava a conversa inteira só para fazer um passo mecânico. A adoção traz workflows que fazem esses passos sem LLM; o agente abre o PR (`sdd-pr.sh --no-wait`), grava o checkpoint e encerra a resposta, e volta só quando há julgamento (código, causa raiz, conflito real, revisão).
+
+| Evento | Workflow | O que faz, sem LLM |
+|---|---|---|
+| PR de ticket mergeado | `sdd-on-merge.yml` | Atualiza o checkpoint do épico: feito é o PR, próximo é o menor sub-issue aberto |
+| CI de um PR termina | `sdd-ci-summary.yml` | Mantém um único comentário com uma linha por check e o fim do log das falhas; vira "verde" quando passa |
+| `main` muda | `sdd-update-prs.yml` | Traz a `main` (merge) para os PRs abertos atrás dela e avisa uma vez os que têm conflito real |
+| Último ticket do épico fechado | `sdd-on-phase-done.yml` | Abre o PR de fechamento da versão (`sdd-release.sh`) |
+| PR de fechamento mergeado | `sdd-on-release-merge.yml` | Dispara a release da versão uma única vez (`sdd-release.sh --tag`) |
+
+Todos são idempotentes, usam só o `GITHUB_TOKEN` (ou o segredo opcional abaixo), sem segredos de LLM, e só agem em PRs do próprio repositório. O `sdd-wait.sh` cobre o que sobrar para esperar num shell.
+
+Configuração do repositório:
+
+1. **Obrigatório para o fechamento automático e para o `sdd-sync`:** *Settings → Actions → General → Workflow permissions* → marque **"Allow GitHub Actions to create and approve pull requests"**. Sem isso, o `sdd-on-phase-done` não abre o PR de fechamento e o `sdd-sync` falha com "GitHub Actions is not permitted to create or approve pull requests".
+2. **Opcional:** o segredo `SDD_ENGINE_TOKEN`, um token fine-grained com permissão de escrita em *Contents* e *Pull requests*. Pushes e PRs feitos com o `GITHUB_TOKEN` não disparam o CI; com o segredo, os que o motor faz disparam.
+3. **Desligar:** a variável de repositório `SDD_ENGINE=off` desliga todos os workflows do motor (nenhum lê nem escreve nada).
+4. **Nome do CI:** o resumo escuta o workflow chamado `CI`. Se o projeto o renomeou, volte o nome ou ajuste `workflows:` em `sdd-ci-summary.yml`.
 
 ## Atualização automática
 

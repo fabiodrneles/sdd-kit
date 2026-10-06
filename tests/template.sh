@@ -56,6 +56,25 @@ done
 if grep -q 'pull_request_target' "$cs"; then err "$cs usa pull_request_target"; fi
 if grep -q 'ref:' "$cs"; then err "$cs faz checkout de outra ref (código do PR)"; fi
 
+# 015 AC-2/AC-6/AC-5/AC-7: os demais workflows do motor existem, são desligáveis por SDD_ENGINE
+# e chamam o script certo, sem pull_request_target.
+for pair in 'sdd-on-merge.yml:sdd-on-merge.sh' 'sdd-update-prs.yml:sdd-update-prs.sh' 'sdd-on-release-merge.yml:sdd-on-release-merge.sh'; do
+  wf="common/.github/workflows/${pair%%:*}"
+  [ -f "$wf" ] || { err "$wf não existe"; continue; }
+  for t in "vars.SDD_ENGINE != 'off'" "${pair##*:}" 'SDD_ENGINE_TOKEN || github.token'; do
+    grep -qF "$t" "$wf" || err "$wf sem '$t'"
+  done
+  if grep -q 'pull_request_target' "$wf"; then err "$wf usa pull_request_target"; fi
+done
+for s in sdd-wait sdd-ci-comment sdd-update-prs sdd-on-merge sdd-on-phase-done sdd-on-release-merge; do
+  [ -f "common/scripts/$s.sh" ] || err "common/scripts/$s.sh não existe"
+done
+
+# 015 FR-7: o CLAUDE.md do template manda não esperar eventos de PR e usar o sdd-wait.sh.
+for t in 'sdd-wait.sh' 'sdd-pr.sh --no-wait' 'motor de eventos'; do
+  grep -qF -- "$t" common/CLAUDE.md || err "template/common/CLAUDE.md sem '$t'"
+done
+
 [ -f common/AGENTS.md ] || err "template/common/AGENTS.md não existe"
 grep -q 'make ci' common/AGENTS.md || err "template/common/AGENTS.md não cita make ci"
 

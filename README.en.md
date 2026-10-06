@@ -152,7 +152,28 @@ In adopted repositories:
 
 ### Token-saving scripts
 
-Adoption also brings scripts for the mechanical steps of the process. The agent calls a script and reads one line per result instead of running dozens of steps and reading long outputs: `sdd-ci.sh` (wait for CI, show only the tail of failed logs), `sdd-pr.sh` (ship the ticket branch: merge main, `make ci`, push, open or reuse the PR, wait for its CI, save the checkpoint), `sdd-release.sh [X.Y.Z]` (prepare the version's closing PR, with the version computed by go-release-manager; X.Y.Z only forces it: CHANGELOG draft from merged PRs, version bumps listed in `.sdd-release`, commit and PR; `--tag` after the merge dispatches the Release tag workflow or pushes the tag), `sdd-doctor.sh [--check]` (check and fix the local environment so `make ci` behaves like CI: pinned tool versions, Go `covdata`, a stale `golangci-lint` shadowing the right one on PATH, UTF-8 locale; one line per item, `--check` only reports), `sdd-mark.sh decide|close` (status files for decisions and phase closing), `sdd-phase-status.sh` (the epic's "Estado da fase" comment), `sdd-epic.sh` (phase epic and sub-issue tickets), `sdd-checkpoint.sh save|show` (resume checkpoint on the epic, so a new session picks up where the last one stopped), `sdd-resume.sh` (the whole resume routine in one command: checkpoint, branch, open PRs with CI, open epic issues) and, for Go, `sdd-release-check.sh pre|post` (simulate the release before tagging; verify the published release).
+Adoption also brings scripts for the mechanical steps of the process. The agent calls a script and reads one line per result instead of running dozens of steps and reading long outputs: `sdd-ci.sh` (wait for CI, show only the tail of failed logs), `sdd-wait.sh pr-merged|ci|issue-closed TARGET` (wait with no LLM for a PR merge, CI or an issue to close; one line at the end and an exit code: 0 held, 1 failed, 2 timed out; for background waiting, never a hand-written loop), `sdd-pr.sh` (ship the ticket branch: merge main, `make ci`, push, open or reuse the PR, wait for its CI, save the checkpoint), `sdd-release.sh [X.Y.Z]` (prepare the version's closing PR, with the version computed by go-release-manager; X.Y.Z only forces it: CHANGELOG draft from merged PRs, version bumps listed in `.sdd-release`, commit and PR; `--tag` after the merge dispatches the Release tag workflow or pushes the tag), `sdd-doctor.sh [--check]` (check and fix the local environment so `make ci` behaves like CI: pinned tool versions, Go `covdata`, a stale `golangci-lint` shadowing the right one on PATH, UTF-8 locale; one line per item, `--check` only reports), `sdd-mark.sh decide|close` (status files for decisions and phase closing), `sdd-phase-status.sh` (the epic's "Estado da fase" comment), `sdd-epic.sh` (phase epic and sub-issue tickets), `sdd-checkpoint.sh save|show` (resume checkpoint on the epic, so a new session picks up where the last one stopped), `sdd-resume.sh` (the whole resume routine in one command: checkpoint, branch, open PRs with CI, open epic issues) and, for Go, `sdd-release-check.sh pre|post` (simulate the release before tagging; verify the published release).
+
+## Event-driven engine
+
+Every PR event (CI, merge, conflict) used to wake the agent's session and reload the whole conversation for a mechanical step. Adoption brings workflows that do those steps with no LLM; the agent opens the PR (`sdd-pr.sh --no-wait`), saves the checkpoint and ends the reply, and comes back only for judgment (code, root cause, a real conflict, review).
+
+| Event | Workflow | What it does, with no LLM |
+|---|---|---|
+| Ticket PR merged | `sdd-on-merge.yml` | Updates the epic's checkpoint: done is the PR, next is the lowest open sub-issue |
+| A PR's CI finishes | `sdd-ci-summary.yml` | Keeps a single comment with one line per check and the tail of failed logs; turns "green" when it passes |
+| `main` changes | `sdd-update-prs.yml` | Merges `main` into open PRs behind it and warns once the ones with a real conflict |
+| Last epic ticket closed | `sdd-on-phase-done.yml` | Opens the version's closing PR (`sdd-release.sh`) |
+| Closing PR merged | `sdd-on-release-merge.yml` | Dispatches the version's release exactly once (`sdd-release.sh --tag`) |
+
+All are idempotent, use only the `GITHUB_TOKEN` (or the optional secret below), no LLM secrets, and act only on PRs from the repository itself. `sdd-wait.sh` covers whatever is left to wait for in a shell.
+
+Repository setup:
+
+1. **Required for the automatic closing PR and for `sdd-sync`:** *Settings → Actions → General → Workflow permissions* → enable **"Allow GitHub Actions to create and approve pull requests"**. Without it, `sdd-on-phase-done` cannot open the closing PR and `sdd-sync` fails with "GitHub Actions is not permitted to create or approve pull requests".
+2. **Optional:** the `SDD_ENGINE_TOKEN` secret, a fine-grained token with write access to *Contents* and *Pull requests*. Pushes and PRs made with the `GITHUB_TOKEN` do not trigger CI; with the secret, the ones the engine makes do.
+3. **Turn off:** the repository variable `SDD_ENGINE=off` disables every engine workflow (none reads or writes anything).
+4. **CI name:** the summary listens to the workflow named `CI`. If the project renamed it, rename it back or adjust `workflows:` in `sdd-ci-summary.yml`.
 
 ## Automatic updates
 

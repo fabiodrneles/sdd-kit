@@ -25,7 +25,8 @@ const commandTemplate = `Pedido do usuário: $ARGUMENTS
 Siga o processo do axyn:
 1. Use o agente axyn-plan para gravar a spec e os tickets com axyn_plan.
 2. Para cada ticket: chame axyn_next, use o agente axyn-code para escrever o código, rode axyn_gate e, só com o portão verde, axyn_ship.
-3. Se o portão não ficar verde, pare e mostre ao usuário o motivo e o que falta.`
+3. Se o portão reprovar, siga o passo de recuperação que o axyn_gate pedir, na ordem, sem trocar de modelo; quando ele pedir uma pergunta, faça-a ao usuário e grave a resposta com axyn_decide.
+4. Se o axyn_gate disser que a escada esgotou, pare e mostre ao usuário o motivo e o que falta.`
 
 // axynConfig is what install adds to opencode.json: the MCP server, the two agents
 // and the /axyn command (spec 021 FR-2).

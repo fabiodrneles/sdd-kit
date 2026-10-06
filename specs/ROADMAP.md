@@ -102,11 +102,11 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 
 ## Fase 13 — Relé na prática (P1)
 
-- [ ] **T57** Agente padrão do relé sem prompts de permissão e com sessão própria; README de como rodar o relé — 019 FR-1, FR-2, AC-1
-- [ ] **T58** `adopt.sh` e `adopt.ps1`: exemplos de uso no `--help` (#115), feito pelo relé
-- [ ] **T59** `doc-commands.sh`: rodar também os blocos `sh` marcados (#114), feito pelo relé
-- [ ] **T60** Despertar ocioso: só o turno sem commit nem push — 019 FR-3, AC-2
-- [ ] **T61** Comparação com a Fase 12 e a economia no README — 019 FR-4, AC-3
+- [x] **T57** Agente padrão do relé sem prompts de permissão e com sessão própria; README de como rodar o relé — 019 FR-1, FR-2, AC-1
+- [x] **T58** `adopt.sh` e `adopt.ps1`: exemplos de uso no `--help` (#115), feito pelo relé
+- [x] **T59** `doc-commands.sh`: rodar também os blocos `sh` marcados (#114), feito pelo relé
+- [x] **T60** Despertar ocioso: só o turno sem commit nem push — 019 FR-3, AC-2
+- [x] **T61** Comparação com a Fase 12 e a economia no README — 019 FR-4, AC-3
 
 ## Próximas fases (visão, sem versão)
 

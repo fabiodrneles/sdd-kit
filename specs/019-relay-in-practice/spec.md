@@ -1,7 +1,7 @@
 # 019 — Relé na prática
 
 - **Prioridade:** P1
-- **Status:** Approved — pedida pelo dono em 2026-10-06
+- **Status:** Done — entregue na `v1.12.0`
 - **Código afetado:** `template/common/scripts/sdd-relay.sh`, `template/common/scripts/sdd-report.sh`, `README.md`, `README.en.md`
 - **Resolve:** o relé (spec 018) só rodou com um agente falso; com o `claude -p` de verdade, o agente não tem permissão para editar nem rodar comandos, e numa sessão do Claude Code ele herda o id da sessão que o chamou, misturando o custo
 
@@ -24,7 +24,7 @@ Medição de 2026-10-06: um `claude -p` novo começa com cerca de 32 mil tokens 
 
 ## Mudanças
 
-### Não lançado
+### v1.12.0
 
 - ADDED FR-1, FR-2 — agente padrão do relé sem prompts de permissão (`--permission-mode acceptEdits` e só os comandos da entrega) e com sessão própria (sem `CLAUDE_CODE_SESSION_ID` herdado); README com a seção do relé (T57, #236).
 - ADDED FR-3 — despertar ocioso: só o turno sem `git commit`, `git push` nem `sdd-pr.sh` (T60, #239).

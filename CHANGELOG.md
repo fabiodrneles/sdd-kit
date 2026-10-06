@@ -8,10 +8,13 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ### Adicionado
 
-- add usage examples to adopt.sh and adopt.ps1 --help (#242)
-- run marked sh blocks in doc-commands.sh (#243)
-- count only idle wake-ups (no commit or push) in the report (#244)
-- sdd-report phase --compare and the measured relay savings in the README (#245)
+- **Economia medida (spec 019):** a primeira fase feita pelo relé custou em média 403 mil tokens por ticket, contra 6,5 milhões por ticket numa sessão longa (Fase 12). São 16 vezes menos por ticket e 5,4 vezes menos contexto relido por chamada. O gráfico e a tabela por ticket estão no topo dos READMEs, e `sdd-report.sh phase '#ÉPICO' --compare '#OUTRO'` refaz a conta (#245).
+- O relé roda de verdade com o `claude -p`: o agente padrão não pede permissão (só edita e roda os comandos da entrega) e começa uma sessão própria, sem herdar o id da sessão que o chamou. Os READMEs ganharam a seção do relé (#241).
+- `adopt.sh` e `adopt.ps1`: exemplos de uso no `--help` (#242). O `doc-commands.sh` roda também os blocos `sh` marcados (#243). Os dois foram feitos pelo relé.
+
+### Mudado
+
+- `sdd-report.sh`: só conta como despertar ocioso o turno sem `git commit`, `git push` nem `sdd-pr.sh`; o trabalho que seguiu sozinho depois de um aviso não entra (#244).
 
 ## [1.11.0] - 2026-10-06
 

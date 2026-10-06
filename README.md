@@ -228,7 +228,9 @@ A adoção grava `.sdd-kit.json` (versão do kit e o hash de cada arquivo gerenc
 - arquivos que são só do seu repositório nunca são tocados;
 - `specs/` e `CHANGELOG.md` são do projeto: o kit os cria na adoção, se faltarem, e nunca mais os altera.
 
-Para o workflow abrir PRs, ative em *Settings → Actions → General* a opção **"Allow GitHub Actions to create and approve pull requests"**.
+Quando a versão nova cria ou muda arquivos em `.github/workflows/`, o `GITHUB_TOKEN` não consegue enviá-los (ele nunca recebe a permissão `workflows`). Sem o segredo **`SDD_SYNC_TOKEN`**, o PR traz tudo menos esses workflows, e a descrição os lista com o que fazer: configurar o segredo (token fine-grained com *Contents*, *Pull requests* e *Workflows* em escrita; o `SDD_ENGINE_TOKEN`, se tiver a permissão *Workflows*, também serve) ou rodar `sh scripts/sdd-sync.sh --only-workflows` na branch do PR e enviar o resultado.
+
+Para o workflow abrir PRs, ative em *Settings → Actions → General* a opção **"Allow GitHub Actions to create and approve pull requests"**. Sem ela, o job envia a branch `sdd-kit/sync`, grava no resumo o link para abrir o PR e termina com um aviso, não com falha.
 
 Quem adotou até a `v1.3.0` e vê a sincronização falhar com `Syntax error`: o script antigo se sobrescrevia enquanto rodava. Rode uma vez uma cópia dele, na raiz do repositório, e abra o PR com o resultado: `cp scripts/sdd-sync.sh /tmp/sdd-sync.sh && sh /tmp/sdd-sync.sh`. Da `v1.3.1` em diante, o próprio script faz isso.
 

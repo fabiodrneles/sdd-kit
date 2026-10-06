@@ -1,5 +1,5 @@
 #!/bin/sh
-# Testes da sincronização (spec 005 AC-1, AC-2 e AC-3) com um kit local.
+# Testes da sincronização (spec 005 AC-1 a AC-5) com um kit local.
 set -eu
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -73,4 +73,42 @@ jq -e '.files | has("CHANGELOG.md") | not' .sdd-kit.json > /dev/null || fail "CH
 before="$(snapshot .)"
 sh scripts/sdd-sync.sh --kit "$kit" --version v0.0.3 > /dev/null
 [ "$before" = "$(snapshot .)" ] || fail "segunda sincronização mudou arquivos"
+# 005 AC-4: sem a permissão `workflows`, a sincronização atualiza o resto, deixa
+# o workflow de fora, o lista e o `--only-workflows` o aplica depois.
+printf '# kit novo\n' >> "$kit/template/common/.github/workflows/sdd-sync.yml"
+printf 'name: novo\non: push\njobs: {}\n' > "$kit/template/common/.github/workflows/sdd-novo.yml"
+printf 'mais\n' >> "$kit/template/common/CONTRIBUTING.md"
+wf="$(cat .github/workflows/sdd-sync.yml)"
+SDD_SYNC_SKIP_WORKFLOWS=1 sh scripts/sdd-sync.sh --kit "$kit" --version v0.0.4 --summary "$tmp/s4.md"
+grep -q '^mais$' CONTRIBUTING.md || fail "AC-4: o resto não foi atualizado"
+[ "$(cat .github/workflows/sdd-sync.yml)" = "$wf" ] || fail "AC-4: workflow alterado com SKIP_WORKFLOWS"
+[ ! -e .github/workflows/sdd-novo.yml ] || fail "AC-4: workflow novo criado com SKIP_WORKFLOWS"
+grep -q 'Workflows não aplicados' "$tmp/s4.md" || fail "AC-4: sem a seção de workflows"
+grep -qxF -e "- \`.github/workflows/sdd-sync.yml\`" "$tmp/s4.md" || fail "AC-4: sdd-sync.yml não listado"
+grep -qxF -e "- \`.github/workflows/sdd-novo.yml\`" "$tmp/s4.md" || fail "AC-4: sdd-novo.yml não listado"
+grep -q -e '--only-workflows' "$tmp/s4.md" || fail "AC-4: sem a instrução --only-workflows"
+[ "$(jq -r .version .sdd-kit.json)" = v0.0.4 ] || fail "AC-4: estado não foi para v0.0.4"
+# Pendente até ser aplicado: o estado não registra o hash dos workflows deixados de fora,
+# e repetir a sincronização na mesma versão os lista de novo.
+jq -e '.files | has(".github/workflows/sdd-novo.yml") | not' .sdd-kit.json > /dev/null || fail "AC-4: workflow novo pendente entrou no estado"
+SDD_SYNC_SKIP_WORKFLOWS=1 sh scripts/sdd-sync.sh --kit "$kit" --version v0.0.4 --summary "$tmp/s4b.md" > /dev/null
+grep -qxF -e "- \`.github/workflows/sdd-sync.yml\`" "$tmp/s4b.md" || fail "AC-4: sdd-sync.yml sumiu da lista na segunda sincronização"
+grep -qxF -e "- \`.github/workflows/sdd-novo.yml\`" "$tmp/s4b.md" || fail "AC-4: sdd-novo.yml sumiu da lista na segunda sincronização"
+other="$(snapshot . | grep -v '\.github/workflows/\|\.sdd-kit\.json')"
+sh scripts/sdd-sync.sh --kit "$kit" --version v0.0.4 --only-workflows --summary "$tmp/s5.md"
+grep -q 'kit novo' .github/workflows/sdd-sync.yml || fail "AC-4: --only-workflows não atualizou o workflow"
+[ -f .github/workflows/sdd-novo.yml ] || fail "AC-4: --only-workflows não criou o workflow novo"
+[ "$other" = "$(snapshot . | grep -v '\.github/workflows/\|\.sdd-kit\.json')" ] || fail "AC-4: --only-workflows mexeu em outros arquivos"
+[ "$(jq -r .version .sdd-kit.json)" = v0.0.4 ] || fail "AC-4: --only-workflows mexeu na versão do estado"
+jq -e '.files | has(".github/workflows/sdd-novo.yml")' .sdd-kit.json > /dev/null || fail "AC-4: --only-workflows não registrou o workflow no estado"
+SDD_SYNC_SKIP_WORKFLOWS=1 sh scripts/sdd-sync.sh --kit "$kit" --version v0.0.4 --summary "$tmp/s4c.md" > /dev/null
+if grep -q 'Workflows não aplicados' "$tmp/s4c.md"; then fail "AC-4: workflows aplicados continuam pendentes"; fi
+grep -qxF -e "- \`.github/workflows/sdd-novo.yml\`" "$tmp/s5.md" || fail "AC-4: resumo do --only-workflows sem o workflow"
+
+# 005 AC-5: o workflow deixa a branch enviada, grava o link e avisa, sem falhar.
+yml="$root/template/common/.github/workflows/sdd-sync.yml"
+grep -q 'SDD_SYNC_TOKEN' "$yml" || fail "AC-5: workflow sem SDD_SYNC_TOKEN"
+grep -q '::warning::' "$yml" || fail "AC-5: workflow sem ::warning::"
+grep -q 'compare/' "$yml" || fail "AC-5: workflow sem o link de comparação"
+
 echo "tests/sync.sh ok"

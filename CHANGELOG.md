@@ -8,8 +8,8 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ### Corrigido
 
-- never report a still-running check as a failure in sdd-ci.sh (#190)
-- point a fresh session to the next ROADMAP phase after a closing (#192)
+- `sdd-ci.sh` não informa mais como falha um check que ainda está rodando (#190).
+- Sessão nova depois do fechamento de uma fase: o `sdd-resume.sh` aponta a próxima fase do ROADMAP, e o motor abre o épico dela no merge do PR de fechamento; "continue" não termina mais em "nada a fazer" (#192).
 
 ## [1.7.1] - 2026-10-06
 

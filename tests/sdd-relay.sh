@@ -16,11 +16,13 @@ fail() { echo "FALHOU: $*" >&2; exit 1; }
 G="$tmp/gh"; mkdir -p "$G" "$tmp/bin"
 cat > "$tmp/bin/gh" <<'SH'
 #!/bin/sh
-jq="" url="" body=""
+jq="" url="" body="" method=""
 shift # api
 while [ $# -gt 0 ]; do
-  case "$1" in --jq) jq="$2"; shift 2 ;; -F) body="${2#body=@}"; shift 2 ;; --paginate | --silent) shift ;; *) url="$1"; shift ;; esac
+  case "$1" in --jq) jq="$2"; shift 2 ;; -F) body="${2#body=@}"; shift 2 ;; -X) method="$2"; shift 2 ;; -f) shift 2 ;; --paginate | --silent) shift ;; *) url="$1"; shift ;; esac
 done
+# PUT do merge (--auto-merge): anota o PR e marca o PR como mesclado.
+[ "${method:-}" != PUT ] || { echo "$url" >> "$G/merged-by-relay"; exit 0; }
 # POST de comentário no épico: guarda o corpo em $G/posted.
 [ -z "$body" ] || { cat "$body" >> "$G/posted"; exit 0; }
 case "$url" in
@@ -244,6 +246,19 @@ reset
 jq '(.[] | select(.number == 2)) += {labels: [{name: "modelo:haiku"}]}' "$G/subs.json" > "$G/x" && mv "$G/x" "$G/subs.json"
 out="$(env -u SDD_AGENT_CMD sh scripts/sdd-relay.sh --repo o/r --dry-run 2>&1)" || fail "dry-run com modelo falhou"
 printf '%s\n' "$out" | grep -qF -- "--model haiku' para o ticket #2" || fail "agente padrão sem --model: $(printf '%s\n' "$out" | head -n 1)"
+
+# #276: com --auto-merge e o CI verde, o relé chama o merge de cada PR; sem a opção, não.
+reset; rm -f "$G/merged-by-relay"
+out="$($relay 2>&1)" || fail "relé sem --auto-merge falhou: $out"
+[ ! -s "$G/merged-by-relay" ] || fail "sem --auto-merge, o relé mesclou: $(cat "$G/merged-by-relay")"
+reset; rm -f "$G/merged-by-relay"
+out="$($relay --auto-merge 2>&1)" || fail "relé com --auto-merge falhou: $out"
+grep -q 'pulls/102/merge' "$G/merged-by-relay" || fail "--auto-merge não mesclou o #102: $(cat "$G/merged-by-relay" 2> /dev/null)"
+grep -q 'pulls/103/merge' "$G/merged-by-relay" || fail "--auto-merge não mesclou o #103"
+printf '%s\n' "$out" | grep -qF 'PR #102 com o CI verde: mesclado (--auto-merge)' || fail "--auto-merge sem a linha: $out"
+reset; rm -f "$G/merged-by-relay"
+SDD_RELAY_AUTO_MERGE=1 $relay > /dev/null 2>&1 || fail "relé com SDD_RELAY_AUTO_MERGE falhou"
+[ -s "$G/merged-by-relay" ] || fail "SDD_RELAY_AUTO_MERGE=1 não mesclou"
 
 # Sem épico aberto: Próximo é perguntar ao dono.
 reset; echo '[]' > "$G/epics.json"

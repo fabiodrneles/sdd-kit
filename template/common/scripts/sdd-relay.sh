@@ -13,6 +13,8 @@
 #   Próximo da fase e termina.
 #   --max      no máximo N agentes nesta rodada (padrão: sem limite)
 #   --dry-run  mostra o ticket e o pacote, sem chamar o agente
+#   --auto-merge  com o CI do PR verde, mescla o PR e segue (também
+#              SDD_RELAY_AUTO_MERGE=1); desligado, espera o merge do dono (#276)
 #   Modelo por ticket (020 FR-5): o label modelo:NOME da issue, senão SDD_AGENT_MODEL;
 #   o agente padrão recebe --model NOME, e um SDD_AGENT_CMD próprio lê SDD_AGENT_MODEL.
 #   SDD_RELAY_WAIT: segundos de cada espera do merge (padrão 3600; repete até o merge).
@@ -36,13 +38,14 @@ if [ -z "${SDD_RELAY_SELF:-}" ]; then
   SDD_RELAY_SELF="$self" exec sh "$self/sdd-relay.sh" "$@"
 fi
 
-usage() { sed -n '2,25p' "$0"; exit 3; }
-repo="" max="" dry=0
+usage() { sed -n '2,29p' "$0"; exit 3; }
+repo="" max="" dry=0 automerge="${SDD_RELAY_AUTO_MERGE:-0}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --repo) repo="${2:?}"; shift 2 ;;
     --max) max="${2:?}"; shift 2 ;;
     --dry-run) dry=1; shift ;;
+    --auto-merge) automerge=1; shift ;;
     -h | --help) usage ;;
     *) echo "sdd-relay: opção desconhecida: $1" >&2; exit 3 ;;
   esac
@@ -177,7 +180,17 @@ while :; do
   while :; do
     rc=0; sh "$here/sdd-ci.sh" --repo "$repo" --timeout "${SDD_RELAY_CI_WAIT:-1800}" "#$pr" > "$tmp/ci" 2>&1 || rc=$?
     case "$rc" in
-      0) break ;;
+      0)
+        # Merge delegado pelo dono (#276): só com o CI verde; recusado (conflito,
+        # proteção da branch), cai na espera normal do merge.
+        if [ "$automerge" = 1 ]; then
+          if gh api -X PUT "repos/$repo/pulls/$pr/merge" -f merge_method=merge --silent 2> /dev/null; then
+            say "PR #$pr com o CI verde: mesclado (--auto-merge)"
+          else
+            say "aviso: o GitHub recusou o merge do PR #$pr; esperando o merge do dono"
+          fi
+        fi
+        break ;;
       2) say "CI do PR #$pr ainda pendente; esperando" ;;
       1)
         reds=$((reds + 1))

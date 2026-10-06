@@ -148,9 +148,21 @@ if grep -q "^## \[$ver\]" "$tmp/CHANGELOG.md"; then die "o CHANGELOG já tem a v
 
 # PRs mesclados na main depois da data do commit da última tag (UTC, comparável).
 since="$(TZ=UTC git log -1 --date=format-local:%Y-%m-%dT%H:%M:%SZ --format=%cd "$last^{commit}")"
-gh api "repos/$repo/pulls?state=closed&base=main&sort=updated&direction=desc&per_page=100" --paginate \
-  --jq ".[] | select(.merged_at != null and .merged_at > \"$since\") | \"\(.number)\t\(.title)\"" > "$tmp/prs" \
-  || die "falha ao listar os PRs de $repo"
+# Paginação explícita (page=N): o --paginate do gh segue links repositories/{id}, que
+# alguns proxies recusam. A lista vem pela atualização mais recente, então para na
+# primeira página que já alcança PRs atualizados antes da última tag.
+: > "$tmp/prs"
+page=1
+while :; do
+  gh api "repos/$repo/pulls?state=closed&base=main&sort=updated&direction=desc&per_page=100&page=$page" \
+    --jq "(.[] | select(.merged_at != null and .merged_at > \"$since\") | \"PR\t\(.number)\t\(.title)\"), \"N\t\(length)\", \"OLD\t\([.[] | select(.updated_at < \"$since\")] | length)\"" \
+    > "$tmp/page" || die "falha ao listar os PRs de $repo"
+  sed -n 's/^PR\t//p' "$tmp/page" >> "$tmp/prs"
+  n="$(sed -n 's/^N\t//p' "$tmp/page")"
+  stale="$(sed -n 's/^OLD\t//p' "$tmp/page")"
+  if [ "${n:-0}" -lt 100 ] || [ "${stale:-0}" -gt 0 ] || [ "$page" -ge 50 ]; then break; fi
+  page=$((page + 1))
+done
 : > "$tmp/add"; : > "$tmp/fix"; : > "$tmp/alt"
 sort -n "$tmp/prs" | while IFS="$(printf '\t')" read -r num title; do
   type="$(printf '%s\n' "$title" | sed -n -E 's/^([a-z]+)(\([^)]*\))?!?: .*/\1/p')"

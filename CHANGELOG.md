@@ -4,6 +4,18 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-10-06
+
+### Adicionado
+
+- sdd-report.sh tokens sums session token usage without LLM (#219)
+- sdd-report.sh ticket and phase report cost per ticket in one epic comment (#220)
+- sdd-report separates owner-less wake-ups and the closing PR cites the phase cost (#221)
+
+### Corrigido
+
+- the engine closes the delivered phase epic before opening the next phase (#218)
+
 ## [1.9.0] - 2026-10-06
 
 ### Adicionado

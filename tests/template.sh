@@ -22,7 +22,7 @@ done
 # de definição virou "rm -rf /coverage" no template .NET.
 mk="$(mktemp -d)"
 for lang in go node python dotnet java rust; do
-  rm -rf "$mk/$lang"; mkdir -p "$mk/$lang"; cp "$lang/Makefile" "$mk/$lang/"
+  rm -rf "${mk:?}/$lang"; mkdir -p "$mk/$lang"; cp "$lang/Makefile" "$mk/$lang/"
   out="$(cd "$mk/$lang" && git init -q && make -n ci 2>&1)" || err "template/$lang: make -n ci falhou: $out"
   printf '%s\n' "$out" | grep -q 'rm -rf /' && err "template/$lang: make ci apagaria um caminho absoluto: $(printf '%s\n' "$out" | grep 'rm -rf /')"
   case "$lang" in go | node | python | dotnet)

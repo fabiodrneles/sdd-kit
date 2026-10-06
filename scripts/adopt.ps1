@@ -25,6 +25,13 @@ uso: adopt.ps1 --lang go|node|java|python|rust|dotnet [opções] [DESTINO]
   --skeleton       num repositório vazio, cria um projeto mínimo com um teste para o CI
                    nascer verde (nunca sobrescreve, nem com --force)
   DESTINO          diretório do repositório (padrão: diretório atual)
+
+exemplos:
+  adopt.ps1 --lang go --dry-run                  vê o que seria feito, sem escrever
+  adopt.ps1 --lang node                          adota no diretório atual
+  adopt.ps1 --lang python --skeleton ../novo     repositório vazio, com projeto mínimo
+  adopt.ps1 --lang rust --force --owner acme --repo app .
+                                                sobrescreve e fixa dono e repositório
 "@)
   exit 2
 }

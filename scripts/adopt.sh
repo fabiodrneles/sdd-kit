@@ -26,6 +26,13 @@ uso: adopt.sh --lang go|node|java|python|rust|dotnet [opções] [DESTINO]
   --skeleton       num repositório vazio, cria um projeto mínimo com um teste para o CI
                    nascer verde (nunca sobrescreve, nem com --force)
   DESTINO          diretório do repositório (padrão: diretório atual)
+
+exemplos:
+  adopt.sh --lang go --dry-run                  vê o que seria feito, sem escrever
+  adopt.sh --lang node                          adota no diretório atual
+  adopt.sh --lang python --skeleton ../novo     repositório vazio, com projeto mínimo
+  adopt.sh --lang rust --force --owner acme --repo app .
+                                                sobrescreve e fixa dono e repositório
 USAGE
   exit 2
 }

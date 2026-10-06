@@ -6,12 +6,18 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [1.7.0] - 2026-10-06
 
+Correções achadas ao usar a v1.6.0 de verdade, no próprio kit e no sdd-kit-demo.
+
+### Adicionado
+
+- **Válvula do cache do Go (`scripts/sdd-cover-guard.sh`):** o `make test` do template Go confere o perfil de cobertura antes do gate. Blocos do mesmo arquivo que se sobrepõem, ou que passam da última linha, indicam um cache quente com versões misturadas. Nesse caso a válvula refaz o `go test` num `GOCACHE` frio e descartável e avisa numa linha. `SDD_COVER_GUARD=off` desliga (spec 010 FR-1, #173).
+
 ### Corrigido
 
-- never lose a sync when the new version brings workflows (#171)
-- measure Go coverage correctly with a warm cache (-count=1 and a cold-cache valve) (#173)
-- dispatch CI after the engine updates a PR branch (#175)
-- accept kit sync branches in sdd-pr.sh (#176)
+- A cobertura do template Go saía menor que a real com o cache quente e um `package main` no `-coverpkg` (Go 1.25+): o `go test` passa a rodar com `-count=1`. É a causa do "76,7%" visto no demo (spec 010 FR-1, #173).
+- O `sdd-sync` não perde mais a sincronização quando a versão nova traz workflows, que o `GITHUB_TOKEN` não pode gravar. Com o segredo `SDD_SYNC_TOKEN`, aplica tudo; sem ele, aplica o resto e lista os workflows pendentes, que voltam a aparecer até serem aplicados (`sdd-sync.sh --only-workflows`). Sem permissão para criar o PR, o job deixa a branch e o link, e termina com um aviso em vez de falhar (spec 005, #171).
+- O motor dispara o CI depois de trazer a `main` para um PR: o push do `GITHUB_TOKEN` não dispara o `pull_request`, e o PR ficava sem nenhum check (spec 015 FR-6, #175).
+- O `sdd-pr.sh` aceita as branches de sincronização do kit (`chore/sync-*`), como já aceitava as de fechamento (#176).
 
 ## [1.6.0] - 2026-10-06
 

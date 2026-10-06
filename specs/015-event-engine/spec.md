@@ -38,7 +38,7 @@ Na sessão de 2026-10-05, só ler notificações de PR e cancelar assinaturas cu
 
 ## Mudanças
 
-### Não lançado
+### v1.7.0
 
 - MODIFIED FR-6 — sem `SDD_ENGINE_TOKEN`, o `sdd-update-prs` espera a cabeça nova do PR e dispara o CI na branch dele: visto no #173, que ficou sem nenhum check depois de o motor trazer a `main` (#174).
 

@@ -65,6 +65,58 @@ if [ "$lang" = "$adopt_lang" ]; then
   echo "e2e-template.sh $lang --skeleton ok"
 fi
 
+# 010 FR-1 (#172): com o cache quente, editar o package main (as linhas mudam de posição)
+# não pode deixar no perfil blocos da versão antiga, que contam como não cobertos: o
+# resultado em cache de outro pacote testado reaproveita metadados velhos do -coverpkg=./...
+# (Go 1.25 ou mais novo; GOTOOLCHAIN=auto baixa). A cobertura tem de ser a de um cache frio.
+# GOCACHE próprio, para não tocar o do runner. MUTANTE=1 tira o -count=1 do Makefile.
+if [ "$lang" = go ]; then
+  cv="$work/$lang-cache172"
+  rm -rf "$cv"
+  cp -R "$d" "$cv"
+  rm -f "$cv/untested.go" "$cv/demo.go" "$cv/demo_test.go"
+  sed -i.bak 's/^go .*/go 1.25.1/' "$cv/go.mod" && rm "$cv/go.mod.bak"
+  mkdir -p "$cv/internal/lib"
+  printf 'package lib\n\n// Two returns 2.\nfunc Two() int { return 2 }\n' > "$cv/internal/lib/lib.go"
+  printf 'package lib\n\nimport "testing"\n\nfunc TestTwo(t *testing.T) {\n\tif Two() != 2 {\n\t\tt.Fatal("two")\n\t}\n}\n' > "$cv/internal/lib/lib_test.go"
+  printf 'package main\n\nimport "example.com/demo/internal/lib"\n\nfunc run() int { return lib.Two() - 1 }\n\nfunc main() { _ = run() }\n' > "$cv/main.go"
+  printf 'package main\n\nimport "testing"\n\nfunc TestRun(t *testing.T) {\n\tif run() != 1 {\n\t\tt.Fatal("run")\n\t}\n}\n' > "$cv/main_test.go"
+  if [ -n "${MUTANTE:-}" ]; then
+    sed 's/ -count=1//' "$cv/Makefile" > "$cv/Makefile.new" && mv "$cv/Makefile.new" "$cv/Makefile"
+  fi
+  cover_total() {
+    if ! (cd "$cv" && GOTOOLCHAIN=auto GOCACHE="$1" make test COVERAGE_MIN=0 > "$work/cache172.log" 2>&1); then
+      cat "$work/cache172.log" >&2
+      return 1
+    fi
+    (cd "$cv" && GOTOOLCHAIN=auto go tool cover -func=coverage.out | awk '/^total:/ { print $3 }')
+  }
+  cover_total "$work/gocache" > /dev/null
+  { printf '// shifted\n// shifted\n'; cat "$cv/main.go"; } > "$cv/main.go.new" && mv "$cv/main.go.new" "$cv/main.go"
+  warm="$(cover_total "$work/gocache")"
+  rm -rf "$work/gocache-cold"
+  cold="$(cover_total "$work/gocache-cold")"
+  if [ -z "$warm" ] || [ "$warm" != "$cold" ]; then
+    echo "FALHOU: cobertura com cache quente ($warm) difere da com cache frio ($cold)" >&2
+    exit 1
+  fi
+  echo "e2e-template.sh go: cobertura com cache quente ok ($warm)"
+  # A válvula (sdd-cover-guard.sh) sozinha: sem o -count=1, o perfil quente sai misturado;
+  # ela tem de perceber, refazer com um cache frio e chegar à mesma cobertura.
+  sed 's/ -count=1//' "$cv/Makefile" > "$cv/Makefile.new" && mv "$cv/Makefile.new" "$cv/Makefile"
+  rm -rf "$work/gocache-valve"
+  cover_total "$work/gocache-valve" > /dev/null
+  { printf '// shifted\n'; cat "$cv/main.go"; } > "$cv/main.go.new" && mv "$cv/main.go.new" "$cv/main.go"
+  valve="$(cover_total "$work/gocache-valve")"
+  rm -rf "$work/gocache-cold2"
+  cold="$(cover_total "$work/gocache-cold2")"
+  if [ -z "$valve" ] || [ "$valve" != "$cold" ]; then
+    echo "FALHOU: sem -count=1, a válvula não corrigiu a cobertura ($valve, cache frio $cold)" >&2
+    exit 1
+  fi
+  echo "e2e-template.sh go: válvula do cache ok ($valve)"
+fi
+
 # 011 AC-2: com o go.mod pedindo outra versão, o hook de sessão deixa a toolchain
 # baixada pelo GOTOOLCHAIN com o covdata, e a cobertura roda num pacote sem testes.
 # GOTOOLCHAIN=auto como numa sessão na web (o CI fixa local).

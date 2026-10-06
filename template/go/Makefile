@@ -14,7 +14,10 @@ lint: ## golangci-lint (prefere o do GOPATH/bin, que o sdd-doctor.sh instala na 
 
 .PHONY: test
 test: ## Testes com race detector e cobertura mínima (COVERAGE_MIN)
-	go test -race -coverpkg=./... -coverprofile=coverage.out ./...
+	@# -count=1: sem ele, com o cache quente e um package main em -coverpkg=./..., o go reaproveita
+	@# metadados de cobertura de uma versão antiga do main.go e a cobertura sai menor que a real (#172).
+	@# sdd-cover-guard.sh confere o perfil e, se ainda vier misturado, refaz com um cache frio.
+	sh scripts/sdd-cover-guard.sh coverage.out -- go test -count=1 -race -coverpkg=./... -coverprofile=coverage.out ./...
 	@total="$$(go tool cover -func=coverage.out | awk '/^total:/ { sub("%", "", $$3); print $$3 }')"; \
 		awk -v t="$$total" -v m="$(COVERAGE_MIN)" 'BEGIN { printf "cobertura: %.1f%% (mínimo %s%%)\n", t, m; exit !(t + 0 >= m + 0) }' || \
 		{ echo "cobertura abaixo do mínimo; suba os testes ou ajuste COVERAGE_MIN no Makefile" >&2; exit 1; }

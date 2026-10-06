@@ -4,6 +4,18 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-10-06
+
+Correções achadas no primeiro ciclo completo do motor num projeto adotado (sdd-kit-demo, da fase 2 à release v0.2.0).
+
+### Corrigido
+
+- O CI do push na `main` não é mais cancelado pelo CI da release: o grupo de concorrência separa por evento, e só PRs cancelam a rodada anterior. Vale no kit e nos seis templates (#179).
+- O `make ci` não deixa mais artefato de cobertura solto na árvore (`coverage.out`, `coverage/`, `.coverage`): os Makefiles gravam esses artefatos em `.git/sdd-out`, que o git não versiona. O template .NET deixou de montar o caminho antes de a variável existir, o que gerava `rm -rf /coverage` (#181).
+- O motor abre o PR de fechamento mesmo num runner sem as ferramentas do projeto: quem verifica é o CI do PR, que o motor dispara na branch (spec 015 FR-4, #183).
+- Antes da tag, o motor espera o CI da `main` verde no commit da release, em vez de rodar `make ci` num runner sem as ferramentas (spec 015 FR-5, #185).
+- O `sdd-release.sh` lista os PRs com paginação explícita: o `--paginate` do gh seguia links que alguns proxies recusam, a partir de 100 PRs fechados (#187).
+
 ## [1.7.0] - 2026-10-06
 
 Correções achadas ao usar a v1.6.0 de verdade, no próprio kit e no sdd-kit-demo.

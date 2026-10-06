@@ -14,7 +14,10 @@
 # Variável: SDD_COVER_GUARD=off desliga a conferência.
 set -u
 
-[ $# -ge 3 ] && [ "$2" = "--" ] || { echo "uso: sdd-cover-guard.sh PERFIL -- COMANDO..." >&2; exit 2; }
+if [ $# -lt 3 ] || [ "$2" != "--" ]; then
+  echo "uso: sdd-cover-guard.sh PERFIL -- COMANDO..." >&2
+  exit 2
+fi
 prof="$1"
 shift 2
 

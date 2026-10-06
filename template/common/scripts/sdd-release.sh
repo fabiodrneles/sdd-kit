@@ -274,4 +274,14 @@ else
   git commit -q -m "chore: release $tag"
 fi
 echo "sdd-release: $branch pronta (CHANGELOG com rascunho: revise o texto antes do merge)"
-sh "$here/sdd-pr.sh" --repo "$repo" --no-wait --title "chore: release $tag"
+# Custo da fase (spec 017 FR-5): a tabela do sdd-report.sh phase do épico aberto,
+# que também fica num comentário do épico; sem ela, o PR sai sem a seção.
+bodyarg=""
+epic="$(gh api "repos/$repo/issues?labels=%C3%A9pico&state=open&per_page=1" --jq '.[0].number // empty' 2> /dev/null || true)"
+if [ -n "$epic" ] && [ -f "$here/sdd-report.sh" ] \
+  && sh "$here/sdd-report.sh" --repo "$repo" phase "#$epic" > "$tmp/report" 2> /dev/null; then
+  { printf '## Custo da fase\n\n%s\n\n' "Do \`sdd-report.sh phase\` do épico #$epic (sem LLM):"
+    grep '^|' "$tmp/report"; } > "$tmp/prbody"
+  bodyarg="$tmp/prbody"
+fi
+sh "$here/sdd-pr.sh" --repo "$repo" --no-wait --title "chore: release $tag" ${bodyarg:+--body-file "$bodyarg"}

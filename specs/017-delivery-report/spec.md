@@ -46,3 +46,4 @@ Cada chamada relê a conversa inteira; a sessão cresce, e o custo total cresce 
 
 - ADDED FR-1, NFR-1, NFR-2 — `sdd-report.sh tokens [--session ARQ | --since DATA]`: totais das sessões do Claude Code sem LLM, cada chamada contada uma vez por `message.id` (T50, #214).
 - ADDED FR-2, FR-3 — `sdd-report.sh ticket '#N'` (totais na janela do PR que fecha a issue, tempo e CI verde na primeira rodada) e `sdd-report.sh phase '#ÉPICO'` (uma linha por ticket e o total, num único comentário do épico) (T51, #215).
+- ADDED FR-4, FR-5 — despertares sem mensagem do dono (turnos sem `origin.kind` "human") numa linha própria, com contagem e tokens, e numa coluna do `phase`; o `sdd-release.sh` cita a tabela da fase no PR de fechamento (T52, #216).

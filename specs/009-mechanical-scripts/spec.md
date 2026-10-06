@@ -13,7 +13,7 @@ Nos casos de uso (#51), o agente repetiu à mão passos mecânicos: esperar o CI
 
 - **FR-1** `sdd-ci.sh [REF]` MUST esperar os checks e os status de commit (ex.: Vercel) de um commit, PR (`#N`) ou branch, imprimir uma linha por check e, só para os que falharam, o passo e o fim do log (ou o link do status). Códigos: 0 verde, 1 falhou, 2 tempo esgotado, 3 uso.
 - **FR-2** `sdd-mark.sh decide Dn=x ...` MUST marcar as decisões como respondidas em `specs/ANALYSIS.md`. Quando nenhuma ficar em aberto, MUST mover as specs `Draft` para `Approved` (cabeçalho e índice) e marcar a Fase 0 do ROADMAP.
-- **FR-3** `sdd-mark.sh close vX.Y.Z` MUST marcar as tarefas da fase, mover as specs citadas para `Done` (ou `In Progress`, se tiverem tarefa aberta em outra fase) e abrir `## [X.Y.Z] - data` no CHANGELOG.
+- **FR-3** `sdd-mark.sh close vX.Y.Z` MUST marcar as tarefas da fase atual (a primeira com tarefa aberta, ou a que já aponta para `vX.Y.Z`), gravar `→ vX.Y.Z` no cabeçalho dela, mover as specs citadas para `Done` (ou `In Progress`, se tiverem tarefa aberta em outra fase) e abrir `## [X.Y.Z] - data` no CHANGELOG.
 - **FR-4** `sdd-mark.sh` MUST preparar todas as edições antes de gravar e MUST NOT gravar nada se uma edição esvaziar um arquivo ou mudar o número de linhas além do esperado.
 - **FR-5** `sdd-phase-status.sh` MUST montar o comentário "Estado da fase" (ticket → PR → CI, decisões pendentes, próximo passo); só com `--post` ele publica.
 - **FR-6** `sdd-epic.sh FASE` MUST criar o épico da fase do ROADMAP e os tickets como sub-issues; `--dry-run` MUST só mostrar o plano.
@@ -32,4 +32,5 @@ Nos casos de uso (#51), o agente repetiu à mão passos mecânicos: esperar o CI
 
 ## Mudanças
 
+- MODIFIED FR-3: a fase é a da tarefa aberta, e o fechamento grava a versão do go-release-manager no cabeçalho (#198).
 - MODIFIED FR-1: status de commit também contam; ADDED AC-7 (#66).

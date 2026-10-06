@@ -57,7 +57,7 @@ flowchart LR
 |---|---|---|
 | Descoberta | Agente | `specs/ANALYSIS.md`: o que foi verificado (comando → resultado), achados por severidade com evidência, decisões em aberto D1..Dn com recomendação |
 | Decisões | **Dono** | Respostas registradas nas specs; nada é implementado antes |
-| Specs | Agente | `specs/constitution.md` (princípios verificáveis), uma spec por área com `FR-*`, `NFR-*` e `AC-*` (Dado/Quando/Então), `ROADMAP.md` por fases e versões |
+| Specs | Agente | `specs/constitution.md` (princípios verificáveis), uma spec por área com `FR-*`, `NFR-*` e `AC-*` (Dado/Quando/Então), `ROADMAP.md` por fases (a versão vem do go-release-manager no fechamento) |
 | Planejamento | Agente | Um épico por fase e um ticket por tarefa, como sub-issues nativas do GitHub |
 | Implementação | Agente | Uma branch e um PR por ticket; cada `AC-*` vira teste; `make ci` verde antes de todo push |
 | Revisão e merge | **Dono** | Revisão na ordem do épico; o agente responde e corrige |

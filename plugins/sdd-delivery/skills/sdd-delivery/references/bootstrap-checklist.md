@@ -30,7 +30,7 @@ it does not execute. The `⏸` are stop points.
 - [ ] `specs/README.md` (SDD flow, conventions, spec index with status).
 - [ ] One spec per area: `specs/NNN-name/spec.md` (FR/NFR, Given/When/Then AC, Out of
       scope, Decisions with the owner's answers).
-- [ ] `specs/ROADMAP.md` with phases → versions and tasks linked to `FR`/`AC`.
+- [ ] `specs/ROADMAP.md` with phases (no fixed version: go-release-manager computes it at closing) and tasks linked to `FR`/`AC`.
 
 ## 2a. Existing repository: green CI first
 

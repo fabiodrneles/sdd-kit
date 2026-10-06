@@ -3,7 +3,7 @@
 #.
 #
 # Uso: sdd-epic.sh [--repo DONO/REPO] [--tickets DIR] [--dry-run] FASE
-#   Lê "## Fase FASE — <nome> (Pn) → `vX.Y.Z`" e as tarefas "- [ ] **Tn** <título> — <IDs>".
+#   Lê "## Fase FASE — <nome> (Pn)" (o fechamento acrescenta "→ `vX.Y.Z`") e as tarefas "- [ ] **Tn** <título> — <IDs>".
 #   --tickets DIR  DIR/Tn.md, se existir, substitui o corpo gerado do ticket. As
 #                  primeiras linhas podem ser "title: <título>" e "labels: a,b",
 #                  seguidas de uma linha em branco.

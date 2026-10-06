@@ -31,7 +31,7 @@ are written in the owner's language; commits and code in English (see the "Langu
 |---|---|
 | Owner | Maintains the repository; final word (decisions, merges, tags, settings). |
 | Agent | Does the delegated work: analysis, specs, tickets, code, PRs. |
-| Phase | Set of tasks that leads to a version (Phase 1 → `v0.1.0`). |
+| Phase | Set of tasks that leads to a version; go-release-manager computes the version when the phase closes. |
 | Epic | Issue that represents a phase and groups the tasks as sub-issues. |
 | Ticket | Issue for one task, sub-issue of an epic. |
 | Stacked PR | PR whose base is the branch of another PR not merged yet. |

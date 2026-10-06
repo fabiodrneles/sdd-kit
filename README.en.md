@@ -41,7 +41,7 @@ flowchart LR
 |---|---|---|
 | Discovery | Agent | `specs/ANALYSIS.md`: what was verified (command → result), findings by severity with evidence, open decisions D1..Dn with a recommendation |
 | Decisions | **Owner** | Answers recorded in the specs; nothing is implemented before |
-| Specs | Agent | `specs/constitution.md` (verifiable principles), one spec per area with `FR-*`, `NFR-*` and `AC-*` (Given/When/Then), `ROADMAP.md` by phases and versions |
+| Specs | Agent | `specs/constitution.md` (verifiable principles), one spec per area with `FR-*`, `NFR-*` and `AC-*` (Given/When/Then), `ROADMAP.md` by phases (the version comes from go-release-manager at closing) |
 | Planning | Agent | One epic per phase and one ticket per task, as native GitHub sub-issues |
 | Implementation | Agent | One branch and one PR per ticket; every `AC-*` becomes a test; `make ci` green before every push |
 | Review and merge | **Owner** | Review in the epic's order; the agent answers and fixes |

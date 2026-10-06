@@ -7,8 +7,8 @@
 #
 # A versão vem do go-release-manager (`go-release-manager next` na origin/main,
 # pelos Conventional Commits desde a última tag estável; sem o binário, usa
-# `go run` com GRM_VERSION). X.Y.Z só força a versão (release-as), com aviso se
-# divergir da calculada. Sem GRM nem Go, e sem X.Y.Z, falha dizendo como instalar.
+# `go run` com GRM_VERSION); o ROADMAP não fixa versão (#198). X.Y.Z força a versão
+# (release-as) e só vale a pedido explícito do dono, com aviso se divergir da calculada. Sem GRM nem Go, e sem X.Y.Z, falha dizendo como instalar.
 #
 # Preparar (X.Y.Z):
 #   1 recusa árvore suja; cria a branch chore/release-vX.Y.Z a partir de origin/main

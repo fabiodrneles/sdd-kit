@@ -96,19 +96,6 @@ try {
   }
 
   $utf8 = New-Object System.Text.UTF8Encoding($false)
-  # Spec 011 FR-4: com uma tag vX.Y.Z no repositório, as fases do ROADMAP criado
-  # começam na versão seguinte (Fase 1 e 2: próximas minors; Fase 3: v1.0.0 se
-  # ainda for 0.x, senão a terceira minor). Sem tag, ficam v0.1.0, v0.2.0, v1.0.0.
-  $phaseVersions = $null
-  $tags = @()
-  try { $tags = @(& git -C $dest tag --list 'v[0-9]*' --sort=-v:refname 2>$null) } catch { $tags = @() }
-  $tag = $tags | Where-Object { $_ -cmatch '^v[0-9]+\.[0-9]+\.[0-9]+$' } | Select-Object -First 1
-  if ($tag) {
-    $nums = $tag.Substring(1).Split('.')
-    $major = [int]$nums[0]; $minor = [int]$nums[1]
-    $f3 = if ($major -eq 0) { 'v1.0.0' } else { "v$major.$($minor + 3).0" }
-    $phaseVersions = @{ '1' = "v$major.$($minor + 1).0"; '2' = "v$major.$($minor + 2).0"; '3' = $f3 }
-  }
 
   $created = 0; $skipped = 0; $overwritten = 0
   $state = [System.Collections.Generic.List[string]]::new()
@@ -143,15 +130,6 @@ try {
       if (-not $IsWindows) {
         $mode = [IO.File]::GetUnixFileMode($src)
         if ($mode -band [IO.UnixFileMode]::UserExecute) { [IO.File]::SetUnixFileMode($dst, $mode) }
-      }
-      if ($rel -ceq 'specs/ROADMAP.md' -and $phaseVersions) {
-        $lines = [IO.File]::ReadAllText($dst, $utf8).Split("`n")
-        for ($j = 0; $j -lt $lines.Count; $j++) {
-          if ($lines[$j] -cmatch '^## Fase ([123]) ') {
-            $lines[$j] = $lines[$j] -creplace '`v[0-9.]*`', ('`' + $phaseVersions[$Matches[1]] + '`')
-          }
-        }
-        [IO.File]::WriteAllText($dst, ($lines -join "`n"), $utf8)
       }
       if ($isOwned) { continue }
       $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $dst).Hash.ToLowerInvariant()

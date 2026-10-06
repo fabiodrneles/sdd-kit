@@ -248,24 +248,25 @@ Each task references the spec and the acceptance criteria it closes. Suggested o
 
 - [ ] Answer D1–Dn in [ANALYSIS.md §7](ANALYSIS.md#7-open-decisions) and move the specs to `Approved`.
 
-## Phase 1 — Actually works (P0) → `v0.1.0`
+## Phase 1 — Actually works (P0)
 
 - [ ] **T1** <task> — 007 FR-1..5
 - [ ] **T2** <task> — 003 FR-1, AC-1/2
 
-## Phase 2 — Reliable (P1) → `v0.2.0`
+## Phase 2 — Reliable (P1)
 
 - [ ] **Tn** <task> — <IDs>
 
-## Phase 3 — Professional (P2) → `v1.0.0`
+## Phase 3 — Professional (P2)
 
 - [ ] **Tn** <task> — <IDs>
 ```
 
-In a repository with published tags, number the phases from the last tag (`git tag --sort=-v:refname`),
-not from `v0.1.0`. A task brought forward to an earlier phase: mark it `*(brought forward)*`. An abandoned task: strike it (`~~…~~`) and explain.
-The phase heading keeps the `` → `vX.Y.Z` `` form: the scripts and `/sdd-release` read it (with the template
-scripts, `` ## Fase N — <nome> → `vX.Y.Z` ``).
+A phase does not set its version: go-release-manager computes it from the commits when the phase
+closes, and the closing (`sdd-mark.sh close vX.Y.Z`) appends `` → `vX.Y.Z` `` to the phase heading as a record.
+Never force a version from the ROADMAP; a forced version (`release-as`) only when the owner explicitly asks.
+A task brought forward to an earlier phase: mark it `*(brought forward)*`. An abandoned task: strike it (`~~…~~`) and explain.
+The scripts find the current phase by its open tasks (with the template scripts, `## Fase N — <nome>`).
 
 ## Epic
 

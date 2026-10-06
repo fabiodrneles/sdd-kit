@@ -4,19 +4,23 @@
 # sessão nova começar pequena em vez de ler specs inteiras.
 #
 # Uso: sdd-context.sh [--repo DONO/REPO] '#N'
+#      sdd-context.sh --task ARQ   (tarefa num arquivo: título, corpo e "Arquivos:"; sem GitHub)
 #   Imprime em Markdown: a issue; só as linhas dos FR/NFR/AC citados em "Spec(s)"
 #   (com "FR-1 a FR-3" expandido); as decisões Dn citadas (specs/ANALYSIS.md); os
 #   arquivos prováveis ("Código afetado" das specs citadas) com as assinaturas
-#   (funções e linha de uso dos scripts); as armadilhas do CLAUDE.md que citam esses
+#   (funções e tipos de sh, Go, Python, JS/TS e Rust, com a linha); as armadilhas do CLAUDE.md que citam esses
 #   arquivos; e os comandos de entrega.
 #   SDD_CONTEXT_MAX: teto em bytes (padrão 16000); acima dele, os arquivos entram só
 #   com o caminho e, se ainda não couber, o pacote é cortado no teto com um aviso.
 # Códigos: 0 ok; 1 falha do gh; 3 uso. Requer gh e jq.
 set -eu
 
-usage() { sed -n '3,14p' "$0"; exit 3; }
+usage() { sed -n '3,15p' "$0"; exit 3; }
 repo=""
 [ "${1:-}" != --repo ] || { repo="${2:?}"; shift 2; }
+# --task ARQ: a tarefa vem de um arquivo (título, corpo e "Arquivos:"), sem GitHub.
+task=""
+if [ "${1:-}" = --task ]; then task="${2:-}"; [ -f "$task" ] || usage; set -- 0; fi
 [ $# -eq 1 ] || usage
 n="${1#\#}"
 case "$n" in '' | *[!0-9]*) usage ;; esac
@@ -29,12 +33,16 @@ if [ -z "$repo" ]; then
   url="$(git remote get-url origin 2> /dev/null || true)"
   repo="$(printf '%s\n' "$url" | sed -E 's#\.git$##; s#^.*[:/]([^/]+/[^/]+)$#\1#')"
 fi
-[ -n "$repo" ] || { echo "sdd-context: repositório desconhecido (use --repo)" >&2; exit 3; }
+[ -n "$repo" ] || [ -n "$task" ] || { echo "sdd-context: repositório desconhecido (use --repo)" >&2; exit 3; }
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
-gh api "repos/$repo/issues/$n" --jq '"\(.title)\n\(.body // "")"' > "$tmp/issue" \
-  || { echo "sdd-context: falha ao ler a issue #$n" >&2; exit 1; }
+if [ -n "$task" ]; then
+  grep -v '^Arquivos: ' "$task" > "$tmp/issue"
+else
+  gh api "repos/$repo/issues/$n" --jq '"\(.title)\n\(.body // "")"' > "$tmp/issue" \
+    || { echo "sdd-context: falha ao ler a issue #$n" >&2; exit 1; }
+fi
 title="$(head -n 1 "$tmp/issue")"
 # O corpo sem o rodapé de atribuição.
 sed 1d "$tmp/issue" | awk '{ l[NR] = $0 } /^---$/ { cut = NR } END {
@@ -56,12 +64,13 @@ printf '%s\n' "$ids" | tr ',' '\n' | awk '
   spec != "" && $0 == "" { print spec "\t" }' | awk '!seen[$0]++' > "$tmp/ids"
 
 {
-  echo "# Ticket #$n: $title"
+  if [ -n "$task" ]; then echo "# Tarefa: $title"; else echo "# Ticket #$n: $title"; fi
   echo
   cat "$tmp/body"
 } > "$tmp/s1"
 
 : > "$tmp/s2"; : > "$tmp/files"
+[ -z "$task" ] || sed -n 's/^Arquivos: //p' "$task" | tr ',' '\n' | sed 's/^ *//; s/ *$//; /^$/d' >> "$tmp/files"
 for spec in $(cut -f1 "$tmp/ids" | awk '!seen[$0]++'); do
   f="$(find "$root/specs" -maxdepth 2 -path "*/$spec-*/spec.md" 2> /dev/null | head -n 1)"
   [ -n "$f" ] || continue
@@ -91,6 +100,21 @@ done
 [ ! -s "$tmp/s3" ] || { printf '\n## Decisões\n\n| D | Pergunta | Opções | Resposta |\n|---|---|---|---|\n'; cat "$tmp/s3"; } > "$tmp/s3b"
 [ -f "$tmp/s3b" ] || : > "$tmp/s3b"
 
+# As assinaturas de um arquivo, com a linha, para o agente ir direto ao trecho em vez
+# de reler o arquivo inteiro (020 FR-7): funções e tipos de sh, Go, Python, JS/TS e Rust.
+sigs() {
+  case "$1" in
+    *.sh) re='^[a-z_]+\(\) \{' ;;
+    *.go) re='^(func|type) ' ;;
+    *.py) re='^(def|class) |^    def ' ;;
+    *.js | *.mjs | *.ts | *.tsx) re='^(export |async function |function |class )' ;;
+    *.rs) re='^(pub )?(fn|struct|enum|impl|trait) ' ;;
+    *) return 0 ;;
+  esac
+  case "$1" in *.sh) grep -m 1 -E '^# Uso:' "$1" | sed 's/^/  - /' || true ;; esac
+  grep -nE "$re" "$1" | sed -E 's/ *\{.*$//; s/^([0-9]+):(.*)$/  - \2 (l. \1)/' || true
+}
+
 # Arquivos prováveis: com assinaturas (s4) e só caminhos (s4p).
 awk '!seen[$0]++' "$tmp/files" > "$tmp/f"
 : > "$tmp/s4"; : > "$tmp/s4p"; : > "$tmp/trap"
@@ -100,9 +124,7 @@ if [ -s "$tmp/f" ]; then
     echo "- \`$p\`" >> "$tmp/s4p"
     if [ -f "$root/$p" ]; then
       echo "- \`$p\`" >> "$tmp/s4"
-      case "$p" in
-        *.sh) { grep -m 1 -E '^# Uso:' "$root/$p" || true; grep -E '^[a-z_]+\(\) \{' "$root/$p" | sed 's/ {.*//' || true; } | sed 's/^/  - /' >> "$tmp/s4" ;;
-      esac
+      sigs "$root/$p" >> "$tmp/s4"
     elif [ -d "$root/$p" ]; then
       echo "- \`$p\` (pasta)" >> "$tmp/s4"
     else
@@ -135,6 +157,16 @@ if [ -s "$tmp/t" ]; then
 fi
 
 spec1="$(cut -f1 "$tmp/ids" | head -n 1)"
+if [ -n "$task" ]; then
+  cat > "$tmp/s6" <<EOT
+
+## Entrega
+
+- \`make ci\` e um commit com esta tarefa (Conventional Commits); sem push.
+- Nunca afrouxe, pule ou apague um teste para o CI passar.
+- Trabalhe só esta tarefa e termine.
+EOT
+else
 cat > "$tmp/s6" <<EOT
 
 ## Entrega
@@ -143,6 +175,7 @@ cat > "$tmp/s6" <<EOT
 - \`make ci\` antes do push; \`sh $sdir/sdd-pr.sh --spec ${spec1:-—} --no-wait\` abre o PR e grava o checkpoint.
 - Depois do PR: \`sh $sdir/sdd-checkpoint.sh save "feito" "próximo"\` e encerre a sessão.
 EOT
+fi
 
 cat "$tmp/s1" "$tmp/s2" "$tmp/s3b" "$tmp/s5" "$tmp/s7" "$tmp/s6" "$tmp/s4" > "$tmp/out"
 if [ "$(wc -c < "$tmp/out")" -gt "$max" ]; then

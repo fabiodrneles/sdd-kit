@@ -7,7 +7,7 @@
 #     scripts sdd-*, workflows sdd-*) e dá todas as tarefas a uma sessão comum do
 #     claude, como um usuário faria;
 #   - com sdd-kit: um agente enxuto por tarefa (só as ferramentas da entrega, sem
-#     skills nem MCP), com o pacote da tarefa, como o sdd-relay.sh faz.
+#     skills nem MCP), com o pacote do sdd-context.sh --task, como o sdd-relay.sh faz.
 #   Mede cada lado pelos arquivos de sessão do Claude Code (sdd-report.sh, sem LLM):
 #   tokens, chamadas e contexto por chamada; mais o tempo, o make ci no fim, os
 #   commits e as funções de teste novas. Grava PASTA/result.md e PASTA/result.json.
@@ -74,17 +74,11 @@ removed="CLAUDE.md, AGENTS.md, specs/, .claude/, scripts/sdd-*.sh, .github/workf
   echo "Implemente as tarefas abaixo neste repositório, cada uma com testes e um commit, e deixe o \`make ci\` passando."
   i=1; while [ "$i" -le "$count" ]; do printf '\n## Tarefa %s: ' "$i"; cat "$out/task-$i.md"; i=$((i + 1)); done
 } > "$out/prompt-without.md"
+# Com sdd-kit, o pacote de cada tarefa sai do mesmo sdd-context.sh que o relé usa.
 i=1
 while [ "$i" -le "$count" ]; do
-  {
-    printf '# Tarefa %s: ' "$i"; cat "$out/task-$i.md"
-    if [ -f "$out/task-$i.files" ]; then
-      printf '\n## Arquivos prováveis\n\n'
-      tr ',' '\n' < "$out/task-$i.files" | sed 's/^ *//; /^$/d; s/^/- `/; s/$/`/'
-    fi
-    printf '\n## Entrega\n\n- Rode `make ci` e faça um commit com esta tarefa; não faça push.\n'
-    printf -- '- Nunca afrouxe, pule ou apague um teste para o CI passar.\n- Trabalhe só esta tarefa e termine.\n'
-  } > "$out/prompt-with-$i.md"
+  { cat "$out/task-$i.md"; [ ! -f "$out/task-$i.files" ] || printf 'Arquivos: %s\n' "$(cat "$out/task-$i.files")"; } > "$out/task-$i.task"
+  (cd "$out/with" && sh "$root/template/common/scripts/sdd-context.sh" --task "$out/task-$i.task") > "$out/prompt-with-$i.md"
   i=$((i + 1))
 done
 

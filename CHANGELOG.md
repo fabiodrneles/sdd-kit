@@ -4,6 +4,13 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-10-06
+
+### Adicionado
+
+- sdd-wait.sh merged-any watches every open PR for a merge without LLM (#207)
+- sdd-pr.sh ends with the merge watcher command (#208)
+
 ## [1.8.0] - 2026-10-06
 
 ### Adicionado

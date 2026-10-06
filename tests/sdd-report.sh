@@ -125,7 +125,7 @@ echo '[{"id":1,"body":"outro comentário"}]' > "$G/comments.json"
 echo '[]' > "$G/none.json"
 # 018 FR-6: o relé gravou na issue #6 o custo exato das sessões que abriu.
 jq -n '[{id: 5, body: ("<!-- sdd-relay-cost " + ({sessions: 1, start: "2026-03-02T08:00:00Z", end: "2026-03-02T09:40:00Z",
-  usage: {calls: 1, read: 50, created: 0, input: 1, output: 3, avg: 51, max: 51, wakes: 0, wake_calls: 0, wake_tokens: 0}} | tojson) + " -->\nCusto do ticket")}]' > "$G/icomments-6.json"
+  model: "haiku", usage: {calls: 1, read: 50, created: 0, input: 1, output: 3, avg: 51, max: 51, wakes: 0, wake_calls: 0, wake_tokens: 0}} | tojson) + " -->\nCusto do ticket")}]' > "$G/icomments-6.json"
 : > "$G/writes"
 export PATH="$tmp/bin:$PATH" G
 
@@ -171,7 +171,7 @@ sh "$r" --repo o/r phase '#9' > /dev/null || fail "phase (2ª) falhou"
   || fail "mais de um comentário de relatório: $(cat "$G/comments.json")"
 b="$(jq -r '.[] | select(.id == 99) | .body' "$G/comments.json")"
 printf '%s\n' "$b" | grep -qF '| #5 T1: a \| b | #20 | janela | 60 | não | 3 | 9300 | 10 | 21 | 0 (0) |' || fail "linha do #5: $b"
-printf '%s\n' "$b" | grep -qF '| #6 T2: c | #22 | relé | 30 | sim | 1 | 50 | 0 | 3 | 0 (0) |' || fail "linha do #6: $b"
+printf '%s\n' "$b" | grep -qF '| #6 T2: c | #22 | relé (haiku) | 30 | sim | 1 | 50 | 0 | 3 | 0 (0) |' || fail "linha do #6: $b"
 printf '%s\n' "$b" | grep -qF '| **Total** | 2 PRs | | 90 | 1 de 2 | 4 | 9350 | 10 | 24 | 0 (0) |' || fail "total: $b"
 # 018 AC-5: o custo médio por ticket com e sem relé, lado a lado.
 printf '%s\n' "$b" | grep -qF 'com relé 54 (1 tickets); sem relé 9334 (1 tickets).' || fail "sem a comparação: $b"

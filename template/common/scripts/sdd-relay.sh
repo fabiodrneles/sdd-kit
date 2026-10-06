@@ -13,6 +13,8 @@
 #   Próximo da fase e termina.
 #   --max      no máximo N agentes nesta rodada (padrão: sem limite)
 #   --dry-run  mostra o ticket e o pacote, sem chamar o agente
+#   Modelo por ticket (020 FR-5): o label modelo:NOME da issue, senão SDD_AGENT_MODEL;
+#   o agente padrão recebe --model NOME, e um SDD_AGENT_CMD próprio lê SDD_AGENT_MODEL.
 #   SDD_RELAY_WAIT: segundos de cada espera do merge (padrão 3600; repete até o merge).
 #   Paradas (FR-3, comentário no épico): Próximo do checkpoint "perguntar ao dono";
 #   CI do PR vermelho duas vezes seguidas (a primeira vira uma sessão de correção);
@@ -98,11 +100,13 @@ prompt() {
 sessions_now() { find "${SDD_SESSIONS_DIR:-$HOME/.claude/projects}" -name '*.jsonl' -type f 2> /dev/null | sort; }
 run_agent() {
   runs=$((runs + 1)) tsess=$((tsess + 1))
+  cmd="$agent"
+  [ -z "$model" ] || [ -n "${SDD_AGENT_CMD:-}" ] || cmd="$agent --model $model"
   sessions_now > "$tmp/before"
   # Sem as variáveis da sessão que chamou o relé: rodado de dentro do Claude Code, o
   # agente herdaria o id dela e gravaria no mesmo arquivo de sessão (019 FR-1).
   env -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_REMOTE_SESSION_ID \
-    SDD_SESSION_MAX_TOKENS="${SDD_SESSION_MAX_TOKENS:-150000}" sh -c "$agent" < "$tmp/prompt" \
+    SDD_SESSION_MAX_TOKENS="${SDD_SESSION_MAX_TOKENS:-150000}" SDD_AGENT_MODEL="$model" sh -c "$cmd" < "$tmp/prompt" \
     || say "aviso: o agente saiu com erro no ticket #$n"
   sessions_now | comm -13 "$tmp/before" - >> "$tmp/tfiles"
 }
@@ -137,6 +141,9 @@ while :; do
   fi
   pr="$(pr_for "$n")"
   tstart="" tsess=0
+  # Modelo do ticket (020 FR-5): o label modelo:NOME da issue, senão SDD_AGENT_MODEL.
+  model="$(gh api "repos/$repo/issues/$n" --jq '[.labels[]?.name | select(startswith("modelo:"))][0] // empty' 2> /dev/null || true)"
+  model="${model#modelo:}"; model="${model:-${SDD_AGENT_MODEL:-}}"
   : > "$tmp/tfiles"
   if [ -z "$pr" ]; then
     tstart="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -145,7 +152,9 @@ while :; do
     while :; do
       prompt "$n" "$task"
       if [ "$dry" -eq 1 ]; then
-        say "[dry-run] chamaria '$agent' para o ticket #$n com $(wc -c < "$tmp/prompt") bytes:"
+        cmd="$agent"
+      [ -z "$model" ] || [ -n "${SDD_AGENT_CMD:-}" ] || cmd="$agent --model $model"
+      say "[dry-run] chamaria '$cmd' para o ticket #$n com $(wc -c < "$tmp/prompt") bytes:"
         cat "$tmp/prompt"
         exit 0
       fi
@@ -195,10 +204,11 @@ $(tail -n 40 "$tmp/ci")"
       u="$(sh "$here/sdd-report.sh" tokens $(sed 's/^/--session /' "$tmp/tfiles") --json 2> /dev/null || echo null)"
     fi
     [ -n "$u" ] || u=null
-    jq -nc --argjson s "$tsess" --arg a "$tstart" --arg b "$tend" --argjson u "$u" '{sessions: $s, start: $a, end: $b, usage: $u}' > "$tmp/cost"
+    jq -nc --argjson s "$tsess" --arg a "$tstart" --arg b "$tend" --argjson u "$u" --arg m "${model:-padrão}" \
+      '{sessions: $s, start: $a, end: $b, model: $m, usage: $u}' > "$tmp/cost"
     {
       printf '<!-- sdd-relay-cost %s -->\n' "$(cat "$tmp/cost")"
-      jq -r '"**Custo do ticket pelo relé:** \(.sessions) sessões, " + (if .usage == null then "sem dado de tokens (sessões fora desta máquina)."
+      jq -r '"**Custo do ticket pelo relé** (modelo \(.model)): \(.sessions) sessões, " + (if .usage == null then "sem dado de tokens (sessões fora desta máquina)."
         else "\(.usage.calls) chamadas, \(.usage.read) tokens relidos, \(.usage.created) gravados, \(.usage.output) gerados; contexto médio \(.usage.avg)." end)' "$tmp/cost"
     } > "$tmp/c"
     gh api "repos/$repo/issues/$n/comments" -F body=@"$tmp/c" --silent 2> /dev/null || say "aviso: não consegui gravar o custo em #$n"

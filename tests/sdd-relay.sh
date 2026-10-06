@@ -53,6 +53,7 @@ cat > "$G/in"
 n="$(sed -n '1s/^# Ticket #\([0-9]*\):.*/\1/p' "$G/in")"
 cp "$G/in" "$G/in-$n"; echo "$n" >> "$G/calls"
 echo "${CLAUDE_CODE_SESSION_ID:-sem}" > "$G/env-session"
+echo "${SDD_AGENT_MODEL:-}" > "$G/model-$n"
 # O agente troca de branch na pasta do relé: aqui, apaga o script de que o relé veio.
 [ ! -f "$G/clobber" ] || : > scripts/sdd-relay.sh
 # A sessão do agente: um arquivo novo, com 1000×N tokens relidos.
@@ -110,7 +111,7 @@ c2="$(sed -n 's/^<!-- sdd-relay-cost \(.*\) -->$/\1/p' "$G/posted" | sed -n 1p)"
 c3="$(sed -n 's/^<!-- sdd-relay-cost \(.*\) -->$/\1/p' "$G/posted" | sed -n 2p)"
 [ "$(printf '%s' "$c2" | jq -c '[.sessions, .usage.calls, .usage.read]')" = '[1,1,2000]' ] || fail "custo do #2: $c2"
 [ "$(printf '%s' "$c3" | jq -c '[.sessions, .usage.calls, .usage.read]')" = '[1,1,3000]' ] || fail "custo do #3: $c3"
-grep -qF '**Custo do ticket pelo relé:** 1 sessões, 1 chamadas, 2000 tokens relidos' "$G/posted" || fail "custo sem o resumo: $(cat "$G/posted")"
+grep -qF '**Custo do ticket pelo relé** (modelo padrão): 1 sessões, 1 chamadas, 2000 tokens relidos' "$G/posted" || fail "custo sem o resumo: $(cat "$G/posted")"
 
 # 018 AC-4: retomada. O #2 já foi mergeado e o #3 tem PR aberto: o relé espera esse
 # merge sem chamar o agente, e não refaz o #2.
@@ -225,6 +226,19 @@ cp scripts/sdd-relay.sh "$tmp/relay.bak"
 out="$($relay 2>&1)" || fail "relé com o script trocado falhou: $out"
 [ "$(tr '\n' ' ' < "$G/calls")" = "2 3 " ] || fail "relé com o script trocado chamou: $(cat "$G/calls")"
 cp "$tmp/relay.bak" scripts/sdd-relay.sh; rm -f "$G/clobber"
+
+# 020 AC-5: o label modelo:NOME escolhe o modelo do ticket; sem label, SDD_AGENT_MODEL.
+reset
+jq '(.[] | select(.number == 3)) += {labels: [{name: "modelo:haiku"}]}' "$G/subs.json" > "$G/x" && mv "$G/x" "$G/subs.json"
+out="$(SDD_AGENT_MODEL=sonnet $relay 2>&1)" || fail "modelo por ticket falhou: $out"
+[ "$(cat "$G/model-2")" = sonnet ] || fail "#2 sem o SDD_AGENT_MODEL: $(cat "$G/model-2")"
+[ "$(cat "$G/model-3")" = haiku ] || fail "#3 sem o modelo do label: $(cat "$G/model-3")"
+grep -qF '"model":"haiku"' "$G/posted" || fail "custo sem o modelo: $(cat "$G/posted")"
+grep -qF '**Custo do ticket pelo relé** (modelo sonnet)' "$G/posted" || fail "resumo sem o modelo: $(cat "$G/posted")"
+reset
+jq '(.[] | select(.number == 2)) += {labels: [{name: "modelo:haiku"}]}' "$G/subs.json" > "$G/x" && mv "$G/x" "$G/subs.json"
+out="$(env -u SDD_AGENT_CMD sh scripts/sdd-relay.sh --repo o/r --dry-run 2>&1)" || fail "dry-run com modelo falhou"
+printf '%s\n' "$out" | grep -qF -- "--model haiku' para o ticket #2" || fail "agente padrão sem --model: $(printf '%s\n' "$out" | head -n 1)"
 
 # Sem épico aberto: Próximo é perguntar ao dono.
 reset; echo '[]' > "$G/epics.json"

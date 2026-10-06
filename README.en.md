@@ -198,7 +198,7 @@ Adoption writes `.sdd-kit.json` (kit version and a hash per managed file). Every
 
 ## axyn
 
-**axyn** brings the process to [opencode](https://opencode.ai) with free or local models: you describe what you want, it writes the spec, opens the tickets and delivers **one PR per ticket**, moving on only when the gates (tests, lint, coverage) pass. It is a single binary with no dependencies.
+**axyn** brings the process to [opencode](https://opencode.ai) with free or local models: you describe what you want, it writes the spec, opens the tickets and delivers **one PR per ticket**, moving on only when the gates pass (the project's `make ci`, loosened or deleted tests, protected files and diff size). It is a single binary with no dependencies.
 
 **1. Install, one command.** Inside the project's cloned repository (the binary goes to `~/.local/bin`; without Go it downloads from the release and checks the sha256, and at the end it runs `axyn install` to set up opencode):
 
@@ -206,7 +206,7 @@ Adoption writes `.sdd-kit.json` (kit version and a hash per managed file). Every
 curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.sh | sh
 ```
 
-On Windows (PowerShell) the binary goes to `%LOCALAPPDATA%\axyn`; then run `axyn install` in the repository:
+On Windows (PowerShell), inside the repository, the binary goes to `%LOCALAPPDATA%\axyn` and `axyn install` also runs at the end:
 
 ```text
 irm https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.ps1 | iex

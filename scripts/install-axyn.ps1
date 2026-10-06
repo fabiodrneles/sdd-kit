@@ -7,9 +7,10 @@
 # (base do download, para testes).
 $ErrorActionPreference = 'Stop'
 
+# Roda por `irm | iex`, dentro da sessão do próprio usuário: nunca `exit` (fecharia a
+# janela); os erros usam throw, que também dá código diferente de zero no `pwsh -File`.
 function Stop-Install([string]$Message) {
-  [Console]::Error.WriteLine("install-axyn: $Message")
-  exit 1
+  throw "install-axyn: $Message"
 }
 
 $name = 'axyn_windows_amd64.exe'
@@ -50,6 +51,10 @@ if (-not $onPath) {
 
 if (Get-Command git -ErrorAction SilentlyContinue) {
   & git rev-parse --git-dir *> $null
-  if ($LASTEXITCODE -eq 0) { & $dest install; exit $LASTEXITCODE }
+  if ($LASTEXITCODE -eq 0) {
+    & $dest install
+    if ($LASTEXITCODE -ne 0) { Stop-Install "axyn install falhou (código $LASTEXITCODE)" }
+    return
+  }
 }
 Write-Output 'no repositório do projeto: axyn install'

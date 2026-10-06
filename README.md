@@ -254,7 +254,7 @@ Quem adotou até a `v1.3.0` e vê a sincronização falhar com `Syntax error`: o
 
 ## axyn
 
-O **axyn** leva o processo para o [opencode](https://opencode.ai) com modelos gratuitos ou locais: você descreve o que quer, ele escreve a spec, abre os tickets e entrega **um PR por ticket**, só avançando quando os portões (testes, lint, cobertura) passam. É um binário único, sem dependências.
+O **axyn** leva o processo para o [opencode](https://opencode.ai) com modelos gratuitos ou locais: você descreve o que quer, ele escreve a spec, abre os tickets e entrega **um PR por ticket**, só avançando quando os portões passam (o `make ci` do projeto, teste afrouxado ou apagado, arquivos protegidos e tamanho do diff). É um binário único, sem dependências.
 
 **1. Instalar, num comando.** Dentro do repositório clonado do projeto (o binário vai para `~/.local/bin`; sem o Go, baixa da release e confere o sha256, e no fim já roda `axyn install` para configurar o opencode):
 
@@ -262,7 +262,7 @@ O **axyn** leva o processo para o [opencode](https://opencode.ai) com modelos gr
 curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.sh | sh
 ```
 
-No Windows (PowerShell), o binário vai para `%LOCALAPPDATA%\axyn`; depois rode `axyn install` no repositório:
+No Windows (PowerShell), dentro do repositório, o binário vai para `%LOCALAPPDATA%\axyn` e o `axyn install` também roda no fim:
 
 ```text
 irm https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.ps1 | iex

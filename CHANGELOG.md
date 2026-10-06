@@ -4,6 +4,21 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-10-06
+
+### Adicionado
+
+- add sdd-wait.sh to wait for merges, CI and issues without an LLM (#158)
+- summarize a red CI in one PR comment without an LLM (#160)
+- bring main into open PRs without an LLM (#161)
+- update the epic checkpoint on merge without an LLM (#162)
+- dispatch the release when the closing PR merges without an LLM (#163)
+- open the closing PR when a phase is done without an LLM (#164)
+
+### Corrigido
+
+- title sdd-pr PRs by the first commit and never close the epic (#159)
+
 ## [1.5.0] - 2026-10-05
 
 Scripts que tiram do agente os passos mecânicos de retomar, entregar, preparar o ambiente e fechar a versão, para que a LLM gaste tokens e contexto só com código e decisões.

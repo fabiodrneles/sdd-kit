@@ -42,7 +42,7 @@ Cada chamada relê a conversa inteira; a sessão cresce, e o custo total cresce 
 
 ## Mudanças
 
-### Não lançado
+### v1.11.0
 
 - CHANGED FR-2 — a janela sem relé começa no último merge antes do primeiro commit (a de 1.10.0 começava no primeiro commit e subestimava o ticket); com o relé, a medição é exata, pelas sessões que ele abriu (T56, #229).
 

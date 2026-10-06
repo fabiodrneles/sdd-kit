@@ -1,7 +1,7 @@
 # 018 — Relé de sessões curtas
 
 - **Prioridade:** P1
-- **Status:** Approved — pedida pelo dono em 2026-10-06 ("uma ideia que realmente nos dê uma economia muito grande de tokens e contexto")
+- **Status:** Done — entregue na `v1.11.0` (pedida pelo dono em 2026-10-06: "uma ideia que realmente nos dê uma economia muito grande de tokens e contexto")
 - **Código afetado:** `template/common/scripts/sdd-relay.sh` e `sdd-context.sh` (novos), `template/common/CLAUDE.md`, `CLAUDE.md`, `plugins/sdd-delivery/`
 - **Depende de:** 014 (checkpoint), 015 (motor), 016 (vigia do merge), 017 (medição)
 
@@ -47,7 +47,7 @@ Estimativa, a ser confirmada pela spec 017 e nunca anunciada antes disso: um tic
 
 ## Mudanças
 
-### Não lançado
+### v1.11.0
 
 - ADDED FR-1 — `sdd-context.sh '#N'`: o pacote do ticket sem LLM (issue, só as linhas dos FR/NFR/AC citados, decisões, arquivos prováveis com assinaturas, armadilhas desses arquivos e comandos de entrega), com teto em `SDD_CONTEXT_MAX` (T53, #226).
 - ADDED FR-2, NFR-1 — `sdd-relay.sh`: um agente novo por ticket (`SDD_AGENT_CMD`, padrão `claude -p`) com o pacote do `sdd-context.sh` na entrada, espera do merge pelo `sdd-wait.sh` e próximo ticket do épico; sem estado próprio, retoma do GitHub; para se o agente terminar sem PR, se o PR fechar sem merge ou se um ticket voltar aberto depois do merge (T54, #227).

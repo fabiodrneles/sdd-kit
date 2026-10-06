@@ -29,7 +29,7 @@ O uso do kit em outros repositórios (#51) gerou achados de processo, que entrar
 
 ## Mudanças
 
-### Não lançado
+### v1.8.0
 
 - MODIFIED FR-4, AC-4 — o ROADMAP criado não fixa versão nas fases; quem decide é o go-release-manager no fechamento (#198).
 

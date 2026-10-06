@@ -44,3 +44,9 @@ Estimativa, a ser confirmada pela spec 017 e nunca anunciada antes disso: um tic
 - **AC-3** Dado um CI vermelho duas vezes no mesmo PR, quando o relé o vê, então para e comenta no épico, sem chamar o agente de novo.
 - **AC-4** Dado o relé interrompido no meio de um ticket, quando roda de novo, então retoma do checkpoint, sem repetir o ticket já mergeado.
 - **AC-5** Dada uma fase feita com o relé, quando o `sdd-report.sh phase` roda, então o custo por ticket aparece ao lado da medição sem relé, para comparação.
+
+## Mudanças
+
+### Não lançado
+
+- ADDED FR-1 — `sdd-context.sh '#N'`: o pacote do ticket sem LLM (issue, só as linhas dos FR/NFR/AC citados, decisões, arquivos prováveis com assinaturas, armadilhas desses arquivos e comandos de entrega), com teto em `SDD_CONTEXT_MAX` (T53, #226).

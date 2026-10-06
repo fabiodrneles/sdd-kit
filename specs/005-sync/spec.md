@@ -46,6 +46,6 @@ D3 (a): melhorias na skill e nos modelos precisam chegar aos repositórios que j
 
 - MODIFIED FR-1 — o `sdd-sync.sh` roda uma cópia de si mesmo, porque a sincronização o atualiza enquanto ele roda (achado na sincronização do sdd-kit-demo, v1.3.1).
 
-### Não lançado
+### v1.7.0
 
 - ADDED FR-5, AC-4, AC-5 — a sincronização não se perde quando a versão nova traz workflows nem quando o Actions não pode criar PRs (#169, PR #171).

@@ -9,7 +9,7 @@
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$KitRef = if ($env:SDD_KIT_REF) { $env:SDD_KIT_REF } else { 'v1.11.0' }
+$KitRef = if ($env:SDD_KIT_REF) { $env:SDD_KIT_REF } else { 'v1.12.0' }
 $Langs = @('go', 'node', 'java', 'python', 'rust', 'dotnet')
 
 function Show-Usage {

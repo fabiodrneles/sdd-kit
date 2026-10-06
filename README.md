@@ -12,6 +12,26 @@
 
 *A adoção num repositório vazio e o primeiro `make ci`, com a saída real ([como foi gerado](docs/demo/demo.sh)).*
 
+## 16 vezes menos tokens por ticket, medido
+
+<!-- markdownlint-disable MD033 -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/relay-savings-pt-dark.svg">
+  <img alt="Custo por ticket: 6,50 milhões de tokens numa sessão longa contra 0,40 milhão com o relé do sdd-kit (16 vezes menos); contexto relido por chamada: 231 mil contra 43 mil (5,4 vezes menos)" src="docs/assets/relay-savings-pt-light.svg" width="880">
+</picture>
+<!-- markdownlint-enable MD033 -->
+
+O jeito padrão de usar um agente é uma sessão longa: ela cresce a cada ticket, e cada chamada relê a conversa inteira. O sdd-kit troca isso por um **relé**: um agente novo por ticket, que começa só com o que o ticket precisa. Os números saem do próprio `sdd-report.sh`, que lê os arquivos de sessão sem chamar a LLM:
+
+| Ticket | Como | Chamadas | Tokens no total | Contexto por chamada |
+|---|---|---|---|---|
+| Fase 12 (4 tickets) | uma sessão longa | 112 | 6,50 milhões por ticket | 231 mil |
+| T58 [#237](https://github.com/fabiodrneles/sdd-kit/issues/237) | relé | 9 | 383 mil | 42 mil |
+| T59 [#238](https://github.com/fabiodrneles/sdd-kit/issues/238) | relé | 10 | 426 mil | 43 mil |
+| T60 [#239](https://github.com/fabiodrneles/sdd-kit/issues/239) | relé | 9 | 395 mil | 43 mil |
+
+Cada issue tem o comentário com o custo exato gravado pelo relé. [Como rodar o relé](#relé-de-sessões-curtas) e [como medir](#onde-está-o-ganho).
+
 O kit nasceu do [cv-craft](https://github.com/fabiodrneles/cv-craft), que saiu de protótipo para `v1.x` com esse processo ([estudo de caso](docs/case-study.md)), e o próprio sdd-kit é desenvolvido com ele ([specs](specs/README.md), [épico #1](https://github.com/fabiodrneles/sdd-kit/issues/1)). Para ver o processo num projeto criado do zero, com épico, tickets, PRs e release, abra o [sdd-kit-demo](https://github.com/fabiodrneles/sdd-kit-demo).
 
 ## Sumário
@@ -75,7 +95,7 @@ Em uns 5 minutos o kit está instalado e o agente trabalhando no seu projeto.
 2. Na pasta do projeto, instale o kit, trocando `go` pela linguagem do projeto (`node`, `java`, `python`, `rust` ou `dotnet`):
 
    ```text
-   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.11.0/scripts/adopt.sh | sh -s -- --lang go .
+   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.12.0/scripts/adopt.sh | sh -s -- --lang go .
    ```
 
    O comando copia para o repositório:
@@ -88,7 +108,7 @@ Em uns 5 minutos o kit está instalado e o agente trabalhando no seu projeto.
    **Ele nunca sobrescreve um arquivo que você já tem** e mostra no final o que criou e o que deixou de lado. Para só ver o que ele faria, sem gravar nada, acrescente `--dry-run`:
 
    ```text
-   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.11.0/scripts/adopt.sh | sh -s -- --lang go --dry-run .
+   curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/v1.12.0/scripts/adopt.sh | sh -s -- --lang go --dry-run .
    ```
 
    Num repositório vazio, `--skeleton` cria também um projeto mínimo com um teste, para o primeiro CI já nascer verde.

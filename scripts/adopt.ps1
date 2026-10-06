@@ -4,17 +4,17 @@
 # modelos do projeto (template/seed) só quando faltam.
 # Equivalente a scripts/adopt.sh, com as mesmas opções e a mesma saída.
 #
-# Uso: adopt.ps1 --lang go|node|java|python|rust|dotnet [--project NOME] [--owner DONO]
+# Uso: adopt.ps1 --lang go|node|java|python|rust|dotnet|web [--project NOME] [--owner DONO]
 #                [--repo REPO] [--dry-run] [--force] [--skeleton] [DESTINO]
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $KitRef = if ($env:SDD_KIT_REF) { $env:SDD_KIT_REF } else { 'v1.13.0' }
-$Langs = @('go', 'node', 'java', 'python', 'rust', 'dotnet')
+$Langs = @('go', 'node', 'java', 'python', 'rust', 'dotnet', 'web')
 
 function Show-Usage {
   [Console]::Error.WriteLine(@"
-uso: adopt.ps1 --lang go|node|java|python|rust|dotnet [opções] [DESTINO]
+uso: adopt.ps1 --lang go|node|java|python|rust|dotnet|web [opções] [DESTINO]
 
   --lang LING      linguagem do repositório (obrigatório): $($Langs -join ' ')
   --project NOME   nome do projeto (padrão: nome do diretório de destino)

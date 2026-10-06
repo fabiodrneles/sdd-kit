@@ -15,6 +15,7 @@ Medição de 2026-10-06, com `claude -p` na raiz do repositório e só "Responda
 - **FR-2** O `sdd-report.sh` MUST mostrar o contexto inicial de cada sessão (a primeira chamada), para medir o custo fixo separado do trabalho.
 - **FR-3** O `sdd-context.sh` MUST incluir no pacote os arquivos de teste que citam os AC do ticket, para o agente não precisar procurá-los.
 - **FR-5** O relé MUST escolher o modelo do agente por ticket: o label `modelo:NOME` da issue, senão `SDD_AGENT_MODEL`, senão o padrão do agente; o custo gravado na issue MUST dizer o modelo, para comparar preço além de tokens.
+- **FR-6** `scripts/benchmark.sh` MUST medir, sem LLM na medição, as mesmas tarefas num projeto real com e sem sdd-kit: sem sdd-kit, uma cópia sem os arquivos do kit e uma sessão comum com todas as tarefas; com sdd-kit, um agente enxuto por tarefa, com o pacote dela. MUST relatar tokens, chamadas, tempo, `make ci` e testes novos de cada lado.
 - **FR-4** O fechamento da Fase 14 MUST comparar o custo por ticket com o da Fase 13 (agente padrão) e o da Fase 12 (sem relé), e atualizar o gráfico do README com o número medido.
 
 ## Critérios de aceite
@@ -23,6 +24,7 @@ Medição de 2026-10-06, com `claude -p` na raiz do repositório e só "Responda
 - **AC-2** Dada uma sessão com várias chamadas, quando `sdd-report.sh tokens` roda, então a saída tem o contexto da primeira chamada.
 - **AC-3** Dado um ticket que cita `018 AC-2` e um teste que cita "018 AC-2", quando `sdd-context.sh` roda, então o pacote lista esse teste.
 - **AC-5** Dado um ticket com o label `modelo:haiku`, quando o relé chama o agente, então o comando tem `--model haiku` e o custo gravado diz o modelo; sem label, usa `SDD_AGENT_MODEL`.
+- **AC-6** Dado o `benchmark.sh --dry-run`, quando roda, então mostra as duas cópias, os arquivos do kit removidos do lado sem sdd-kit e um pedido por tarefa do lado com sdd-kit, sem chamar o agente.
 - **AC-4** Dada a Fase 14 feita pelo relé, quando o `sdd-report.sh phase --compare` roda contra a Fase 13, então mostra a diferença por ticket e por chamada.
 
 ## Mudanças
@@ -32,3 +34,4 @@ Medição de 2026-10-06, com `claude -p` na raiz do repositório e só "Responda
 - ADDED FR-1 — agente padrão do relé só com as ferramentas da entrega (`SDD_AGENT_TOOLS`, padrão `Bash Read Edit Write Grep Glob`), sem skills e sem servidores MCP: contexto inicial de 37 mil para 11 mil tokens; o relé roda de uma cópia dos scripts, para o agente trocar de branch sem quebrá-lo (T62, #248).
 - ADDED FR-5 — modelo por ticket: o label `modelo:NOME` da issue, senão `SDD_AGENT_MODEL`; o agente padrão recebe `--model NOME`, e o custo gravado na issue diz o modelo (T66, #251).
 - FIXED FR-1 — o agente não herda as variáveis do relé (`SDD_SCRIPTS_DIR`, `SDD_RELAY_SELF`), que quebravam o `make ci` dele; o pedido manda começar da `origin/main` e proíbe afrouxar teste (achados do T63, #249).
+- ADDED FR-6 — `scripts/benchmark.sh`: as mesmas tarefas (`docs/benchmark/tasks.md`) num projeto real com e sem sdd-kit, medidas pelos arquivos de sessão (T67, #257).

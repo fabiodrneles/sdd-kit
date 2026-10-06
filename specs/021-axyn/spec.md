@@ -1,8 +1,8 @@
 # 021 — axyn: o sdd-kit no terminal, com o modelo que o usuário tiver
 
 - **Prioridade:** P1
-- **Status:** Draft — proposta ao dono em 2026-10-06
-- **Código afetado:** novo repositório `fabiodrneles/axyn` (Go), `template/common/scripts/` (o motor atual, como referência de comportamento)
+- **Status:** Approved — aprovada pelo dono em 2026-10-06
+- **Código afetado:** `axyn/` (novo, Go, neste repositório até funcionar; depois `fabiodrneles/axyn`), `template/web/` (novo), `template/common/scripts/` (o motor atual, como referência de comportamento)
 - **Resolve:** quem não pode pagar o Claude Code não consegue usar o sdd-kit; os modelos gratuitos são úteis para escrever código, mas erram mais e não seguem processo
 
 ## Contexto
@@ -13,21 +13,22 @@ A divisão do axyn: **o motor faz tudo o que é determinístico** (estado, specs
 
 ## Decisões do dono (2026-10-06)
 
-- **D13** O axyn começa usando o opencode como agente; uma interface própria fica para depois, se precisar.
+- **D13** O axyn roda **dentro do opencode**: a instalação configura no projeto o servidor MCP `axyn`, os agentes (planejamento e código) e o comando `/axyn`; o opencode é a interface, e o axyn é o cérebro. Uma interface própria fica para depois, se precisar.
 - **D14** O usuário traz as próprias chaves (BYOK), como no opencode; o axyn usa os modelos que ele configurar.
 - **D15** A escada de modelos vai dos gratuitos aos pagos que o usuário tiver; os gratuitos são testados primeiro.
-- **D16** Nome: **axyn** ("archon" já é um projeto de IA para programação com mais de 20 mil estrelas); repositório em `github.com/fabiodrneles/axyn`, página no GitHub Pages, sem domínio pago.
+- **D16** Nome: **axyn** ("archon" já é um projeto de IA para programação com mais de 20 mil estrelas); código em `axyn/` neste repositório até funcionar, depois `github.com/fabiodrneles/axyn`; página no GitHub Pages, sem domínio pago.
+- **D17** O teste de aceitação é o do dono: no opencode, com um modelo gratuito, instalar o axyn com um comando, pedir uma landing page num repositório clonado e receber tudo construído, com PRs e CI verde.
 - Tudo gratuito e de código aberto (MIT): distribuição pelo GitHub Releases, sem serviço pago.
 
 ## Requisitos funcionais
 
-- **FR-1** `axyn` MUST ser um binário único em Go para Linux, macOS e Windows, sem `jq` nem `sh`; `axyn` sem argumentos mostra o próximo passo do projeto (o "Próximo" do checkpoint) e `axyn run '#N'` trabalha um ticket.
-- **FR-2** A configuração (`~/.config/axyn/config.yaml`) MUST listar os modelos em ordem de preferência, com as chaves lidas de variáveis de ambiente, nunca gravadas no repositório; MUST aceitar ao menos OpenRouter, Gemini, Groq, Ollama (local), Anthropic e OpenAI.
-- **FR-3** O axyn MUST chamar o opencode sem interação, com o modelo escolhido, num worktree do ticket, com o pacote do ticket (o mesmo do `sdd-context.sh`) e só as ferramentas da entrega.
-- **FR-4** Todo diff MUST passar pelos portões antes de virar commit: `make ci` (ou o comando do projeto); nenhum teste apagado, pulado ou com `assert` a menos; nenhum arquivo protegido alterado (workflows, specs, scripts do motor, versão); tamanho do diff dentro do limite do ticket; cada AC do ticket citado num teste.
-- **FR-5** Diff reprovado MUST voltar ao mesmo modelo uma vez, com o motivo; reprovado de novo, MUST subir para o próximo modelo da escada; esgotada a escada, o ticket para e o axyn diz o que faltou, sem quebrar nada.
-- **FR-6** Com os portões verdes, o motor MUST fazer o commit, o push e o PR (como o `sdd-pr.sh`) e gravar no ticket o modelo, as tentativas e o custo.
-- **FR-7** `axyn eval` MUST rodar a bateria de tarefas (como o `benchmark.sh`) com cada modelo configurado e gravar uma tabela de notas por tipo de tarefa, que o FR-5 usa para começar pelo modelo mais barato que passa naquele tipo.
+- **FR-1** `axyn` MUST ser um binário único em Go para Linux, macOS e Windows, sem `jq` nem `sh`, instalado por um comando (`curl ... | sh`, ou `go install`), com `axyn version`.
+- **FR-2** `axyn install` MUST configurar o opencode do projeto: o servidor MCP `axyn` no `opencode.json`, o agente `axyn-plan` (escreve spec e tickets), o agente `axyn-code` (só as ferramentas de código; escreve o código de um ticket) e o comando `/axyn PEDIDO`; sem apagar a configuração que o usuário já tem.
+- **FR-3** O servidor MCP (`axyn mcp`) MUST oferecer ao opencode as ferramentas determinísticas: `axyn_plan` (valida e grava a spec e os tickets), `axyn_next` (o próximo ticket e o pacote dele), `axyn_gate` (os portões do FR-5 sobre o diff atual) e `axyn_ship` (commit, push e PR, só com o portão verde para aquele diff).
+- **FR-4** Num repositório vazio ou sem CI, o axyn MUST preparar o projeto antes do primeiro ticket, com o template da stack (o template `web` para uma landing page: HTML validado e links verificados), para os portões terem o que verificar.
+- **FR-5** Todo diff MUST passar pelos portões antes do commit: o CI do projeto (`make ci`); nenhum teste apagado, pulado ou com asserção a menos; nenhum arquivo protegido alterado (workflows, specs aprovadas, configuração do axyn, versão); tamanho do diff dentro do limite do ticket; cada AC do ticket citado num teste.
+- **FR-6** Escada de modelos: a configuração (`~/.config/axyn/config.yaml`) MUST listar os modelos em ordem, com as chaves só em variáveis de ambiente, nunca no repositório (OpenRouter, Gemini, Groq, Ollama, Anthropic, OpenAI e o que o opencode aceitar); diff reprovado volta ao mesmo modelo uma vez, com o motivo; reprovado de novo, o `axyn_gate` indica o próximo modelo; esgotada a escada, o ticket para com o motivo, sem quebrar nada.
+- **FR-7** Cada ticket entregue MUST registrar o modelo, as tentativas e o custo; `axyn eval` MUST dar a nota de cada modelo configurado por tipo de tarefa, com a bateria do `benchmark.sh`.
 
 ## Requisitos não funcionais
 
@@ -37,11 +38,11 @@ A divisão do axyn: **o motor faz tudo o que é determinístico** (estado, specs
 
 ## Critérios de aceite
 
-- **AC-1** Dado um agente falso que apaga um teste, quando o axyn roda o ticket, então o diff é reprovado com o motivo e nada é commitado.
-- **AC-2** Dados dois modelos na escada e o primeiro reprovado duas vezes, quando o axyn roda, então o segundo é chamado com o motivo, e o ticket registra as três tentativas.
-- **AC-3** Dado um ticket com os portões verdes, quando o axyn roda, então há um commit, um push e um PR, e o ticket tem o modelo e o custo.
-- **AC-4** Dado um modelo local (Ollama) configurado e nenhuma chave de API, quando `axyn run` roda um ticket do sdd-kit-demo, então o ticket vai de ponta a ponta ou para com o motivo, sem chamar serviço pago.
-- **AC-5** Dados dois modelos e a bateria, quando `axyn eval` roda, então há uma tabela com a nota de cada modelo por tipo de tarefa.
+- **AC-1** Dado um agente falso que apaga um teste, quando o `axyn_gate` roda, então reprova com o motivo, e o `axyn_ship` recusa o commit.
+- **AC-2** Dados dois modelos na escada e o primeiro reprovado duas vezes, quando o `axyn_gate` roda, então indica o segundo modelo, e o ticket registra as tentativas.
+- **AC-3** Dado um projeto com configuração própria do opencode, quando `axyn install` roda, então ela continua lá, com o servidor MCP, os agentes e o comando `/axyn` acrescentados.
+- **AC-4** Dado um repositório vazio, quando o axyn prepara o projeto web, então o `make ci` dele roda e reprova um HTML inválido.
+- **AC-5** (D17) Dado o opencode com um modelo gratuito e o axyn instalado num repositório clonado, quando o usuário pede `/axyn crie uma landing page`, então há uma spec, tickets e um PR por ticket com CI verde, ou o axyn para com o motivo, sem quebrar o projeto; no CI, o mesmo fluxo roda com um agente falso.
 
 ## Fora do escopo do axyn mínimo
 

@@ -167,9 +167,15 @@ jq -rs --arg m "$marker" --arg e "$n" '
     "Gerado por `sdd-report.sh phase` (spec 017), sem LLM; uma rodada nova edita este comentário."' "$tmp/rows" > "$tmp/body"
 cat "$tmp/body"
 id="$(pages "repos/$repo/issues/$n/comments?" "select(.body | startswith(\"$marker\")) | .id" | head -n 1)" || id=""
+# Sem permissão de escrita (ex.: token só de leitura), a tabela já saiu: avisa e
+# segue com 0, para quem a cita (o sdd-release.sh) não perdê-la.
 if [ -n "$id" ]; then
-  gh api -X PATCH "repos/$repo/issues/comments/$id" -F body=@"$tmp/body" --silent
+  ok=0; gh api -X PATCH "repos/$repo/issues/comments/$id" -F body=@"$tmp/body" --silent || ok=1
 else
-  gh api "repos/$repo/issues/$n/comments" -F body=@"$tmp/body" --silent
+  ok=0; gh api "repos/$repo/issues/$n/comments" -F body=@"$tmp/body" --silent || ok=1
 fi
-echo "sdd-report: relatório gravado no épico #$n"
+if [ "$ok" -eq 0 ]; then
+  echo "sdd-report: relatório gravado no épico #$n"
+else
+  echo "sdd-report: aviso: não consegui gravar o relatório no épico #$n" >&2
+fi

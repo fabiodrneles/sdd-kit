@@ -79,13 +79,17 @@ case "$method $url" in
   "GET "*actions/runs*) b="${url#*branch=}"; f="$G/runs-${b%%&*}.json" ;;
   "GET "*/sub_issues*) f="$G/subs.json" ;;
   "GET "*/comments*) f="$G/comments.json" ;;
+  "PATCH "* | "POST "*) [ ! -f "$G/readonly" ] || { echo "HTTP 403" >&2; exit 1; } ;;
+  *) echo "gh falso: $method $url" >&2; exit 1 ;;
+esac
+case "$method $url" in
   "PATCH "*)
     id="${url##*/}"; echo w >> "$G/writes"
     jq --arg id "$id" --rawfile b "$body" 'map(if (.id|tostring) == $id then .body = $b else . end)' "$G/comments.json" > "$G/c" && mv "$G/c" "$G/comments.json"; exit 0 ;;
   "POST "*)
     echo w >> "$G/writes"
     jq --rawfile b "$body" '. + [{id: 99, body: $b}]' "$G/comments.json" > "$G/c" && mv "$G/c" "$G/comments.json"; exit 0 ;;
-  *) echo "gh falso: $method $url" >&2; exit 1 ;;
+  "GET "*) ;;
 esac
 [ -f "$f" ] || { echo "gh falso: sem $f" >&2; exit 1; }
 jq -r "$jq" "$f"
@@ -148,6 +152,13 @@ b="$(jq -r '.[] | select(.id == 99) | .body' "$G/comments.json")"
 printf '%s\n' "$b" | grep -qF '| #5 T1: a \| b | #20 | 60 | não | 2 | 300 | 10 | 12 | 0 (0) |' || fail "linha do #5: $b"
 printf '%s\n' "$b" | grep -qF '| #6 T2: c | #22 | 30 | sim | 1 | 50 | 0 | 3 |' || fail "linha do #6: $b"
 printf '%s\n' "$b" | grep -qF '| **Total** | 2 PRs | 90 | 1 de 2 | 3 | 350 | 10 | 15 | 0 (0) |' || fail "total: $b"
+
+# Token só de leitura: a escrita do comentário falha, mas a tabela sai e o código é 0.
+touch "$G/readonly"
+out="$(sh "$r" --repo o/r phase '#9' 2> "$tmp/err")" || fail "phase só leitura saiu com erro"
+printf '%s\n' "$out" | grep -qF '| **Total** | 2 PRs |' || fail "phase só leitura sem a tabela: $out"
+grep -q 'não consegui gravar' "$tmp/err" || fail "phase só leitura sem aviso: $(cat "$tmp/err")"
+rm "$G/readonly"
 
 # Uso inválido: 3.
 rc=0; sh "$r" bogus > /dev/null 2>&1 || rc=$?

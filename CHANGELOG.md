@@ -4,6 +4,15 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-10-06
+
+### Adicionado
+
+- add usage examples to adopt.sh and adopt.ps1 --help (#242)
+- run marked sh blocks in doc-commands.sh (#243)
+- count only idle wake-ups (no commit or push) in the report (#244)
+- sdd-report phase --compare and the measured relay savings in the README (#245)
+
 ## [1.11.0] - 2026-10-06
 
 ### Adicionado

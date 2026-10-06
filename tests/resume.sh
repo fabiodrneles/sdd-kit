@@ -97,6 +97,7 @@ out="$(sh "$s" --repo o/r)" || fail "sdd-resume sem épico falhou"
 printf '%s\n' "$out" | grep -q 'nenhum épico aberto' || fail "sem aviso de épico: $out"
 # #191: sem épico, o próximo passo vem do ROADMAP (a fase com tarefa aberta).
 mkdir -p specs
+# shellcheck disable=SC2016 # literal: crases e $ do texto gerado
 printf '## Fase 1 — A (P0) → `v0.1.0`\n\n- [x] **T1** a\n\n## Fase 2 — B (P1) → `v0.2.0`\n\n- [ ] **T2** b\n' > specs/ROADMAP.md
 out="$(sh "$s" --repo o/r)" || fail "sdd-resume sem épico com ROADMAP falhou"
 printf '%s\n' "$out" | grep -q 'Próximo: abrir a Fase 2 — B.*sdd-epic.sh 2' || fail "não apontou a próxima fase: $out"

@@ -45,6 +45,7 @@ cat > "$tmp/release.sh" <<'SH'
 echo "$* pre=${SDD_RELEASE_PRE:-}" >> "$G/dispatch"
 SH
 # sdd-epic.sh falso: registra a fase aberta.
+# shellcheck disable=SC2016 # literal: crases e $ do texto gerado
 printf '#!/bin/sh\necho "$*" >> "$G/epic"\n' > "$tmp/epic.sh"
 export PATH="$tmp/bin:$PATH" G SDD_RELEASE_SH="$tmp/release.sh" SDD_EPIC_SH="$tmp/epic.sh"
 echo '[]' > "$G/epics"; : > "$G/epic"
@@ -98,6 +99,7 @@ rc=0; run 10 > /dev/null 2>&1 || rc=$?
 
 # #191: com a fase fechada, o motor abre o épico da próxima fase do ROADMAP; com um
 # épico já aberto, não abre outro.
+# shellcheck disable=SC2016 # literal: crases e $ do texto gerado
 printf '#!/bin/sh\necho "$* pre=${SDD_RELEASE_PRE:-}" >> "$G/dispatch"\n' > "$tmp/release.sh"
 mkdir -p "$tmp/proj/specs"
 printf '## Fase 1 — A (P0) → `v1.2.3`\n\n- [x] **T1** a\n\n## Fase 2 — B (P1) → `v1.3.0`\n\n- [ ] **T2** b\n' > "$tmp/proj/specs/ROADMAP.md"

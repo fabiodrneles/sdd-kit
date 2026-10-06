@@ -11,6 +11,7 @@ on:
     branches: [main]
 
 permissions:
+  actions: write
   contents: write
   pull-requests: write
 
@@ -30,4 +31,6 @@ jobs:
           GH_TOKEN: ${{ secrets.SDD_ENGINE_TOKEN || github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           SDD_ENGINE: ${{ vars.SDD_ENGINE }}
+          SDD_ENGINE_TOKEN_SET: ${{ secrets.SDD_ENGINE_TOKEN != '' && '1' || '' }}
+          SDD_CI_WORKFLOW: ${{ vars.SDD_CI_WORKFLOW }}
         run: sh template/common/scripts/sdd-update-prs.sh

@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -46,6 +47,12 @@ type ticket struct {
 	Body  string   `json:"body"`
 	ACs   []string `json:"acs"`
 	Done  bool     `json:"done"`
+
+	// Record of the delivery (spec 021 FR-7).
+	Attempts []attempt `json:"attempts,omitempty"`
+	Model    string    `json:"model,omitempty"`
+	Strategy string    `json:"strategy,omitempty"`
+	CostUSD  float64   `json:"cost_usd,omitempty"`
 }
 
 type plan struct {
@@ -62,6 +69,7 @@ type mcpServer struct {
 	ci       string
 	base     string
 	maxLines int
+	config   string // model ladder file (FR-6); empty or missing means no ladder
 }
 
 func obj(props map[string]any, required ...string) map[string]any {
@@ -98,10 +106,11 @@ func runMCP(args []string, in io.Reader, out, errw io.Writer) int {
 	ci := fs.String("ci", defaultCICmd, "comando do CI do projeto")
 	base := fs.String("base", "HEAD", "referência do git contra a qual o diff é medido")
 	maxLines := fs.Int("max-lines", defaultMaxLines, "limite de linhas alteradas por ticket")
+	config := fs.String("config", defaultConfigPath(), "arquivo com a escada de modelos")
 	if err := fs.Parse(args); err != nil {
 		return exitUsage
 	}
-	s := &mcpServer{dir: ".", ci: *ci, base: *base, maxLines: *maxLines}
+	s := &mcpServer{dir: ".", ci: *ci, base: *base, maxLines: *maxLines, config: *config}
 	sc := bufio.NewScanner(in)
 	sc.Buffer(make([]byte, 1<<20), 1<<26)
 	enc := json.NewEncoder(out)
@@ -204,6 +213,7 @@ func (s *mcpServer) gate(a gateArgs) (bool, string, error) {
 	if err != nil {
 		return false, "", fmt.Errorf("git diff falhou: %v", err)
 	}
+	advice := s.recordAttempt(len(findings) == 0, findings)
 	if len(findings) == 0 {
 		return true, fmt.Sprintf("gate: verde (%d arquivo(s) no diff)", n), nil
 	}
@@ -215,6 +225,9 @@ func (s *mcpServer) gate(a gateArgs) (bool, string, error) {
 	}
 	if ciFailed && ciLog.Len() > 0 {
 		b.WriteString("--- fim do log do CI ---\n" + tail(ciLog.String(), 40))
+	}
+	if advice != "" {
+		b.WriteString(advice)
 	}
 	return false, strings.TrimRight(b.String(), "\n"), nil
 }
@@ -458,6 +471,14 @@ func (s *mcpServer) toolShip(a gateArgs, msg string) (string, error) {
 	}
 	if t != nil {
 		t.Done = true
+		t.Strategy = "direto"
+		if len(t.Attempts) > 1 {
+			t.Strategy = "nova tentativa"
+		}
+		t.CostUSD, _ = strconv.ParseFloat(os.Getenv("AXYN_COST_USD"), 64)
+		if t.Model != "" {
+			notes = append(notes, fmt.Sprintf("registro: modelo %s, %d tentativa(s), estratégia %s, custo US$ %.4f", t.Model, len(t.Attempts), t.Strategy, t.CostUSD))
+		}
 		_ = s.savePlan(pl, planPath)
 	}
 	return strings.Join(notes, "\n"), nil

@@ -40,6 +40,8 @@ fi
 
 usage() { sed -n '2,29p' "$0"; exit 3; }
 repo="" max="" dry=0 automerge="${SDD_RELAY_AUTO_MERGE:-0}"
+# A chave do repositório (sdd-auto-merge.sh on) também liga o merge do relé.
+[ "${SDD_AUTO_MERGE:-off}" != on ] || automerge=1
 while [ $# -gt 0 ]; do
   case "$1" in
     --repo) repo="${2:?}"; shift 2 ;;
@@ -61,6 +63,8 @@ fi
 # comandos da entrega) e sem prompt interativo (019 FR-1); só com as ferramentas da
 # entrega, sem skills e sem servidores MCP, o contexto inicial cai de ~37 mil para
 # ~11 mil tokens (020 FR-1).
+# A chave do repositório: `sh scripts/sdd-auto-merge.sh on` liga o merge do relé também.
+[ "$automerge" = 1 ] || [ "$dry" -eq 1 ] || [ "$(gh api "repos/$repo/actions/variables/SDD_AUTO_MERGE" --jq .value 2> /dev/null || true)" != on ] || automerge=1
 tools="${SDD_AGENT_TOOLS:-Bash Read Edit Write Grep Glob}"
 agent="${SDD_AGENT_CMD:-claude -p --permission-mode acceptEdits --tools $tools --disable-slash-commands --strict-mcp-config --allowedTools 'Bash(git:*)' 'Bash(make:*)' 'Bash(sh:*)' 'Bash(gh:*)' 'Bash(jq:*)' 'Bash(ls:*)' 'Bash(grep:*)' 'Bash(sed:*)' 'Bash(find:*)' 'Bash(cat:*)' 'Bash(head:*)' 'Bash(tail:*)' 'Bash(wc:*)' 'Bash(python3:*)' 'Bash(go:*)' 'Bash(npm:*)'}"
 tmp="$(mktemp -d)"

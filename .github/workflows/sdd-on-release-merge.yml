@@ -13,6 +13,12 @@ on:
   pull_request:
     types: [closed]
     branches: [main]
+  # Disparado pelo sdd-auto-merge depois de mesclar o PR de fechamento.
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Número do PR de fechamento mesclado
+        required: true
 
 permissions:
   actions: write
@@ -29,10 +35,10 @@ jobs:
   release:
     name: Disparar a release
     if: >-
-      vars.SDD_ENGINE != 'off' &&
+      vars.SDD_ENGINE != 'off' && (github.event_name == 'workflow_dispatch' || (
       github.event.pull_request.merged == true &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      startsWith(github.event.pull_request.head.ref, 'chore/release-v')
+      startsWith(github.event.pull_request.head.ref, 'chore/release-v')))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -47,5 +53,5 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           SDD_ENGINE: ${{ vars.SDD_ENGINE }}
           GRM_VERSION: v1.1.0
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_NUMBER: ${{ inputs.pr || github.event.pull_request.number }}
         run: sh template/common/scripts/sdd-on-release-merge.sh "$PR_NUMBER"

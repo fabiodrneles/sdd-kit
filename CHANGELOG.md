@@ -4,6 +4,16 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-10-06
+
+### Corrigido
+
+- never cancel main or release CI runs (#179)
+- keep coverage artifacts out of the working tree (#181)
+- let the engine open the closing PR without local tools (#183)
+- gate the engine's release on main's CI instead of local tools (#185)
+- page the PR list explicitly in sdd-release.sh (#187)
+
 ## [1.7.0] - 2026-10-06
 
 Correções achadas ao usar a v1.6.0 de verdade, no próprio kit e no sdd-kit-demo.

@@ -53,6 +53,8 @@ cat > "$G/in"
 n="$(sed -n '1s/^# Ticket #\([0-9]*\):.*/\1/p' "$G/in")"
 cp "$G/in" "$G/in-$n"; echo "$n" >> "$G/calls"
 echo "${CLAUDE_CODE_SESSION_ID:-sem}" > "$G/env-session"
+# O agente troca de branch na pasta do relé: aqui, apaga o script de que o relé veio.
+[ ! -f "$G/clobber" ] || : > scripts/sdd-relay.sh
 # A sessão do agente: um arquivo novo, com 1000×N tokens relidos.
 printf '{"timestamp":"%s","message":{"id":"s%s-%s","usage":{"input_tokens":1,"cache_read_input_tokens":%s,"output_tokens":5}}}\n' \
   "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$n" "$(grep -c . "$G/calls")" "$((1000 * n))" > "$SDD_SESSIONS_DIR/agent-$n-$(grep -c . "$G/calls").jsonl"
@@ -100,6 +102,8 @@ grep -qF -- '- **AC-1** Linha do AC-1.' "$G/in-2" || fail "pacote do #2 sem o AC
 grep -qF 'AC-2' "$G/in-2" && fail "pacote do #2 com o AC-2 de outro ticket"
 grep -qF -- '- **AC-2** Linha do AC-2.' "$G/in-3" || fail "pacote do #3 sem o AC-2"
 grep -qF 'Trabalhe só o ticket #3' "$G/in-3" || fail "sem a instrução do ticket: $(cat "$G/in-3")"
+# O pacote cita os scripts do repositório, não os da cópia de onde o relé roda.
+grep -qF 'sh scripts/sdd-pr.sh --spec 018 --no-wait' "$G/in-3" || fail "pacote com o caminho da cópia: $(grep sdd-pr "$G/in-3")"
 printf '%s\n' "$out" | tail -n 1 | grep -qF 'Próximo: PR de fechamento da fase' || fail "sem o Próximo da fase: $out"
 # 018 FR-6: o custo exato de cada ticket (só a sessão dele) num comentário da issue.
 c2="$(sed -n 's/^<!-- sdd-relay-cost \(.*\) -->$/\1/p' "$G/posted" | sed -n 1p)"
@@ -208,8 +212,19 @@ CLAUDE_CODE_SESSION_ID=pai $relay --max 1 > /dev/null 2>&1 || fail "relé com se
 [ "$(cat "$G/env-session")" = sem ] || fail "o agente herdou CLAUDE_CODE_SESSION_ID: $(cat "$G/env-session")"
 reset
 out="$(env -u SDD_AGENT_CMD sh scripts/sdd-relay.sh --repo o/r --dry-run 2>&1)" || fail "dry-run padrão falhou"
-printf '%s\n' "$out" | grep -qF "chamaria 'claude -p --permission-mode acceptEdits --allowedTools" || fail "agente padrão sem o modo de permissão: $out"
+printf '%s\n' "$out" | grep -qF "chamaria 'claude -p --permission-mode acceptEdits --tools" || fail "agente padrão sem o modo de permissão: $out"
 printf '%s\n' "$out" | grep -qF "'Bash(git:*)'" || fail "agente padrão sem o git: $out"
+# 020 AC-1: só as ferramentas da entrega, sem skills e sem MCP; SDD_AGENT_TOOLS troca.
+printf '%s\n' "$out" | grep -qF -- "--tools Bash Read Edit Write Grep Glob --disable-slash-commands --strict-mcp-config" || fail "agente padrão não é enxuto: $out"
+out="$(env -u SDD_AGENT_CMD SDD_AGENT_TOOLS="Bash Read" sh scripts/sdd-relay.sh --repo o/r --dry-run 2>&1)" || fail "dry-run com SDD_AGENT_TOOLS falhou"
+printf '%s\n' "$out" | grep -qF -- "--tools Bash Read --disable-slash-commands" || fail "SDD_AGENT_TOOLS não trocou: $out"
+
+# 020 FR-1: o relé roda de uma cópia; o agente apagar o script da pasta não o quebra.
+reset; touch "$G/clobber"
+cp scripts/sdd-relay.sh "$tmp/relay.bak"
+out="$($relay 2>&1)" || fail "relé com o script trocado falhou: $out"
+[ "$(tr '\n' ' ' < "$G/calls")" = "2 3 " ] || fail "relé com o script trocado chamou: $(cat "$G/calls")"
+cp "$tmp/relay.bak" scripts/sdd-relay.sh; rm -f "$G/clobber"
 
 # Sem épico aberto: Próximo é perguntar ao dono.
 reset; echo '[]' > "$G/epics.json"

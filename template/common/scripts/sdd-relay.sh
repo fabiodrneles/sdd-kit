@@ -7,7 +7,8 @@
 #   Repete: acha o épico aberto e a primeira sub-issue aberta; se ela já tem PR
 #   aberto ("Closes #N"), espera o merge; senão monta o pacote, chama o agente com
 #   ele na entrada padrão ($SDD_AGENT_CMD; padrão "claude -p" sem prompts de
-#   permissão, só com os comandos da entrega), e espera o merge do
+#   permissão, só com os comandos da entrega e as ferramentas de SDD_AGENT_TOOLS,
+#   sem skills nem servidores MCP), e espera o merge do
 #   PR que o agente abriu (sdd-wait.sh pr-merged). Sem sub-issue aberta, imprime o
 #   Próximo da fase e termina.
 #   --max      no máximo N agentes nesta rodada (padrão: sem limite)
@@ -24,7 +25,16 @@
 #          PR fechado sem merge); 3 uso. Requer gh e jq.
 set -eu
 
-usage() { sed -n '2,24p' "$0"; exit 3; }
+# Roda de uma cópia dos scripts: o agente troca de branch na mesma pasta, e o sh lê
+# o script aos poucos; um sdd-relay.sh trocado no meio quebraria o relé (020 FR-1).
+if [ -z "${SDD_RELAY_SELF:-}" ]; then
+  self="$(mktemp -d)" SDD_SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
+  cp "$SDD_SCRIPTS_DIR"/*.sh "$self/"
+  export SDD_SCRIPTS_DIR # o pacote cita os scripts do repositório, não os da cópia
+  SDD_RELAY_SELF="$self" exec sh "$self/sdd-relay.sh" "$@"
+fi
+
+usage() { sed -n '2,25p' "$0"; exit 3; }
 repo="" max="" dry=0
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -43,10 +53,13 @@ if [ -z "$repo" ]; then
 fi
 [ -n "$repo" ] || { echo "sdd-relay: repositório desconhecido (use --repo)" >&2; exit 3; }
 # O agente padrão roda sem prompts de permissão (edita arquivos e roda só os
-# comandos da entrega) e sem prompt interativo (019 FR-1).
-agent="${SDD_AGENT_CMD:-claude -p --permission-mode acceptEdits --allowedTools 'Bash(git:*)' 'Bash(make:*)' 'Bash(sh:*)' 'Bash(gh:*)' 'Bash(jq:*)' 'Bash(ls:*)' 'Bash(grep:*)' 'Bash(sed:*)' 'Bash(find:*)' 'Bash(cat:*)' 'Bash(head:*)' 'Bash(tail:*)' 'Bash(wc:*)' 'Bash(python3:*)' 'Bash(go:*)' 'Bash(npm:*)'}"
+# comandos da entrega) e sem prompt interativo (019 FR-1); só com as ferramentas da
+# entrega, sem skills e sem servidores MCP, o contexto inicial cai de ~37 mil para
+# ~11 mil tokens (020 FR-1).
+tools="${SDD_AGENT_TOOLS:-Bash Read Edit Write Grep Glob}"
+agent="${SDD_AGENT_CMD:-claude -p --permission-mode acceptEdits --tools $tools --disable-slash-commands --strict-mcp-config --allowedTools 'Bash(git:*)' 'Bash(make:*)' 'Bash(sh:*)' 'Bash(gh:*)' 'Bash(jq:*)' 'Bash(ls:*)' 'Bash(grep:*)' 'Bash(sed:*)' 'Bash(find:*)' 'Bash(cat:*)' 'Bash(head:*)' 'Bash(tail:*)' 'Bash(wc:*)' 'Bash(python3:*)' 'Bash(go:*)' 'Bash(npm:*)'}"
 tmp="$(mktemp -d)"
-trap 'rm -rf "$tmp"' EXIT
+trap 'rm -rf "$tmp" "$SDD_RELAY_SELF"' EXIT
 say() { echo "sdd-relay: $*"; }
 
 # PR aberto que fecha a issue $1 (o corpo começa por "Closes #N"), ou vazio.

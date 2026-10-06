@@ -28,3 +28,5 @@ Medição de 2026-10-06, com `claude -p` na raiz do repositório e só "Responda
 ## Mudanças
 
 ### Não lançado
+
+- ADDED FR-1 — agente padrão do relé só com as ferramentas da entrega (`SDD_AGENT_TOOLS`, padrão `Bash Read Edit Write Grep Glob`), sem skills e sem servidores MCP: contexto inicial de 37 mil para 11 mil tokens; o relé roda de uma cópia dos scripts, para o agente trocar de branch sem quebrá-lo (T62, #248).

@@ -23,7 +23,7 @@ case "$n" in '' | *[!0-9]*) usage ;; esac
 max="${SDD_CONTEXT_MAX:-16000}"
 case "$max" in '' | *[!0-9]*) echo "sdd-context: SDD_CONTEXT_MAX inválido: $max" >&2; exit 3 ;; esac
 root="$(git rev-parse --show-toplevel 2> /dev/null || pwd)"
-here="$(cd "$(dirname "$0")" && pwd)"
+here="${SDD_SCRIPTS_DIR:-$(cd "$(dirname "$0")" && pwd)}"
 sdir="${here#"$root"/}"
 if [ -z "$repo" ]; then
   url="$(git remote get-url origin 2> /dev/null || true)"

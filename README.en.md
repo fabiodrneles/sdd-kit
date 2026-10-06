@@ -12,41 +12,6 @@
 
 *Adoption in an empty repository and the first `make ci`, with real output ([how it was generated](docs/demo/demo.sh)).*
 
-## What it costs, measured
-
-Every number comes from `sdd-report.sh`, which reads the Claude Code session files without calling the LLM, and can be reproduced.
-
-**In a real work phase, the relay costs 16 times less per ticket.** A long working session (PRs, CI waits, notices, conversation) grows with every ticket, and every call rereads all of it; the relay gives each ticket a fresh agent that starts with only the ticket's pack.
-
-<!-- markdownlint-disable MD033 -->
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/relay-savings-en-dark.svg">
-  <img alt="Cost per ticket in a work phase: 6.50 million tokens in a long session against 0.40 million with the relay (16 times fewer); context reread per call: 231 thousand against 43 thousand (5.4 times less)" src="docs/assets/relay-savings-en-light.svg" width="880">
-</picture>
-<!-- markdownlint-enable MD033 -->
-
-| Ticket | How | Calls | Total tokens | Context per call |
-|---|---|---|---|---|
-| Phase 12 (4 tickets) | one long working session | 112 | 6.50 million per ticket | 231 thousand |
-| T58 [#237](https://github.com/fabiodrneles/sdd-kit/issues/237) | relay | 9 | 383 thousand | 42 thousand |
-| T59 [#238](https://github.com/fabiodrneles/sdd-kit/issues/238) | relay | 10 | 426 thousand | 43 thousand |
-| T60 [#239](https://github.com/fabiodrneles/sdd-kit/issues/239) | relay | 9 | 395 thousand | 43 thousand |
-
-**The lean agent costs 3.2 times less than the default one on the same ticket** (528 thousand against 166 thousand tokens, same result, 12 and 11 calls): with only the delivery tools, no skills and no MCP servers, the starting context drops from 37 thousand to 11 thousand tokens.
-
-**Coding small tasks, the kit is not yet cheaper than a plain `claude`.** In the [benchmark](scripts/benchmark.sh) with the [same 10 tasks](docs/benchmark/tasks-10.md) on a real Go project, handed over at once, with no conversation and no red CI:
-
-| 10 tasks on sdd-kit-demo | Without sdd-kit (one session) | With sdd-kit (one lean agent per task) |
-|---|---|---|
-| Total tokens | 1.16 million | 1.42 million |
-| Calls | 22 | 85 |
-| Context per call | 52 thousand | 16 thousand |
-| `make ci` green, commits, new tests | yes, 10, 20 | yes, 10, 19 |
-
-Each fresh agent spends about 8 calls getting to know the code; the plain session pays that once. The engine's next step is the adaptive batch: small tickets in the same lean session up to a context ceiling. The raw results are in [`docs/benchmark/`](docs/benchmark/), and `sh scripts/benchmark.sh --tasks docs/benchmark/tasks-10.md` redoes the measurement.
-
-What the kit delivers beyond cost: specs with acceptance criteria, tickets, one PR per ticket, CI as a gate, resume checkpoints and each ticket's cost recorded on its issue.
-
 The kit comes from [cv-craft](https://github.com/fabiodrneles/cv-craft), which went from prototype to `v1.x` with this process ([case study](docs/case-study.en.md)), and sdd-kit itself is built with it ([specs](specs/README.md), [epic #1](https://github.com/fabiodrneles/sdd-kit/issues/1)). To see the process in a project built from scratch, with epic, tickets, PRs and a release, open [sdd-kit-demo](https://github.com/fabiodrneles/sdd-kit-demo). This repository's specs, issues and pull requests are written in Portuguese; code and commits are in English. The skill itself is in English and writes specs, issues and PRs in the owner's language, read from `CLAUDE.md`/`AGENTS.md` or asked once.
 
 ## What is in the kit

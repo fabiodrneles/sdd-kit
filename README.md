@@ -12,41 +12,6 @@
 
 *A adoção num repositório vazio e o primeiro `make ci`, com a saída real ([como foi gerado](docs/demo/demo.sh)).*
 
-## Quanto custa, medido
-
-Todos os números saem do `sdd-report.sh`, que lê os arquivos de sessão do Claude Code sem chamar a LLM, e podem ser refeitos.
-
-**Numa fase de trabalho real, o relé custa 16 vezes menos por ticket.** Uma sessão longa de trabalho (PRs, espera de CI, avisos, conversa) cresce a cada ticket, e cada chamada relê tudo; o relé dá a cada ticket um agente novo, que começa só com o pacote do ticket.
-
-<!-- markdownlint-disable MD033 -->
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/relay-savings-pt-dark.svg">
-  <img alt="Custo por ticket numa fase de trabalho: 6,50 milhões de tokens numa sessão longa contra 0,40 milhão com o relé (16 vezes menos); contexto relido por chamada: 231 mil contra 43 mil (5,4 vezes menos)" src="docs/assets/relay-savings-pt-light.svg" width="880">
-</picture>
-<!-- markdownlint-enable MD033 -->
-
-| Ticket | Como | Chamadas | Tokens no total | Contexto por chamada |
-|---|---|---|---|---|
-| Fase 12 (4 tickets) | uma sessão longa de trabalho | 112 | 6,50 milhões por ticket | 231 mil |
-| T58 [#237](https://github.com/fabiodrneles/sdd-kit/issues/237) | relé | 9 | 383 mil | 42 mil |
-| T59 [#238](https://github.com/fabiodrneles/sdd-kit/issues/238) | relé | 10 | 426 mil | 43 mil |
-| T60 [#239](https://github.com/fabiodrneles/sdd-kit/issues/239) | relé | 9 | 395 mil | 43 mil |
-
-**O agente enxuto custa 3,2 vezes menos que o padrão no mesmo ticket** (528 mil contra 166 mil tokens, mesmo resultado, 12 e 11 chamadas): só as ferramentas da entrega, sem skills e sem servidores MCP, o contexto inicial cai de 37 mil para 11 mil tokens.
-
-**Programando tarefas pequenas, o kit ainda não é mais barato que um `claude` comum.** No [benchmark](scripts/benchmark.sh) com as [mesmas 10 tarefas](docs/benchmark/tasks-10.md) num projeto Go real, entregues de uma vez, sem conversa nem CI vermelho:
-
-| 10 tarefas no sdd-kit-demo | Sem sdd-kit (uma sessão) | Com sdd-kit (um agente enxuto por tarefa) |
-|---|---|---|
-| Tokens no total | 1,16 milhão | 1,42 milhão |
-| Chamadas | 22 | 85 |
-| Contexto por chamada | 52 mil | 16 mil |
-| `make ci` verde, commits, testes novos | sim, 10, 20 | sim, 10, 19 |
-
-Cada agente novo gasta cerca de 8 chamadas para reconhecer o código; a sessão comum paga isso uma vez. O próximo passo do motor é o lote adaptativo: tickets pequenos na mesma sessão enxuta até um teto de contexto. Os resultados brutos estão em [`docs/benchmark/`](docs/benchmark/), e `sh scripts/benchmark.sh --tasks docs/benchmark/tasks-10.md` refaz a medição.
-
-O que o kit entrega além do custo: specs com critérios de aceite, tickets, um PR por ticket, CI como portão, checkpoint de retomada e o custo de cada ticket gravado na issue.
-
 O kit nasceu do [cv-craft](https://github.com/fabiodrneles/cv-craft), que saiu de protótipo para `v1.x` com esse processo ([estudo de caso](docs/case-study.md)), e o próprio sdd-kit é desenvolvido com ele ([specs](specs/README.md), [épico #1](https://github.com/fabiodrneles/sdd-kit/issues/1)). Para ver o processo num projeto criado do zero, com épico, tickets, PRs e release, abra o [sdd-kit-demo](https://github.com/fabiodrneles/sdd-kit-demo).
 
 ## Sumário

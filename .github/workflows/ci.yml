@@ -86,7 +86,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lang: [go, node, java, java-gradle, python, rust, dotnet]
+        lang: [go, node, java, java-gradle, python, rust, dotnet, web]
     steps:
       - uses: actions/checkout@v7
       - if: matrix.lang == 'go'
@@ -101,7 +101,7 @@ jobs:
         with:
           version: ${{ steps.lint.outputs.version }}
           install-only: true
-      - if: matrix.lang == 'node'
+      - if: contains(fromJSON('["node","web"]'), matrix.lang)
         uses: actions/setup-node@v7
         with:
           node-version: lts/*

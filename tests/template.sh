@@ -7,8 +7,9 @@ cd "$root/template"
 fail=0
 err() { echo "FALHOU: $*" >&2; fail=1; }
 
-for lang in go node java python rust dotnet; do
+for lang in go node java python rust dotnet web; do
   for f in Makefile .github/workflows/ci.yml .github/dependabot.yml .claude/hooks/session-start.sh; do
+    [ "$lang/$f" = web/.claude/hooks/session-start.sh ] && continue # web não instala dependências
     [ -f "$lang/$f" ] || err "template/$lang/$f não existe"
   done
   grep -q '^ci:' "$lang/Makefile" || err "template/$lang/Makefile sem alvo ci"
@@ -135,7 +136,7 @@ if (cd "$dc" && sh "$root/template/common/scripts/doc-commands.sh" > out 2>&1); 
   err "doc-commands aceitou um bloco sh que falha"
 fi
 # 011 AC-3: make linkcheck em toda linguagem; com o lychee, um link quebrado reprova.
-for lang in go node java python rust dotnet; do
+for lang in go node java python rust dotnet web; do
   grep -q '^linkcheck:' "$lang/Makefile" || err "template/$lang/Makefile sem alvo linkcheck"
 done
 if command -v lychee >/dev/null; then
@@ -149,6 +150,23 @@ else
   echo "tests/template.sh: lychee ausente, make linkcheck não executado aqui"
 fi
 rm -rf "$dc"
+
+# 021 FR-4/AC-4: o template web valida o HTML e os links locais; o make ci reprova os dois.
+if command -v node >/dev/null; then
+  wd="$(mktemp -d)"
+  sed -e 's/{{PROJECT}}/Demo/g' skeleton/web/index.html > "$wd/index.html"
+  cp web/Makefile web/.htmlvalidate.json "$wd/"; mkdir "$wd/scripts"; cp web/scripts/links.sh "$wd/scripts/"
+  (cd "$wd" && make ci > out 2>&1) || err "web: make ci reprovou o esqueleto: $(tail -5 "$wd/out")"
+  printf '<p>sem doctype <b></p>\n' > "$wd/bad.html"
+  if (cd "$wd" && make ci > out 2>&1); then err "web: make ci aceitou HTML inválido (021 AC-4)"; fi
+  rm "$wd/bad.html"
+  sed 's#<p>#<a href="nao-existe.html">x</a><p>#' "$wd/index.html" > "$wd/i2" && mv "$wd/i2" "$wd/index.html"
+  if (cd "$wd" && make ci > out 2>&1); then err "web: make ci aceitou link local quebrado"; fi
+  grep -q 'nao-existe.html' "$wd/out" || err "web: o make ci não mostrou o link quebrado"
+  rm -rf "$wd"
+else
+  echo "tests/template.sh: node ausente, make ci do template web não executado aqui"
+fi
 
 # 003 AC-1: workflows válidos.
 command -v actionlint >/dev/null || { echo "actionlint não instalado (veja .claude/hooks/session-start.sh)" >&2; exit 1; }

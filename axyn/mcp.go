@@ -93,7 +93,13 @@ var mcpTools = []toolDef{
 	{"axyn_gate", "Roda os portões (CI, teste afrouxado, caminhos protegidos, tamanho) sobre o diff atual.",
 		obj(map[string]any{
 			"max_lines": map[string]any{"type": "integer", "description": "limite menor que o do projeto (nunca maior)"},
+			"plan":      map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "arquivos que vai alterar (passo do plano antes do código)"},
 		})},
+	{"axyn_decide", "Grava a resposta do usuário a uma pergunta do axyn como decisão na spec.",
+		obj(map[string]any{
+			"question": str("a pergunta feita ao usuário"),
+			"answer":   str("a resposta do usuário"),
+		}, "question", "answer")},
 	{"axyn_ship", "Commit, push e PR do diff atual, só se o portão estiver verde; recusa se reprovar.",
 		obj(map[string]any{
 			"message": str("mensagem do commit (Conventional Commits)"),
@@ -167,7 +173,8 @@ func runMCP(args []string, in io.Reader, out, errw io.Writer) int {
 }
 
 type gateArgs struct {
-	MaxLines int `json:"max_lines"`
+	MaxLines int      `json:"max_lines"`
+	Plan     []string `json:"plan"` // files the model says it will touch (FR-8 step 5)
 }
 
 // call runs one tool. A gate that fails is a normal answer (text, not an error);
@@ -188,6 +195,12 @@ func (s *mcpServer) call(name string, raw json.RawMessage) (string, error) {
 		}
 		_, report, err := s.gate(a)
 		return report, err
+	case "axyn_decide":
+		var a struct{ Question, Answer string }
+		if err := json.Unmarshal(raw, &a); err != nil {
+			return "", err
+		}
+		return s.toolDecide(a.Question, a.Answer)
 	case "axyn_ship":
 		var a struct {
 			gateArgs
@@ -213,7 +226,12 @@ func (s *mcpServer) gate(a gateArgs) (bool, string, error) {
 	if err != nil {
 		return false, "", fmt.Errorf("git diff falhou: %v", err)
 	}
-	advice := s.recordAttempt(len(findings) == 0, findings)
+	if len(a.Plan) > 0 {
+		if _, t := s.openTicket(); t != nil {
+			findings = append(findings, checkPlan(t, a.Plan)...)
+		}
+	}
+	advice, recovered := s.recordAttempt(len(findings) == 0, findings, a.Plan, ciLog.String())
 	if len(findings) == 0 {
 		return true, fmt.Sprintf("gate: verde (%d arquivo(s) no diff)", n), nil
 	}
@@ -223,13 +241,27 @@ func (s *mcpServer) gate(a gateArgs) (bool, string, error) {
 		fmt.Fprintf(&b, "gate: reprovado [%s] %s\n", f.gate, f.reason)
 		ciFailed = ciFailed || f.gate == "ci"
 	}
-	if ciFailed && ciLog.Len() > 0 {
+	if ciFailed && ciLog.Len() > 0 && !recovered {
 		b.WriteString("--- fim do log do CI ---\n" + tail(ciLog.String(), 40))
 	}
 	if advice != "" {
 		b.WriteString(advice)
 	}
 	return false, strings.TrimRight(b.String(), "\n"), nil
+}
+
+// openTicket is the plan and its first ticket not yet delivered.
+func (s *mcpServer) openTicket() (*plan, *ticket) {
+	pl, _, err := s.loadPlan()
+	if err != nil {
+		return nil, nil
+	}
+	for i := range pl.Tickets {
+		if !pl.Tickets[i].Done {
+			return pl, &pl.Tickets[i]
+		}
+	}
+	return pl, nil
 }
 
 func tail(s string, n int) string {
@@ -471,9 +503,11 @@ func (s *mcpServer) toolShip(a gateArgs, msg string) (string, error) {
 	}
 	if t != nil {
 		t.Done = true
-		t.Strategy = "direto"
-		if len(t.Attempts) > 1 {
-			t.Strategy = "nova tentativa"
+		if t.Strategy == "" {
+			t.Strategy = "direto"
+			if len(t.Attempts) > 1 {
+				t.Strategy = "nova tentativa"
+			}
 		}
 		t.CostUSD, _ = strconv.ParseFloat(os.Getenv("AXYN_COST_USD"), 64)
 		if t.Model != "" {

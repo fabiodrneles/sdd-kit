@@ -39,7 +39,7 @@ Numa sessão na web, o hook `.claude/hooks/session-start.sh` instala o shellchec
 - **Branch:** uma por ticket, `<tipo>/<nº-da-issue>-<descrição>`.
 - **PR:** começa com `Closes #N · Épico #M · Spec NNN` e segue o template.
 - **Arquivos de status** (status das specs, checkboxes do ROADMAP, CHANGELOG) só mudam no PR de fechamento da fase.
-- **Merge** é do dono, salvo delegação explícita: o `sdd-relay.sh --auto-merge` mescla os PRs do relé com o CI verde (#276). **Tag e release**: pelo workflow *Release tag* (Actions), que o agente pode disparar quando o dono pedir o fechamento da versão.
+- **Merge** é do dono, salvo delegação: `sh template/common/scripts/sdd-auto-merge.sh on` liga o merge automático (todo PR com o CI verde e sem conflito, inclusive os do relé), `off` desliga e `status` mostra. Quando o dono pedir para ligar ou desligar, rode o comando. **Tag e release**: pelo workflow *Release tag* (Actions), que o agente pode disparar quando o dono pedir o fechamento da versão.
 
 ## Armadilhas
 

@@ -116,6 +116,24 @@ fi
 : > "$tmp/s5"
 [ ! -s "$tmp/trap" ] || { printf '\n## Armadilhas\n\n'; awk '!seen[$0]++' "$tmp/trap"; } > "$tmp/s5"
 
+# Testes que citam os AC do ticket ("018 AC-2"), para o agente não precisar procurá-los.
+: > "$tmp/s7"; : > "$tmp/t"
+tab="$(printf '\t')"
+while IFS="$tab" read -r sp id; do
+  case "$id" in AC-*) ;; *) continue ;; esac
+  for td in tests test; do
+    [ -d "$root/$td" ] || continue
+    grep -rlF -- "$sp $id" "$root/$td" 2> /dev/null | while read -r tf; do
+      printf '%s\t%s %s\n' "${tf#"$root"/}" "$sp" "$id"
+    done
+  done
+done < "$tmp/ids" | sort > "$tmp/t" || true
+if [ -s "$tmp/t" ]; then
+  { printf '\n## Testes que citam os AC\n\n'
+    awk -F '\t' '{ a[$1] = a[$1] (a[$1] ? ", " : "") $2; if (!($1 in o)) { o[$1] = 1; n[++c] = $1 } }
+      END { for (i = 1; i <= c; i++) printf "- `%s` (%s)\n", n[i], a[n[i]] }' "$tmp/t"; } > "$tmp/s7"
+fi
+
 spec1="$(cut -f1 "$tmp/ids" | head -n 1)"
 cat > "$tmp/s6" <<EOT
 
@@ -126,9 +144,9 @@ cat > "$tmp/s6" <<EOT
 - Depois do PR: \`sh $sdir/sdd-checkpoint.sh save "feito" "próximo"\` e encerre a sessão.
 EOT
 
-cat "$tmp/s1" "$tmp/s2" "$tmp/s3b" "$tmp/s5" "$tmp/s6" "$tmp/s4" > "$tmp/out"
+cat "$tmp/s1" "$tmp/s2" "$tmp/s3b" "$tmp/s5" "$tmp/s7" "$tmp/s6" "$tmp/s4" > "$tmp/out"
 if [ "$(wc -c < "$tmp/out")" -gt "$max" ]; then
-  cat "$tmp/s1" "$tmp/s2" "$tmp/s3b" "$tmp/s5" "$tmp/s6" "$tmp/s4p" > "$tmp/out"
+  cat "$tmp/s1" "$tmp/s2" "$tmp/s3b" "$tmp/s5" "$tmp/s7" "$tmp/s6" "$tmp/s4p" > "$tmp/out"
 fi
 if [ "$(wc -c < "$tmp/out")" -gt "$max" ]; then
   note="[sdd-context: pacote cortado no teto de $max bytes (SDD_CONTEXT_MAX)]"

@@ -25,3 +25,5 @@ Medição de 2026-10-06: um `claude -p` novo começa com cerca de 32 mil tokens 
 ## Mudanças
 
 ### Não lançado
+
+- ADDED FR-1, FR-2 — agente padrão do relé sem prompts de permissão (`--permission-mode acceptEdits` e só os comandos da entrega) e com sessão própria (sem `CLAUDE_CODE_SESSION_ID` herdado); README com a seção do relé (T57, #236).

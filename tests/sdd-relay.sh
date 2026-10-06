@@ -52,6 +52,7 @@ cat > "$tmp/bin/agent" <<'SH'
 cat > "$G/in"
 n="$(sed -n '1s/^# Ticket #\([0-9]*\):.*/\1/p' "$G/in")"
 cp "$G/in" "$G/in-$n"; echo "$n" >> "$G/calls"
+echo "${CLAUDE_CODE_SESSION_ID:-sem}" > "$G/env-session"
 # A sessão do agente: um arquivo novo, com 1000×N tokens relidos.
 printf '{"timestamp":"%s","message":{"id":"s%s-%s","usage":{"input_tokens":1,"cache_read_input_tokens":%s,"output_tokens":5}}}\n' \
   "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$n" "$(grep -c . "$G/calls")" "$((1000 * n))" > "$SDD_SESSIONS_DIR/agent-$n-$(grep -c . "$G/calls").jsonl"
@@ -199,6 +200,16 @@ echo '[{"name":"feat/2-um"}]' > "$G/branches.json"
 rc=0; out="$(SDD_RELAY_SESSIONS=2 $relay 2>&1)" || rc=$?
 [ "$rc" -eq 1 ] || fail "sessões sem PR saiu com $rc"
 [ "$(tr '\n' ' ' < "$G/calls")" = "2 2 " ] || fail "sessões sem PR chamou: $(cat "$G/calls")"
+
+# 019 AC-1: o agente roda sem o id da sessão que chamou o relé; o padrão não pede
+# permissão e só libera os comandos da entrega.
+reset
+CLAUDE_CODE_SESSION_ID=pai $relay --max 1 > /dev/null 2>&1 || fail "relé com sessão pai falhou"
+[ "$(cat "$G/env-session")" = sem ] || fail "o agente herdou CLAUDE_CODE_SESSION_ID: $(cat "$G/env-session")"
+reset
+out="$(env -u SDD_AGENT_CMD sh scripts/sdd-relay.sh --repo o/r --dry-run 2>&1)" || fail "dry-run padrão falhou"
+printf '%s\n' "$out" | grep -qF "chamaria 'claude -p --permission-mode acceptEdits --allowedTools" || fail "agente padrão sem o modo de permissão: $out"
+printf '%s\n' "$out" | grep -qF "'Bash(git:*)'" || fail "agente padrão sem o git: $out"
 
 # Sem épico aberto: Próximo é perguntar ao dono.
 reset; echo '[]' > "$G/epics.json"

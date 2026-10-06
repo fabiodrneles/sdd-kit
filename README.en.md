@@ -154,6 +154,20 @@ In adopted repositories:
 
 Adoption also brings scripts for the mechanical steps of the process. The agent calls a script and reads one line per result instead of running dozens of steps and reading long outputs: `sdd-ci.sh` (wait for CI, show only the tail of failed logs), `sdd-wait.sh pr-merged|ci|issue-closed TARGET` (wait with no LLM for a PR merge, CI or an issue to close; one line at the end and an exit code: 0 held, 1 failed, 2 timed out; for background waiting, never a hand-written loop), `sdd-pr.sh` (ship the ticket branch: merge main, `make ci`, push, open or reuse the PR, wait for its CI, save the checkpoint), `sdd-release.sh [X.Y.Z]` (prepare the version's closing PR, with the version computed by go-release-manager; X.Y.Z only forces it: CHANGELOG draft from merged PRs, version bumps listed in `.sdd-release`, commit and PR; `--tag` after the merge dispatches the Release tag workflow or pushes the tag), `sdd-doctor.sh [--check]` (check and fix the local environment so `make ci` behaves like CI: pinned tool versions, Go `covdata`, a stale `golangci-lint` shadowing the right one on PATH, UTF-8 locale; one line per item, `--check` only reports), `sdd-mark.sh decide|close` (status files for decisions and phase closing), `sdd-phase-status.sh` (the epic's "Estado da fase" comment), `sdd-epic.sh` (phase epic and sub-issue tickets), `sdd-checkpoint.sh save|show` (resume checkpoint on the epic, so a new session picks up where the last one stopped), `sdd-resume.sh` (the whole resume routine in one command: checkpoint, branch, open PRs with CI, open epic issues) and, for Go, `sdd-release-check.sh pre|post` (simulate the release before tagging; verify the published release).
 
+## Short-session relay
+
+`scripts/sdd-relay.sh` works the open epic ticket by ticket, with no LLM in between. For each ticket it starts a fresh agent that begins with only the `scripts/sdd-context.sh` pack (the issue, the cited spec lines and the likely files), waits for the PR merge and moves to the next one. A short session rereads little context on each call; a long session rereads the whole conversation.
+
+```sh
+sh scripts/sdd-relay.sh --dry-run   # shows the next ticket and its pack, without calling the agent
+sh scripts/sdd-relay.sh --max 1     # one ticket, then stop
+sh scripts/sdd-relay.sh             # the whole epic, until the phase closes or a stop
+```
+
+- **Where:** on a machine or session with `claude` and `gh` authenticated, at the repository root. The default agent is `claude -p` with no permission prompts and only the delivery commands; `SDD_AGENT_CMD` swaps the agent.
+- **Stops:** the relay stops and comments on the epic when the Next step is "ask the owner", when the PR's CI fails twice in a row and when the `SDD_BUDGET_TOKENS` budget runs out. `SDD_SESSION_MAX_TOKENS` (default 150000) caps each session's context. To interrupt, press Ctrl+C: run again, it resumes from GitHub.
+- **Cost:** the relay records each ticket's exact cost on its issue, and `scripts/sdd-report.sh phase '#EPIC'` compares tickets with and without the relay.
+
 ## Event-driven engine
 
 Every PR event (CI, merge, conflict) used to wake the agent's session and reload the whole conversation for a mechanical step. Adoption brings workflows that do those steps with no LLM; the agent opens the PR (`sdd-pr.sh --no-wait`), saves the checkpoint and ends the reply, and comes back only for judgment (code, root cause, a real conflict, review).

@@ -101,6 +101,20 @@ if [ "$lang" = go ]; then
     exit 1
   fi
   echo "e2e-template.sh go: cobertura com cache quente ok ($warm)"
+  # A válvula (sdd-cover-guard.sh) sozinha: sem o -count=1, o perfil quente sai misturado;
+  # ela tem de perceber, refazer com um cache frio e chegar à mesma cobertura.
+  sed 's/ -count=1//' "$cv/Makefile" > "$cv/Makefile.new" && mv "$cv/Makefile.new" "$cv/Makefile"
+  rm -rf "$work/gocache-valve"
+  cover_total "$work/gocache-valve" > /dev/null
+  { printf '// shifted\n'; cat "$cv/main.go"; } > "$cv/main.go.new" && mv "$cv/main.go.new" "$cv/main.go"
+  valve="$(cover_total "$work/gocache-valve")"
+  rm -rf "$work/gocache-cold2"
+  cold="$(cover_total "$work/gocache-cold2")"
+  if [ -z "$valve" ] || [ "$valve" != "$cold" ]; then
+    echo "FALHOU: sem -count=1, a válvula não corrigiu a cobertura ($valve, cache frio $cold)" >&2
+    exit 1
+  fi
+  echo "e2e-template.sh go: válvula do cache ok ($valve)"
 fi
 
 # 011 AC-2: com o go.mod pedindo outra versão, o hook de sessão deixa a toolchain

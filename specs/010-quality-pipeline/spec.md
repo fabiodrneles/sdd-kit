@@ -30,6 +30,7 @@ A adoção já cria o `ci.yml` por linguagem, o `docs.yml`, o `sdd-sync.yml` e o
 ### Não lançado
 
 - MODIFIED FR-1 — o `go test` do template Go usa `-count=1`: com o cache quente e um `package main` coberto por `-coverpkg=./...` (Go 1.25 ou mais novo), o go reaproveitava metadados de cobertura de uma versão antiga do arquivo e a cobertura saía menor que a real (#172).
+- ADDED FR-1 — válvula do cache: `scripts/sdd-cover-guard.sh` confere o perfil antes do gate (blocos sobrepostos ou além do fim do arquivo = versões misturadas) e, se vier misturado, refaz o `go test` num `GOCACHE` frio e descartável, avisando numa linha; `SDD_COVER_GUARD=off` desliga (#172).
 
 ### v1.3.1
 

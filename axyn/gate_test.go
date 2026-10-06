@@ -47,6 +47,11 @@ func TestB(t *testing.T) {
 `
 
 func repo(t *testing.T) string {
+	// the server under test commits too, and CI runners have no git identity
+	for _, k := range []string{"GIT_AUTHOR", "GIT_COMMITTER"} {
+		t.Setenv(k+"_NAME", "t")
+		t.Setenv(k+"_EMAIL", "t@t")
+	}
 	dir := t.TempDir()
 	git(t, dir, "init", "-q")
 	write(t, dir, "x_test.go", twoTests)

@@ -56,6 +56,8 @@ echo "false chore/release-v1.2.3 o/r" > "$G/pr.12"
 echo "true chore/release-v1.2.3 fork/r" > "$G/pr.13"
 : > "$G/tags"; echo '{"workflow_runs":[]}' > "$G/runs"; : > "$G/dispatch"; : > "$G/calls"
 run() { sh "$s/sdd-on-release-merge.sh" --repo o/r "$@"; }
+# Os cenários sem ROADMAP rodam num diretório vazio, não na raiz do kit (que tem o próprio ROADMAP).
+mkdir -p "$tmp/empty"; cd "$tmp/empty"
 count() { wc -l < "$G/dispatch" | tr -d ' '; }
 
 # 015 AC-5: o PR de fechamento mesclado dispara a release da versão, uma vez.

@@ -43,5 +43,6 @@ Convenções: `MUST`/`SHOULD`/`MAY` seguem a RFC 2119. Prioridades: **P0** (bloq
 | 013 | [Primeira impressão](013-first-impression/spec.md) | P1 | Done |
 | 014 | [Checkpoints de retomada](014-checkpoints/spec.md) | P1 | Done |
 | 015 | [Motor orientado a eventos](015-event-engine/spec.md) | P1 | Done |
+| 016 | [Merge percebido sem tokens](016-merge-watch/spec.md) | P1 | Approved |
 
 Status possíveis: `Draft` → `Approved` → `In Progress` → `Done`.

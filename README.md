@@ -214,7 +214,7 @@ Todos são idempotentes, usam só o `GITHUB_TOKEN` (ou o segredo opcional abaixo
 Configuração do repositório:
 
 1. **Obrigatório para o fechamento automático e para o `sdd-sync`:** *Settings → Actions → General → Workflow permissions* → marque **"Allow GitHub Actions to create and approve pull requests"**. Sem isso, o `sdd-on-phase-done` não abre o PR de fechamento e o `sdd-sync` falha com "GitHub Actions is not permitted to create or approve pull requests".
-2. **Opcional:** o segredo `SDD_ENGINE_TOKEN`, um token fine-grained com permissão de escrita em *Contents* e *Pull requests*. Pushes e PRs feitos com o `GITHUB_TOKEN` não disparam o CI; com o segredo, os que o motor faz disparam.
+2. **Opcional:** o segredo `SDD_ENGINE_TOKEN`, um token fine-grained com permissão de escrita em *Contents* e *Pull requests*. Pushes e PRs feitos com o `GITHUB_TOKEN` não disparam o CI. Sem o segredo, o motor dispara ele mesmo o CI (`workflow_dispatch`) na branch de cada PR que atualizar; com o segredo, o próprio push já dispara.
 3. **Desligar:** a variável de repositório `SDD_ENGINE=off` desliga todos os workflows do motor (nenhum lê nem escreve nada).
 4. **Nome do CI:** o resumo escuta o workflow chamado `CI`. Se o projeto o renomeou, volte o nome ou ajuste `workflows:` em `sdd-ci-summary.yml`.
 

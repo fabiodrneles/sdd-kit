@@ -16,7 +16,7 @@ Na sessão de 2026-10-05, só ler notificações de PR e cancelar assinaturas cu
 - **FR-3** Quando o CI de um PR falha, um workflow MUST comentar no PR um único resumo (uma linha por check e só o fim do log das falhas, como o `sdd-ci.sh`), editando o mesmo comentário nas rodadas seguintes.
 - **FR-4** Quando o último ticket aberto do épico é fechado, um workflow MUST abrir o PR de fechamento da versão da fase com o `sdd-release.sh`.
 - **FR-5** Quando o PR de fechamento (`chore/release-vX.Y.Z`) é mergeado, um workflow MUST disparar a release da versão (o `sdd-release.sh --tag`).
-- **FR-6** Quando a `main` muda, um workflow MUST atualizar a branch dos PRs abertos que estão atrás dela e não têm conflito (REST `update-branch`), e MUST comentar uma vez nos que têm conflito real.
+- **FR-6** Quando a `main` muda, um workflow MUST atualizar a branch dos PRs abertos que estão atrás dela e não têm conflito (REST `update-branch`), e MUST comentar uma vez nos que têm conflito real; sem `SDD_ENGINE_TOKEN`, MUST disparar o CI (`workflow_dispatch`) na branch atualizada, já que o push do `GITHUB_TOKEN` não o dispara.
 - **FR-7** O `CLAUDE.md` do template MUST mandar o agente não esperar nem acompanhar eventos de PR: abrir o PR, gravar o checkpoint e encerrar a resposta; o motor faz o resto, e o agente volta só quando há julgamento a fazer.
 - **FR-8** O próprio sdd-kit MUST rodar o motor gerado do template por `make self-sync`, e o CI MUST falhar se a cópia divergir.
 
@@ -37,6 +37,10 @@ Na sessão de 2026-10-05, só ler notificações de PR e cancelar assinaturas cu
 - **AC-8** Dado um workflow do motor no template alterado sem `make self-sync`, quando o `make ci` roda, então falha nomeando o arquivo; depois do `make self-sync`, passa.
 
 ## Mudanças
+
+### Não lançado
+
+- MODIFIED FR-6 — sem `SDD_ENGINE_TOKEN`, o `sdd-update-prs` espera a cabeça nova do PR e dispara o CI na branch dele: visto no #173, que ficou sem nenhum check depois de o motor trazer a `main` (#174).
 
 ### v1.6.0
 

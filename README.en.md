@@ -171,7 +171,7 @@ All are idempotent, use only the `GITHUB_TOKEN` (or the optional secret below), 
 Repository setup:
 
 1. **Required for the automatic closing PR and for `sdd-sync`:** *Settings → Actions → General → Workflow permissions* → enable **"Allow GitHub Actions to create and approve pull requests"**. Without it, `sdd-on-phase-done` cannot open the closing PR and `sdd-sync` fails with "GitHub Actions is not permitted to create or approve pull requests".
-2. **Optional:** the `SDD_ENGINE_TOKEN` secret, a fine-grained token with write access to *Contents* and *Pull requests*. Pushes and PRs made with the `GITHUB_TOKEN` do not trigger CI; with the secret, the ones the engine makes do.
+2. **Optional:** the `SDD_ENGINE_TOKEN` secret, a fine-grained token with write access to *Contents* and *Pull requests*. Pushes and PRs made with the `GITHUB_TOKEN` do not trigger CI. Without the secret, the engine dispatches CI itself (`workflow_dispatch`) on each PR branch it updates; with the secret, the push itself triggers it.
 3. **Turn off:** the repository variable `SDD_ENGINE=off` disables every engine workflow (none reads or writes anything).
 4. **CI name:** the summary listens to the workflow named `CI`. If the project renamed it, rename it back or adjust `workflows:` in `sdd-ci-summary.yml`.
 

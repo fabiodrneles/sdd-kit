@@ -19,12 +19,17 @@ while [ $# -gt 0 ]; do
   case "$1" in --jq) jq="$2"; shift 2 ;; *) url="$1"; shift ;; esac
 done
 case "$url" in
+  repos/o/r/pulls\?state=open*)
+    # Lista de PRs abertos: uma linha JSON de $G/lists por chamada (a última se repete).
+    c=$(($(cat "$G/lcount" 2>/dev/null || echo 0) + 1)); echo "$c" > "$G/lcount"
+    l="$(sed -n "${c}p" "$G/lists")"; [ -n "$l" ] || l="$(tail -n 1 "$G/lists")"
+    echo "$l" | jq -r "$jq" ;;
   repos/o/r/pulls/* | repos/o/r/issues/*)
     c=$(($(cat "$G/count" 2>/dev/null || echo 0) + 1)); echo "$c" > "$G/count"
     l="$(sed -n "${c}p" "$G/seq")"; [ -n "$l" ] || l="$(tail -n 1 "$G/seq")"
     st="${l%% *}" m="${l#* }"
     if [ "$m" = - ]; then m=null; else m="\"$m\""; fi
-    echo "{\"state\":\"$st\",\"merged_at\":$m,\"head\":{\"sha\":\"abc1234\"}}" | jq -r "$jq" ;;
+    echo "{\"state\":\"$st\",\"merged_at\":$m,\"title\":\"feat: x\",\"head\":{\"sha\":\"abc1234\"}}" | jq -r "$jq" ;;
   *check-runs*) echo "{\"total_count\":1,\"check_runs\":[{\"id\":1,\"name\":\"ci\",\"status\":\"completed\",\"conclusion\":\"$(cat "$G/concl")\",\"app\":{\"slug\":\"x\"}}]}" | jq -r "$jq" ;;
   *status*) echo '{"statuses":[]}' | jq -r "$jq" ;;
   *) echo "gh falso: $url" >&2; exit 1 ;;
@@ -86,8 +91,44 @@ echo failure > "$G/concl"
 rc=0; $w ci '#42' > "$tmp/out" 2>&1 || rc=$?
 [ "$rc" -eq 1 ] || fail "ci vermelho: código $rc"
 
+# 016: o vigia merged-any. runany LISTAS SEQ ARGS...: listas de PRs abertos por rodada
+# e respostas de pulls/N; saída em $tmp/out, código em $rc.
+runany() {
+  rm -f "$G/count" "$G/lcount"
+  printf '%s\n' "$1" > "$G/lists"; printf '%s\n' "$2" > "$G/seq"
+  shift 2
+  rc=0; "$@" > "$tmp/out" 2>&1 || rc=$?
+}
+# 016 AC-1: dois PRs abertos; o #1 sai da lista mergeado: código 0 e uma linha.
+# shellcheck disable=SC2086
+runany '[{"number":1},{"number":2}]
+[{"number":1},{"number":2}]
+[{"number":2}]' "closed 2026-01-01T00:00:00Z" $w --timeout 5 merged-any
+[ "$rc" -eq 0 ] || fail "merged-any: código $rc: $(cat "$tmp/out")"
+grep -qx 'sdd-wait: #1 mergeado: feat: x' "$tmp/out" || fail "merged-any: saída: $(cat "$tmp/out")"
+[ "$(cat "$G/count")" -eq 1 ] || fail "merged-any: consultou PRs que seguem abertos ($(cat "$G/count"))"
+# 016 AC-2: fechado sem merge sai com 1; sem merge no tempo, 2.
+# shellcheck disable=SC2086
+runany '[{"number":1}]
+[]' "closed -" $w --timeout 5 merged-any
+[ "$rc" -eq 1 ] || fail "merged-any fechado: código $rc"
+grep -q '#1 fechado sem merge' "$tmp/out" || fail "merged-any fechado: saída: $(cat "$tmp/out")"
+# shellcheck disable=SC2086
+runany '[{"number":1}]' "open -" $w --timeout 1 merged-any
+[ "$rc" -eq 2 ] || fail "merged-any tempo: código $rc"
+# Lista vazia por falha momentânea, com o PR ainda aberto: não conclui nada.
+# shellcheck disable=SC2086
+runany '[{"number":1}]
+[]' "open -" $w --timeout 1 merged-any
+[ "$rc" -eq 2 ] || fail "merged-any com lista vazia momentânea: código $rc: $(cat "$tmp/out")"
+# 016 AC-3: sem PR aberto, sai com 3 sem esperar.
+# shellcheck disable=SC2086
+runany '[]' "open -" $w --timeout 30 merged-any
+[ "$rc" -eq 3 ] || fail "merged-any sem PR: código $rc"
+grep -q 'nada a vigiar' "$tmp/out" || fail "merged-any sem PR: saída: $(cat "$tmp/out")"
+
 # uso: 3.
-for a in "" "bogus #1" "pr-merged 42" "--nope pr-merged #1"; do
+for a in "" "bogus #1" "pr-merged 42" "--nope pr-merged #1" "merged-any #1"; do
   rc=0
   # shellcheck disable=SC2086
   $w $a > "$tmp/out" 2>&1 || rc=$?

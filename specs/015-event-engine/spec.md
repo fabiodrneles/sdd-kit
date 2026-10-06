@@ -40,6 +40,7 @@ Na sessão de 2026-10-05, só ler notificações de PR e cancelar assinaturas cu
 
 ### Não lançado
 
+- MODIFIED FR-5 — antes da tag, o motor espera o CI da `main` verde no commit que vai receber a tag (`SDD_RELEASE_PRE=ci`), em vez do `sdd-release-check.sh pre` local, que falha num runner sem as ferramentas do projeto: visto no sdd-kit-demo com o merge do #24 (#184).
 - MODIFIED FR-4 — o PR de fechamento aberto pelo motor pula o `make ci` local (o runner não tem as ferramentas do projeto; quem verifica é o CI do PR) e, sem `SDD_ENGINE_TOKEN`, dispara o CI na branch do PR: visto no sdd-kit-demo, onde o motor parou no `golangci-lint` ausente (#182).
 
 ### v1.7.0

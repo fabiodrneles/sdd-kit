@@ -32,6 +32,10 @@ case "$method $url" in
     echo '{"number":50,"html_url":"https://github.com/o/r/pull/50"}' | jq -r "$jq"; exit 0 ;;
   "POST repos/o/r/actions/workflows/release-tag.yml/dispatches") echo w >> "$G/writes"; echo "$args" > "$G/dispatch"; exit 0 ;;
   "POST "*) echo w >> "$G/writes"; exit 0 ;;
+  "GET "*/check-runs*) jq -r "$jq" "$G/checks.json"; exit 0 ;;
+  "GET "*/status*) echo '{"statuses":[]}' | jq -r "$jq"; exit 0 ;;
+  "GET "*/logs*) echo "falhou aqui"; exit 0 ;;
+  "GET repos/o/r/commits/"*) echo "{\"sha\":\"${url##*/}\"}" | jq -r "$jq"; exit 0 ;;
   "GET "*pulls\?state=closed*) jq -r "$jq" "$G/closed.json"; exit 0 ;;
   "GET "*pulls\?state=open*) exit 0 ;;
   "GET "*issues\?labels*) echo '[{"number":7}]' | jq -r "$jq"; exit 0 ;;
@@ -170,6 +174,19 @@ case "$d" in *"ref=main"*"inputs[release-as]=v1.1.0"*"inputs[ref]=$(git rev-pars
 git ls-remote --exit-code origin refs/tags/v1.1.0 > /dev/null 2>&1 && fail "criou a tag direto com o workflow"
 grep -qx 'pre v1.1.0' "$tmp/check.log" || fail "não rodou o pre: $(cat "$tmp/check.log")"
 printf '%s\n' "$out" | grep -q 'sdd-release-check.sh post v1.1.0' || fail "sem o post: $out"
+
+# #184: no motor (SDD_RELEASE_PRE=ci), a checagem antes da tag é o CI da main no
+# commit da tag, e não o pre local (o runner não tem as ferramentas do projeto).
+rm -f "$tmp/check.log" "$G/dispatch"
+echo '{"total_count":1,"check_runs":[{"id":1,"name":"ci","status":"completed","conclusion":"success","app":{"slug":"github-actions"}}]}' > "$G/checks.json"
+out="$(SDD_RELEASE_PRE=ci $rel --tag 1.1.0 2>&1)" || fail "--tag com CI verde falhou: $out"
+[ -s "$G/dispatch" ] || fail "CI verde e sem dispatch: $out"
+[ ! -e "$tmp/check.log" ] || fail "SDD_RELEASE_PRE=ci rodou o pre local"
+rm -f "$G/dispatch"
+echo '{"total_count":1,"check_runs":[{"id":1,"name":"ci","status":"completed","conclusion":"failure","app":{"slug":"github-actions"}}]}' > "$G/checks.json"
+if out="$(SDD_RELEASE_PRE=ci $rel --tag 1.1.0 2>&1)"; then fail "CI vermelho devia barrar a tag: $out"; fi
+printf '%s\n' "$out" | grep -q 'CI da main não está verde' || fail "sem o motivo: $out"
+[ ! -e "$G/dispatch" ] || fail "disparou a release com o CI vermelho"
 
 # --tag sem workflow: tag anotada enviada para a origin/main.
 git rm -q .github/workflows/release-tag.yml; git commit -q -m "ci: sem workflow"; git push -q origin main

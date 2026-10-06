@@ -27,6 +27,10 @@ A adoção já cria o `ci.yml` por linguagem, o `docs.yml`, o `sdd-sync.yml` e o
 
 ## Mudanças
 
+### Não lançado
+
+- MODIFIED FR-1 — o `go test` do template Go usa `-count=1`: com o cache quente e um `package main` coberto por `-coverpkg=./...` (Go 1.25 ou mais novo), o go reaproveitava metadados de cobertura de uma versão antiga do arquivo e a cobertura saía menor que a real (#172).
+
 ### v1.3.1
 
 - MODIFIED FR-1 — a cobertura do template Go usa `-coverpkg=./...`, e conta pacotes testados só por outros pacotes (achado no sdd-kit-demo, v1.3.1).

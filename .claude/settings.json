@@ -19,6 +19,16 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && sh template/common/scripts/sdd-session-guard.sh"
+          }
+        ]
+      }
     ]
   }
 }

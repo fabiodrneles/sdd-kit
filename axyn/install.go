@@ -137,6 +137,39 @@ func runInstall(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintf(stderr, "axyn: %v\n", err)
 		return exitFail
 	}
+	if note := excludeConfig(*dir); note != "" {
+		_, _ = fmt.Fprintln(stdout, note)
+	}
 	_, _ = fmt.Fprintf(stdout, "axyn: %s configurado (servidor MCP axyn, agentes axyn-plan e axyn-code, comando /axyn)\n", path)
 	return exitOK
+}
+
+// excludeConfig keeps a new opencode.json out of `git status` (through .git/info/exclude,
+// local to this clone) so the engine's clean-tree check does not stop the first /axyn.
+// A file the project already tracks is left alone: its change is the user's to commit.
+func excludeConfig(dir string) string {
+	s := &mcpServer{dir: dir}
+	if _, err := s.git("ls-files", "--error-unmatch", "opencode.json"); err == nil {
+		return "axyn: opencode.json já é versionado; faça commit da mudança antes do /axyn"
+	}
+	path, err := s.git("rev-parse", "--git-path", "info/exclude")
+	if err != nil {
+		return ""
+	}
+	if !filepath.IsAbs(path) {
+		path = filepath.Join(dir, path)
+	}
+	if data, _ := os.ReadFile(path); bytes.Contains(data, []byte("\n/opencode.json\n")) {
+		return ""
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return ""
+	}
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return ""
+	}
+	defer func() { _ = f.Close() }()
+	_, _ = f.WriteString("\n/opencode.json\n")
+	return ""
 }

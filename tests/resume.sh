@@ -91,6 +91,15 @@ sed -i.bak 's#feat/12-x#feat/99-y#' "$G/comments.json"
 out="$(sh "$s" --repo o/r)" || fail "sdd-resume com branch ausente falhou"
 printf '%s\n' "$out" | grep -q 'feat/99-y não existe no origin' || fail "não avisou da branch ausente: $out"
 
+# #195: checkpoint sem "Próximo": a saída manda perguntar ao dono.
+cp "$G/comments.json" "$tmp/comments.bak"
+sed -i.bak '/Próximo/d' "$G/comments.json"
+out="$(sh "$s" --repo o/r)" || fail "sdd-resume com checkpoint sem Próximo falhou"
+printf '%s\n' "$out" | grep -q 'Próximo: perguntar ao dono' || fail "checkpoint sem Próximo não mandou perguntar: $out"
+cp "$tmp/comments.bak" "$G/comments.json"
+out="$(sh "$s" --repo o/r)" || fail "sdd-resume com checkpoint falhou"
+printf '%s\n' "$out" | grep -q 'perguntar ao dono' && fail "checkpoint com Próximo mandou perguntar: $out"
+
 # Sem épico aberto e sem gh: avisa e sai com 0.
 echo '[]' > "$G/issues.json"
 out="$(sh "$s" --repo o/r)" || fail "sdd-resume sem épico falhou"
@@ -103,8 +112,11 @@ out="$(sh "$s" --repo o/r)" || fail "sdd-resume sem épico com ROADMAP falhou"
 printf '%s\n' "$out" | grep -q 'Próximo: abrir a Fase 2 — B.*sdd-epic.sh 2' || fail "não apontou a próxima fase: $out"
 sed -i.bak 's/- \[ \] \*\*T2/- [x] **T2/' specs/ROADMAP.md
 out="$(sh "$s" --repo o/r)" || fail "sdd-resume com ROADMAP concluído falhou"
-printf '%s\n' "$out" | grep -q 'Próximas fases' || fail "ROADMAP concluído sem orientação: $out"
+printf '%s\n' "$out" | grep -q 'Próximo: perguntar ao dono' || fail "ROADMAP concluído sem mandar perguntar: $out"
 rm -rf specs
+# #195: sem ROADMAP, também perguntar ao dono (nunca escolher sozinho).
+out="$(sh "$s" --repo o/r)" || fail "sdd-resume sem ROADMAP falhou"
+printf '%s\n' "$out" | grep -q 'Próximo: perguntar ao dono' || fail "sem ROADMAP não mandou perguntar: $out"
 mkdir "$tmp/nogh"
 for t in sh git jq sed grep dirname cat; do ln -s "$(command -v "$t")" "$tmp/nogh/$t"; done
 out="$(PATH="$tmp/nogh" sh "$s")" || fail "sdd-resume sem gh falhou: $out"

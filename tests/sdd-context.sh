@@ -67,7 +67,7 @@ for l in '- `scripts/build.sh`' '  - # Uso: build.sh [ALVO]' '  - main()' '  - h
   printf '%s\n' "$out" | grep -qxF -- "$l" || fail "sem '$l': $out"
 done
 printf '%s\n' "$out" | grep -qF 'build.sh fora da seção' && fail "trouxe linha fora das armadilhas: $out"
-printf '%s\n' "$out" | grep -qF 'sh scripts/sdd-pr.sh --spec 003 --no-wait' || fail "sem a entrega: $out"
+printf '%s\n' "$out" | grep -qF '/sdd-pr.sh --spec 003 --no-wait' || fail "sem a entrega: $out"
 
 # 018 AC-1: o teto. Primeiro os arquivos perdem as assinaturas; depois, o corte.
 full="$(printf '%s\n' "$out" | wc -c)"

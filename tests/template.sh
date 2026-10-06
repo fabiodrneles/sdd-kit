@@ -13,6 +13,8 @@ for lang in go node java python rust dotnet; do
   done
   grep -q '^ci:' "$lang/Makefile" || err "template/$lang/Makefile sem alvo ci"
   grep -q 'make ci' "$lang/.github/workflows/ci.yml" || err "template/$lang: o CI não roda make ci"
+  # #178: o CI da main e o da release (workflow_call) não podem se cancelar.
+  grep -q 'cancel-in-progress: true' "$lang/.github/workflows/ci.yml" && err "template/$lang: o CI cancela rodadas fora de PRs (#178)"
 done
 
 # Outros agentes leem AGENTS.md (spec 006 FR-5).

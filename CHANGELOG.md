@@ -4,6 +4,13 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-10-06
+
+### Corrigido
+
+- `sdd-ci.sh` não informa mais como falha um check que ainda está rodando (#190).
+- Sessão nova depois do fechamento de uma fase: o `sdd-resume.sh` aponta a próxima fase do ROADMAP, e o motor abre o épico dela no merge do PR de fechamento; "continue" não termina mais em "nada a fazer" (#192).
+
 ## [1.7.1] - 2026-10-06
 
 Correções achadas no primeiro ciclo completo do motor num projeto adotado (sdd-kit-demo, da fase 2 à release v0.2.0).

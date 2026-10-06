@@ -6,7 +6,8 @@
 # Uso: sdd-relay.sh [--repo DONO/REPO] [--max N] [--dry-run]
 #   Repete: acha o épico aberto e a primeira sub-issue aberta; se ela já tem PR
 #   aberto ("Closes #N"), espera o merge; senão monta o pacote, chama o agente com
-#   ele na entrada padrão ($SDD_AGENT_CMD, padrão "claude -p"), e espera o merge do
+#   ele na entrada padrão ($SDD_AGENT_CMD; padrão "claude -p" sem prompts de
+#   permissão, só com os comandos da entrega), e espera o merge do
 #   PR que o agente abriu (sdd-wait.sh pr-merged). Sem sub-issue aberta, imprime o
 #   Próximo da fase e termina.
 #   --max      no máximo N agentes nesta rodada (padrão: sem limite)
@@ -23,7 +24,7 @@
 #          PR fechado sem merge); 3 uso. Requer gh e jq.
 set -eu
 
-usage() { sed -n '2,23p' "$0"; exit 3; }
+usage() { sed -n '2,24p' "$0"; exit 3; }
 repo="" max="" dry=0
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -41,7 +42,9 @@ if [ -z "$repo" ]; then
   repo="$(printf '%s\n' "$url" | sed -E 's#\.git$##; s#^.*[:/]([^/]+/[^/]+)$#\1#')"
 fi
 [ -n "$repo" ] || { echo "sdd-relay: repositório desconhecido (use --repo)" >&2; exit 3; }
-agent="${SDD_AGENT_CMD:-claude -p}"
+# O agente padrão roda sem prompts de permissão (edita arquivos e roda só os
+# comandos da entrega) e sem prompt interativo (019 FR-1).
+agent="${SDD_AGENT_CMD:-claude -p --permission-mode acceptEdits --allowedTools 'Bash(git:*)' 'Bash(make:*)' 'Bash(sh:*)' 'Bash(gh:*)' 'Bash(jq:*)' 'Bash(ls:*)' 'Bash(grep:*)' 'Bash(sed:*)' 'Bash(find:*)' 'Bash(cat:*)' 'Bash(head:*)' 'Bash(tail:*)' 'Bash(wc:*)' 'Bash(python3:*)' 'Bash(go:*)' 'Bash(npm:*)'}"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 say() { echo "sdd-relay: $*"; }
@@ -83,7 +86,10 @@ sessions_now() { find "${SDD_SESSIONS_DIR:-$HOME/.claude/projects}" -name '*.jso
 run_agent() {
   runs=$((runs + 1)) tsess=$((tsess + 1))
   sessions_now > "$tmp/before"
-  SDD_SESSION_MAX_TOKENS="${SDD_SESSION_MAX_TOKENS:-150000}" sh -c "$agent" < "$tmp/prompt" \
+  # Sem as variáveis da sessão que chamou o relé: rodado de dentro do Claude Code, o
+  # agente herdaria o id dela e gravaria no mesmo arquivo de sessão (019 FR-1).
+  env -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_REMOTE_SESSION_ID \
+    SDD_SESSION_MAX_TOKENS="${SDD_SESSION_MAX_TOKENS:-150000}" sh -c "$agent" < "$tmp/prompt" \
     || say "aviso: o agente saiu com erro no ticket #$n"
   sessions_now | comm -13 "$tmp/before" - >> "$tmp/tfiles"
 }

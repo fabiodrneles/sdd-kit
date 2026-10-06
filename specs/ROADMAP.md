@@ -100,6 +100,14 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 - [x] **T55** Paradas do relé (dono, CI vermelho duas vezes, orçamento) e teto de contexto por sessão — 018 FR-3, FR-4, AC-3
 - [x] **T56** `CLAUDE.md` e skill: uma sessão, um ticket; custo por ticket no épico, com e sem relé — 018 FR-5, FR-6, NFR-2, AC-5
 
+## Fase 13 — Relé na prática (P1)
+
+- [ ] **T57** Agente padrão do relé sem prompts de permissão e com sessão própria; README de como rodar o relé — 019 FR-1, FR-2, AC-1
+- [ ] **T58** `adopt.sh` e `adopt.ps1`: exemplos de uso no `--help` (#115), feito pelo relé
+- [ ] **T59** `doc-commands.sh`: rodar também os blocos `sh` marcados (#114), feito pelo relé
+- [ ] **T60** Despertar ocioso: só o turno sem commit nem push — 019 FR-3, AC-2
+- [ ] **T61** Comparação com a Fase 12 e a economia no README — 019 FR-4, AC-3
+
 ## Próximas fases (visão, sem versão)
 
 Ideias aprovadas pelo dono em 2026-10-03, em ordem de impacto. Cada uma vira spec e fase quando chegar a vez.

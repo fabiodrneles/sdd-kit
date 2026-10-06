@@ -197,6 +197,20 @@ A adoção também traz scripts para os passos mecânicos do processo. O agente 
 | `scripts/sdd-resume.sh` | Retomada em um comando: checkpoint, branch, PRs abertos com CI e issues abertas do épico |
 | `scripts/sdd-release-check.sh pre\|post vX.Y.Z` | Go: simula o release antes da tag e confere a release publicada |
 
+## Relé de sessões curtas
+
+O `scripts/sdd-relay.sh` trabalha o épico aberto ticket a ticket, sem LLM no meio. Para cada ticket, abre um agente novo que começa só com o pacote do `scripts/sdd-context.sh` (a issue, as linhas citadas da spec e os arquivos prováveis), espera o merge do PR e segue para o próximo. Uma sessão curta relê pouco contexto a cada chamada; uma sessão longa relê a conversa inteira.
+
+```sh
+sh scripts/sdd-relay.sh --dry-run   # mostra o próximo ticket e o pacote, sem chamar o agente
+sh scripts/sdd-relay.sh --max 1     # um ticket e para
+sh scripts/sdd-relay.sh             # o épico inteiro, até a fase fechar ou uma parada
+```
+
+- **Onde:** numa máquina ou sessão com o `claude` e o `gh` autenticados, na raiz do repositório. O agente padrão é `claude -p` sem prompts de permissão, só com os comandos da entrega; `SDD_AGENT_CMD` troca o agente.
+- **Paradas:** o relé para e comenta no épico quando o Próximo é "perguntar ao dono", quando o CI do PR falha duas vezes seguidas e quando o orçamento `SDD_BUDGET_TOKENS` acaba. `SDD_SESSION_MAX_TOKENS` (padrão 150000) é o teto de contexto de cada sessão. Para interromper, use Ctrl+C: rodado de novo, ele retoma do GitHub.
+- **Custo:** o relé grava em cada issue o custo exato do ticket, e o `scripts/sdd-report.sh phase '#ÉPICO'` compara os tickets com e sem relé.
+
 ## Motor orientado a eventos
 
 Cada evento de PR que acordava a sessão do agente (CI, merge, conflito) recarregava a conversa inteira só para fazer um passo mecânico. A adoção traz workflows que fazem esses passos sem LLM; o agente abre o PR (`sdd-pr.sh --no-wait`), grava o checkpoint e encerra a resposta, e volta só quando há julgamento (código, causa raiz, conflito real, revisão).

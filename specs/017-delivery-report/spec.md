@@ -39,3 +39,9 @@ Cada chamada relê a conversa inteira; a sessão cresce, e o custo total cresce 
 - **AC-3** Dado um épico com dois tickets, quando `sdd-report.sh phase` roda duas vezes, então o épico tem um único comentário de relatório, com uma linha por ticket e o total.
 - **AC-4** Dados despertares sem mensagem do dono no arquivo de sessão, quando o relatório roda, então eles aparecem numa linha própria, com a contagem e os tokens.
 - **AC-5** Sem arquivo de sessão, quando o relatório roda, então diz "sem dado de tokens" e sai com 0.
+
+## Mudanças
+
+### Não lançado
+
+- ADDED FR-1, NFR-1, NFR-2 — `sdd-report.sh tokens [--session ARQ | --since DATA]`: totais das sessões do Claude Code sem LLM, cada chamada contada uma vez por `message.id` (T50, #214).

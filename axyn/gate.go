@@ -18,9 +18,18 @@ const (
 	defaultCICmd    = "make ci"
 )
 
-// defaultProtected are the paths a ticket diff may not touch (spec 021 FR-5).
+// defaultProtected are the paths a ticket diff may not touch (spec 021 FR-5). The
+// CI definition and the linters' configs are here too: a model that edits the
+// Makefile could make "make ci" pass without running the tests.
 var defaultProtected = []string{
 	".github/workflows",
+	"Makefile",
+	".golangci.yml",
+	".golangci.yaml",
+	".eslintrc*",
+	"eslint.config.*",
+	".markdownlint*",
+	"lychee.toml",
 	"specs",
 	".axyn",
 	"axyn.yaml",

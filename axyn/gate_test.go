@@ -116,6 +116,13 @@ func TestGateProtectedPaths(t *testing.T) {
 		!strings.Contains(out, "protegido alterado: .github/workflows/ci.yml") {
 		t.Fatalf("code %d, out %q", code, out)
 	}
+	// The CI definition: editing it could make "make ci" skip the tests.
+	write(t, dir, "Makefile", "ci:\n\ttrue\n")
+	write(t, dir, "web/eslint.config.js", "export default []\n")
+	out, _ = gate(dir)
+	if !strings.Contains(out, "protegido alterado: Makefile") || !strings.Contains(out, "protegido alterado: web/eslint.config.js") {
+		t.Fatalf("CI definition not protected: %q", out)
+	}
 	write(t, dir, "docs/a.md", "a\n")
 	out, _ = gate(dir, "--protect", "docs")
 	if !strings.Contains(out, "protegido alterado: docs/a.md") {

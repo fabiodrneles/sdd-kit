@@ -28,8 +28,8 @@ epic="$(printf '%s\n' "$out" | sed -n '1s/^[^#]*#\([0-9][0-9]*\) (.*$/\1/p')"
 if [ -z "$epic" ]; then
   # Sem épico aberto (a fase anterior fechou): o próximo passo vem do ROADMAP (#191).
   if next="$(sh "$here/sdd-next-phase.sh" 2> /dev/null)"; then
-    n="${next%%$(printf '\t')*}"
-    echo "Próximo: abrir a ${next#*$(printf '\t')} (já aprovada no ROADMAP): sh scripts/sdd-epic.sh $n"
+    t="$(printf '\t')"; n="${next%%"$t"*}"
+    echo "Próximo: abrir a ${next#*"$t"} (já aprovada no ROADMAP): sh scripts/sdd-epic.sh $n"
   elif [ -f specs/ROADMAP.md ]; then
     echo "Próximo: o ROADMAP não tem fase com tarefa aberta; escolher com o dono um item de \"Próximas fases\" e escrever a spec e a fase"
   fi

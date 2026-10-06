@@ -70,7 +70,7 @@ open_epic="$(gh api "repos/$repo/issues?labels=%C3%A9pico&state=open&per_page=1"
 if [ -n "$open_epic" ]; then
   echo "épico #$open_epic já aberto: próxima fase não aberta"
 elif next="$(sh "$here/sdd-next-phase.sh" 2> /dev/null)"; then
-  n="${next%%$(printf '\t')*}"
+  t="$(printf '\t')"; n="${next%%"$t"*}"
   echo "abrindo a Fase $n do ROADMAP"
   if sh "${SDD_EPIC_SH:-$here/sdd-epic.sh}" --repo "$repo" "$n"; then
     sh "$here/sdd-checkpoint.sh" --repo "$repo" --ci save "release $tag disparada; Fase $n aberta pelo motor" \

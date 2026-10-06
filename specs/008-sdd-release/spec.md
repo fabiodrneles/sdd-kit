@@ -17,7 +17,7 @@ O fechamento de fase (`/sdd-close`) recebe a versão como argumento, escolhida a
 - **FR-4** O plugin MUST trazer um modelo de workflow de release, disparado à mão pelo dono (`workflow_dispatch`), que usa a GitHub Action do go-release-manager para criar a tag.
 - **FR-5** `scripts/check-plugin.sh` MUST validar todos os plugins do marketplace: manifest com `name` igual ao diretório, `version` SemVer e comandos com `description`.
 
-- **FR-6** O `/sdd-release` MUST comparar a versão da fase no ROADMAP com a calculada e, se divergirem, explicar ao dono e propor `--release-as`, a atualização do ROADMAP ou um `.go-releaserc.yml`. O modelo `release-tag.yml` MUST aceitar `release-as` e `ref` (go-release-manager `v1.1.0`).
+- **FR-6** A versão MUST ser a calculada pelo go-release-manager; o ROADMAP não fixa versão por fase. O `/sdd-release` MUST NOT forçar uma versão a partir do ROADMAP: `--release-as` só a pedido explícito do dono; sem versão calculada, explica ao dono e propõe um `.go-releaserc.yml` ou a versão forçada. O modelo `release-tag.yml` MUST aceitar `release-as` e `ref` (go-release-manager `v1.1.0`).
 
 ## Critérios de aceite
 
@@ -27,6 +27,7 @@ O fechamento de fase (`/sdd-close`) recebe a versão como argumento, escolhida a
 
 ## Mudanças
 
+- MODIFIED FR-6: a versão é sempre a do go-release-manager; o ROADMAP não fixa versão e `release-as` só a pedido do dono (#198).
 - ADDED FR-6: versão do ROADMAP × versão calculada; `release-as` e `ref` no modelo de workflow (#57).
 
 ## Fora de escopo

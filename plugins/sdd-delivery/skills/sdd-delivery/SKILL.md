@@ -60,7 +60,7 @@ with those scripts, keep the labels and the headings marked *(read by scripts)* 
 | phase-N (label) | `fase-N` *(read by scripts)* |
 | type:feature, type:test… (labels) | `tipo:feature`, `tipo:teste`… *(written by `sdd-epic.sh`)* |
 | "Phase status" comment | "Estado da fase" *(written by scripts)* |
-| ROADMAP heading `` ## Phase N — <name> → `vX.Y.Z` ``, "Decisions" section | `` ## Fase N — <nome> → `vX.Y.Z` ``, `## Decisões` *(read by scripts)* |
+| ROADMAP heading `## Phase N — <name>` (the closing appends `` → `vX.Y.Z` ``), "Decisions" section | `## Fase N — <nome>`, `## Decisões` *(read by scripts)* |
 | spec section "Changes" / "Unreleased" | `## Mudanças` *(read by scripts)* / `### Não lançado` |
 | spec section "Current state (verified)" | `## Estado atual (verificado)` *(read by scripts)* |
 | Context / Functional requirements / Non-functional requirements | Contexto / Requisitos funcionais / Requisitos não funcionais |
@@ -99,7 +99,7 @@ Goal: understand the real state before changing any line of code.
 4. Always separate what was **verified** (executed) from what is **inferred** (code reading).
 5. Write `specs/constitution.md` (5–10 verifiable principles), one spec per area in
    `specs/NNN-name/spec.md`, `specs/README.md` (flow, conventions, index with status) and
-   `specs/ROADMAP.md` (phases → versions, tasks `T1..Tn` citing the IDs they close).
+   `specs/ROADMAP.md` (phases without a fixed version, which go-release-manager computes at closing; tasks `T1..Tn` citing the IDs they close).
    Default phases: **Phase 0** decisions → **Phase 1** "actually works" `v0.1.0` →
    **Phase 2** "reliable" `v0.2.0` → **Phase 3** "professional" `v1.0.0`.
 6. Give the owner a **short** list of the main findings (critical first) and the

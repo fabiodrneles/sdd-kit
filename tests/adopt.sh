@@ -105,8 +105,8 @@ echo 'meu código' > "$sk/hello.go"
 sh "$root/scripts/adopt.sh" --lang go --project demo --owner acme --repo demo --skeleton --force "$sk" > /dev/null
 [ "$(cat "$sk/hello.go")" = 'meu código' ] || fail "--skeleton --force sobrescreveu código do projeto"
 
-# 011 AC-4: com a tag v1.4.0, o ROADMAP criado começa na v1.5.0; sem tag, na
-# v0.1.0.
+# 011 AC-4 (#198): com a tag v1.4.0 ou sem tag, o ROADMAP criado não fixa versão nas fases
+# (quem decide é o go-release-manager no fechamento).
 tg="$tmp/tagged"; mkdir "$tg"
 git -C "$tg" init -q
 git -C "$tg" -c user.email=t@t -c user.name=t commit -q --allow-empty -m init
@@ -114,13 +114,12 @@ git -C "$tg" tag v1.4.0; git -C "$tg" tag v1.10.0-rc1
 cp -R "$tg" "$tmp/tagged-ps"
 # shellcheck disable=SC2086
 sh "$adopt" --lang go $opts "$tg" > /dev/null
-[ "$(grep -c '^## Fase [123] .*.v1\.[567]\.0.$' "$tg/specs/ROADMAP.md")" -eq 3 ] ||
-  fail "ROADMAP não começa na v1.5.0 depois da tag v1.4.0: $(grep '^## Fase' "$tg/specs/ROADMAP.md")"
-grep -q '^## Fase 1 .*.v1\.5\.0.$' "$tg/specs/ROADMAP.md" || fail "Fase 1 não é a v1.5.0"
-grep -q '^## Fase 1 .*.v0\.1\.0.$' "$tmp/go-empty/specs/ROADMAP.md" || fail "sem tag, a Fase 1 não é a v0.1.0"
+! grep -q '^## Fase.*→' "$tg/specs/ROADMAP.md" || fail "ROADMAP com versão fixada: $(grep '^## Fase' "$tg/specs/ROADMAP.md")"
+! grep -q '^## Fase.*→' "$tmp/go-empty/specs/ROADMAP.md" || fail "ROADMAP sem tag com versão fixada"
+[ "$(grep -c '^## Fase [123] ' "$tg/specs/ROADMAP.md")" -eq 3 ] || fail "ROADMAP sem as fases 1 a 3"
 if command -v pwsh >/dev/null; then
   pwsh -NoProfile -File "$root/scripts/adopt.ps1" --lang go --project Demo --owner acme --repo demo "$tmp/tagged-ps" > /dev/null
-  diff -r -x .git "$tg" "$tmp/tagged-ps" >&2 || fail "adopt.ps1 numerou o ROADMAP diferente"
+  diff -r -x .git "$tg" "$tmp/tagged-ps" >&2 || fail "adopt.ps1 gerou o ROADMAP diferente"
 fi
 
 # 011 AC-5: a adoção cria o CHANGELOG.md com [Unreleased], e o sdd-mark close

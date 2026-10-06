@@ -38,7 +38,7 @@ cat > "$d/specs/ROADMAP.md" <<'MD'
 
 - [ ] Responder as decisões.
 
-## Fase 1 — Funcionar (P0) → `v0.1.0`
+## Fase 1 — Funcionar (P0)
 
 - [ ] **T1** Fazer x — 001 AC-1
 MD
@@ -67,6 +67,9 @@ printf '%s\n' "$out" | grep -q 'T1' || fail "sdd-epic --dry-run sem T1: $out"
 # 009 AC-3: fechamento da fase; idempotente.
 sh "$s/sdd-mark.sh" close --date 2026-01-03 v0.1.0 > /dev/null
 grep -q '^- \[x\] \*\*T1\*\*' specs/ROADMAP.md || fail "T1 não marcada"
+# #198: a fase sem versão é a da tarefa aberta, e o cabeçalho registra a versão do go-release-manager.
+# shellcheck disable=SC2016 # crases literais do Markdown
+grep -qx '## Fase 1 — Funcionar (P0) → `v0.1.0`' specs/ROADMAP.md || fail "cabeçalho sem a versão entregue: $(grep '^## Fase 1' specs/ROADMAP.md)"
 # shellcheck disable=SC2016 # crases literais do Markdown
 grep -q 'Status:\*\* Done — entregue na `v0.1.0`' specs/001-x/spec.md || fail "001 não foi para Done"
 grep -q '^## \[0.1.0\] - 2026-01-03' CHANGELOG.md || fail "CHANGELOG sem [0.1.0]"

@@ -7,9 +7,11 @@
 #       sobra nenhuma em aberto, move as specs Draft para Approved (cabeçalho e
 #       specs/README.md) e marca a Fase 0 do ROADMAP.
 #   sdd-mark.sh close [--date AAAA-MM-DD] vX.Y.Z
-#       PR de fechamento: marca as tarefas da fase "→ `vX.Y.Z`" do ROADMAP,
-#       move para Done as specs citadas que não têm tarefa aberta em outra fase
-#       (as demais vão para In Progress) e abre "## [X.Y.Z] - data" no CHANGELOG.
+#       PR de fechamento da versão vX.Y.Z (a do go-release-manager, #198): marca as
+#       tarefas da fase atual do ROADMAP (a primeira com tarefa aberta; num ROADMAP
+#       antigo, a fase "→ `vX.Y.Z`") e grava "→ `vX.Y.Z`" no cabeçalho dela; move para
+#       Done as specs citadas que não têm tarefa aberta em outra fase (as demais vão
+#       para In Progress) e abre "## [X.Y.Z] - data" no CHANGELOG.
 # Saída: uma linha por arquivo alterado e os avisos. Nunca deixa um arquivo vazio
 # ou menor do que a edição permite; em erro, nada é gravado (códigos: 0 ok, 1 erro, 2 uso).
 set -eu
@@ -119,11 +121,15 @@ close)
   [ $# -eq 1 ] || usage
   v="$1"; case "$v" in v[0-9]*.[0-9]*.[0-9]*) ;; *) die "versão inválida: $v (use vX.Y.Z)" ;; esac
   r=specs/ROADMAP.md; [ -f "$r" ] || die "$r não existe"
-  grep -qE "^## Fase .*\`$v\`" "$r" || die "nenhuma fase do ROADMAP aponta para \`$v\`"
+  # A fase: a que já aponta para a versão (ROADMAP antigo) ou a primeira com tarefa aberta.
+  h="$(grep -E "^## Fase .*\`$v\`" "$r" | head -n 1)" || true
+  [ -n "$h" ] || h="$(awk '/^## Fase [0-9]+/ { c = $0; next } /^## / { c = "" } c != "" && /^- \[ \]/ { print c; exit }' "$r")"
+  [ -n "$h" ] || die "nenhuma fase do ROADMAP tem tarefa aberta nem aponta para \`$v\`"
   # Specs citadas nas tarefas da fase, e specs com tarefa aberta em outra fase.
-  awk -v v="\`$v\`" '/^## / { on = index($0, v) > 0 } on && /^- \[/' "$r" | grep -oE '(^| )[0-9]{3} ' | tr -d ' ' | sort -u > "$tmp/phase"
-  awk -v v="\`$v\`" '/^## / { on = index($0, v) > 0 } !on && /^- \[ \]/' "$r" | grep -oE '(^| )[0-9]{3} ' | tr -d ' ' | sort -u > "$tmp/open"
-  awk -v v="\`$v\`" '/^## / { on = index($0, v) > 0 } on { sub(/^- \[ \]/, "- [x]") } { print }' "$r" > "$tmp/out"
+  awk -v h="$h" '/^## / { on = ($0 == h) } on && /^- \[/' "$r" | grep -oE '(^| )[0-9]{3} ' | tr -d ' ' | sort -u > "$tmp/phase"
+  awk -v h="$h" '/^## / { on = ($0 == h) } !on && /^- \[ \]/' "$r" | grep -oE '(^| )[0-9]{3} ' | tr -d ' ' | sort -u > "$tmp/open"
+  # Marca as tarefas e registra a versão entregue no cabeçalho (se ainda não tem).
+  awk -v h="$h" -v v="\`$v\`" '/^## / { on = ($0 == h); if (on && index($0, v) == 0) $0 = $0 " → " v } on { sub(/^- \[ \]/, "- [x]") } { print }' "$r" > "$tmp/out"
   stage "$r"
   [ -s "$tmp/phase" ] || warn "nenhuma tarefa da fase cita uma spec (NNN FR-n); status das specs não mudou"
   while IFS= read -r nnn; do

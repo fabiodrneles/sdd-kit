@@ -81,11 +81,11 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 - [x] **T45** `CLAUDE.md` e skill: o agente não espera eventos, o motor faz — 015 FR-7 — #153
 - [x] **T46** O sdd-kit roda o próprio motor (`make self-sync` e checagem de divergência) — 015 FR-8, AC-8 — #167
 
-## Fase 10 — Merge percebido sem tokens (P1)
+## Fase 10 — Merge percebido sem tokens (P1) → `v1.9.0`
 
-- [ ] **T47** `sdd-wait.sh merged-any`: vigia sem LLM do merge de qualquer PR aberto — 016 FR-1, FR-2, NFR-1, AC-1, AC-2, AC-3
-- [ ] **T48** `sdd-pr.sh` e `sdd-release.sh` imprimem o comando do vigia — 016 FR-3, AC-4
-- [ ] **T49** `CLAUDE.md` (kit e template) e skill: um vigia em segundo plano, sem assinar eventos de PR — 016 FR-4, FR-5, NFR-2, AC-5
+- [x] **T47** `sdd-wait.sh merged-any`: vigia sem LLM do merge de qualquer PR aberto — 016 FR-1, FR-2, NFR-1, AC-1, AC-2, AC-3
+- [x] **T48** `sdd-pr.sh` e `sdd-release.sh` imprimem o comando do vigia — 016 FR-3, AC-4
+- [x] **T49** `CLAUDE.md` (kit e template) e skill: um vigia em segundo plano, sem assinar eventos de PR — 016 FR-4, FR-5, NFR-2, AC-5
 
 ## Fase 11 — Relatório de entrega e de custo (P1)
 

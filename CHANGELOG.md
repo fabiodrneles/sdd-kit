@@ -8,8 +8,10 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ### Adicionado
 
-- sdd-wait.sh merged-any watches every open PR for a merge without LLM (#207)
-- sdd-pr.sh ends with the merge watcher command (#208)
+- **Vigia do merge sem tokens (spec 016):** `sdd-wait.sh merged-any` espera, sem LLM, qualquer PR aberto ser mergeado e acorda a sessão uma única vez. São uma consulta por rodada (60 s por padrão), e o vigia só conclui com o PR de fato fechado, mesmo se a lista falhar (#207). O dono não precisa mais avisar o agente de cada merge.
+- O `sdd-pr.sh` termina com o comando do vigia, e o `sdd-release.sh` o herda (#208).
+- `CLAUDE.md` (kit e template) e skill: o agente deixa um vigia em segundo plano e, no despertar, faz o Próximo do checkpoint (#211).
+- Specs 017 (relatório de entrega e de custo) e 018 (relé de sessões curtas) aprovadas, como Fases 11 e 12 do ROADMAP (#210).
 
 ## [1.8.0] - 2026-10-06
 

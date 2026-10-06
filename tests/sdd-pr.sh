@@ -143,6 +143,11 @@ echo e > e.txt; git add e.txt; git commit -q -m "docs: e"
 out="$($pr --dry-run 2>&1)" || fail "dry-run do épico falhou: $out"
 printf '%s\n' "$out" | grep -q 'Refs #7 · Épico #7 · Spec —' || fail "branch do épico sem Refs: $out"
 printf '%s\n' "$out" | grep -q 'Closes #7' && fail "branch do épico com Closes: $out"
+# #170: a branch de sincronização do kit não tem ticket e não é recusada.
+git checkout -q -b chore/sync-sdd-kit-v9.9.9 main
+echo y > y.txt; git add y.txt; git commit -q -m "chore: sync sdd-kit files to v9.9.9"
+out="$($pr --dry-run 2>&1)" || fail "branch de sincronização recusada: $out"
+printf '%s\n' "$out" | grep -q '| Épico #7 · Spec —$' || fail "sincronização sem a primeira linha sem Closes: $out"
 git checkout -q feat/9-x
 
 # --body-file e --title substituem as seções do template.

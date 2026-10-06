@@ -1,7 +1,7 @@
 # 016 — Merge percebido sem tokens
 
 - **Prioridade:** P1
-- **Status:** Approved — pedida pelo dono em 2026-10-06
+- **Status:** Done — entregue na `v1.9.0`
 - **Código afetado:** `template/common/scripts/sdd-wait.sh`, `template/common/scripts/sdd-pr.sh`, `template/common/CLAUDE.md`, `CLAUDE.md`, `plugins/sdd-delivery/`
 - **Resolve:** a cada merge o dono precisa escrever "já mergeei" para a sessão continuar, gastando o tempo dele e o contexto da LLM
 
@@ -36,7 +36,7 @@ Limite conhecido: se o contêiner da sessão for reciclado, o vigia morre junto.
 
 ## Mudanças
 
-### Não lançado
+### v1.9.0
 
 - ADDED FR-1, FR-2, NFR-1 — `sdd-wait.sh merged-any`: uma consulta à lista de PRs abertos por rodada (60 s por padrão); conclui só com o PR de fato fechado, mesmo se a lista falhar (T47, #204).
 - ADDED FR-3 — o `sdd-pr.sh` termina com o comando do vigia (`vigia: sh scripts/sdd-wait.sh merged-any`); o `sdd-release.sh` o herda, porque termina chamando o `sdd-pr.sh` (T48, #205).

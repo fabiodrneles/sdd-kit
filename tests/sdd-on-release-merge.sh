@@ -33,6 +33,8 @@ case "$url" in
     grep -qx "${url##*/}" "$G/tags" ;;
   repos/o/r/actions/workflows/release-tag.yml/runs*)
     jq -r "$jq" < "$G/runs" ;;
+  repos/o/r/issues\?labels*)
+    jq -r "$jq" < "$G/epics" ;;
   *) echo "gh falso: $url" >&2; exit 1 ;;
 esac
 SH
@@ -42,7 +44,10 @@ cat > "$tmp/release.sh" <<'SH'
 #!/bin/sh
 echo "$* pre=${SDD_RELEASE_PRE:-}" >> "$G/dispatch"
 SH
-export PATH="$tmp/bin:$PATH" G SDD_RELEASE_SH="$tmp/release.sh"
+# sdd-epic.sh falso: registra a fase aberta.
+printf '#!/bin/sh\necho "$*" >> "$G/epic"\n' > "$tmp/epic.sh"
+export PATH="$tmp/bin:$PATH" G SDD_RELEASE_SH="$tmp/release.sh" SDD_EPIC_SH="$tmp/epic.sh"
+echo '[]' > "$G/epics"; : > "$G/epic"
 
 echo "true chore/release-v1.2.3 o/r" > "$G/pr.10"
 echo "true feat/9-algo o/r" > "$G/pr.11"
@@ -55,6 +60,9 @@ count() { wc -l < "$G/dispatch" | tr -d ' '; }
 # 015 AC-5: o PR de fechamento mesclado dispara a release da versão, uma vez.
 out="$(run 10)" || fail "PR de fechamento saiu com erro: $out"
 [ "$(cat "$G/dispatch")" = "--repo o/r --tag 1.2.3 pre=ci" ] || fail "disparo errado (#184: com SDD_RELEASE_PRE=ci): $(cat "$G/dispatch")"
+
+# #191: sem ROADMAP no diretório, nenhuma fase é aberta (e nada quebra).
+[ ! -s "$G/epic" ] || fail "abriu fase sem ROADMAP: $(cat "$G/epic")"
 
 # 015 AC-5 (NFR-2): com a tag criada, rodar de novo não dispara outra vez.
 echo "v1.2.3" > "$G/tags"
@@ -87,4 +95,16 @@ printf '#!/bin/sh\nexit 1\n' > "$tmp/release.sh"
 rc=0; run 10 > /dev/null 2>&1 || rc=$?
 [ "$rc" -eq 1 ] || fail "falha do sdd-release.sh deveria sair 1, saiu $rc"
 
+
+# #191: com a fase fechada, o motor abre o épico da próxima fase do ROADMAP; com um
+# épico já aberto, não abre outro.
+printf '#!/bin/sh\necho "$* pre=${SDD_RELEASE_PRE:-}" >> "$G/dispatch"\n' > "$tmp/release.sh"
+mkdir -p "$tmp/proj/specs"
+printf '## Fase 1 — A (P0) → `v1.2.3`\n\n- [x] **T1** a\n\n## Fase 2 — B (P1) → `v1.3.0`\n\n- [ ] **T2** b\n' > "$tmp/proj/specs/ROADMAP.md"
+echo "true chore/release-v1.2.4 o/r" > "$G/pr.20"; : > "$G/tags"; echo '{"workflow_runs":[]}' > "$G/runs"; : > "$G/epic"
+out="$(cd "$tmp/proj" && run 20 2>&1)" || fail "fechamento com próxima fase falhou: $out"
+[ "$(cat "$G/epic")" = "--repo o/r 2" ] || fail "não abriu a Fase 2: $(cat "$G/epic") / $out"
+echo '[{"number":5}]' > "$G/epics"; : > "$G/epic"; echo "true chore/release-v1.2.5 o/r" > "$G/pr.21"
+out="$(cd "$tmp/proj" && run 21 2>&1)" || fail "fechamento com épico aberto falhou: $out"
+[ ! -s "$G/epic" ] || fail "abriu outra fase com épico aberto: $(cat "$G/epic")"
 echo "sdd-on-release-merge: ok"

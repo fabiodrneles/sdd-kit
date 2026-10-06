@@ -17,6 +17,7 @@ permissions:
   actions: write
   checks: read
   contents: read
+  issues: write
   statuses: read
 
 concurrency:

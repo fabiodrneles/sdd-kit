@@ -63,3 +63,21 @@ fi
 echo "disparando a release $tag (PR #$pr)"
 # O runner não tem as ferramentas do projeto: a checagem antes da tag é o CI da main (#184).
 SDD_RELEASE_PRE=ci sh "$release" --repo "$repo" --tag "$ver" || { echo "sdd-on-release-merge: o sdd-release.sh falhou" >&2; exit 1; }
+
+# A fase fechou: abre o épico da próxima fase do ROADMAP (já aprovada pelo dono) e
+# grava o checkpoint nele, para um "continue" numa sessão nova achar o próximo passo (#191).
+open_epic="$(gh api "repos/$repo/issues?labels=%C3%A9pico&state=open&per_page=1" --jq '.[0].number // empty' 2> /dev/null || true)"
+if [ -n "$open_epic" ]; then
+  echo "épico #$open_epic já aberto: próxima fase não aberta"
+elif next="$(sh "$here/sdd-next-phase.sh" 2> /dev/null)"; then
+  n="${next%%$(printf '\t')*}"
+  echo "abrindo a Fase $n do ROADMAP"
+  if sh "${SDD_EPIC_SH:-$here/sdd-epic.sh}" --repo "$repo" "$n"; then
+    sh "$here/sdd-checkpoint.sh" --repo "$repo" --ci save "release $tag disparada; Fase $n aberta pelo motor" \
+      "primeiro ticket aberto do épico (sdd-resume.sh lista as issues)" || true
+  else
+    echo "sdd-on-release-merge: aviso: não consegui abrir a Fase $n" >&2
+  fi
+else
+  echo "nenhuma fase com tarefa aberta no ROADMAP: o dono escolhe a próxima"
+fi

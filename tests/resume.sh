@@ -95,6 +95,15 @@ printf '%s\n' "$out" | grep -q 'feat/99-y não existe no origin' || fail "não a
 echo '[]' > "$G/issues.json"
 out="$(sh "$s" --repo o/r)" || fail "sdd-resume sem épico falhou"
 printf '%s\n' "$out" | grep -q 'nenhum épico aberto' || fail "sem aviso de épico: $out"
+# #191: sem épico, o próximo passo vem do ROADMAP (a fase com tarefa aberta).
+mkdir -p specs
+printf '## Fase 1 — A (P0) → `v0.1.0`\n\n- [x] **T1** a\n\n## Fase 2 — B (P1) → `v0.2.0`\n\n- [ ] **T2** b\n' > specs/ROADMAP.md
+out="$(sh "$s" --repo o/r)" || fail "sdd-resume sem épico com ROADMAP falhou"
+printf '%s\n' "$out" | grep -q 'Próximo: abrir a Fase 2 — B.*sdd-epic.sh 2' || fail "não apontou a próxima fase: $out"
+sed -i.bak 's/- \[ \] \*\*T2/- [x] **T2/' specs/ROADMAP.md
+out="$(sh "$s" --repo o/r)" || fail "sdd-resume com ROADMAP concluído falhou"
+printf '%s\n' "$out" | grep -q 'Próximas fases' || fail "ROADMAP concluído sem orientação: $out"
+rm -rf specs
 mkdir "$tmp/nogh"
 for t in sh git jq sed grep dirname cat; do ln -s "$(command -v "$t")" "$tmp/nogh/$t"; done
 out="$(PATH="$tmp/nogh" sh "$s")" || fail "sdd-resume sem gh falhou: $out"

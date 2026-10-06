@@ -53,4 +53,9 @@ if [ -n "$existing" ]; then
   exit 0
 fi
 echo "sdd-on-phase-done: último ticket do épico #$epic fechado; preparando o PR de fechamento"
+# O runner do motor não tem as ferramentas do projeto: o CI do PR verifica, e sem
+# SDD_ENGINE_TOKEN o PR do GITHUB_TOKEN precisa que o CI seja disparado (#182).
+SDD_PR_NO_CI=1
+export SDD_PR_NO_CI
+if [ -z "${SDD_ENGINE_TOKEN_SET:-}" ]; then SDD_PR_DISPATCH_CI=1; export SDD_PR_DISPATCH_CI; fi
 exec sh "$here/sdd-release.sh" --repo "$repo"

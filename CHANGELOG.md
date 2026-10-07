@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.21.1] - 2026-10-07
+
+### Corrigido
+
+- avaliação justa no Windows e no plano gratuito do opencode, paralelismo conforme a máquina (#352)
+
 ## [1.21.0] - 2026-10-07
 
 ### Adicionado

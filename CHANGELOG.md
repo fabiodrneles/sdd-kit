@@ -19,7 +19,7 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 - O agente do plano usa o modelo escolhido, e as ferramentas de um `make ci` que já existe (como o `golangci-lint`) são conferidas antes do primeiro ticket, com o comando de instalação (#319)
 - No Windows, o `make ci` usa o `sh` do Git sozinho (#325)
 - Execução interrompida (travamento, terminal fechado) é reconhecida na hora e retomada com o código salvo num WIP; o portão não deixa mais o índice do git quebrando o `git stash` (#325)
-- O `/axyn` roda num agente só com as ferramentas de conversa, mostra "axyn, por favor: <pedido>" e não sai mais do roteiro; uma execução em andamento mostra o andamento em vez de erro (#325)
+- O `/axyn` roda num agente só com as ferramentas de conversa, mostra "axyn, por favor: (seu pedido)" e não sai mais do roteiro; uma execução em andamento mostra o andamento em vez de erro (#325)
 
 ## [1.15.0] - 2026-10-07
 

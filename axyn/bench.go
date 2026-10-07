@@ -747,6 +747,25 @@ func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout 
 	p := &benchProfile{Date: time.Now(), Axyn: version, Opencode: toolVersion("opencode", "--version"), Models: models, prevForReport: prev}
 	if prev != nil {
 		p.Pinned = prev.Pinned // a choice by hand survives every new evaluation
+		// Evaluating only some tasks or models keeps the other results of the last round:
+		// axyn bench --tasks plan redoes the plan step, not the whole battery.
+		run := map[string]bool{}
+		for _, m := range models {
+			for _, t := range chosen {
+				run[m+"|"+t.ID] = true
+			}
+		}
+		for _, r := range prev.Results {
+			if !run[r.Model+"|"+r.Task] {
+				p.Results = append(p.Results, r)
+			}
+		}
+		for _, m := range prev.Models {
+			if !inList(p.Models, m) {
+				p.Models = append(p.Models, m)
+			}
+		}
+		p.Routing, p.Contained = route(p.Results, minScore)
 	}
 	if runs < 1 {
 		runs = 1

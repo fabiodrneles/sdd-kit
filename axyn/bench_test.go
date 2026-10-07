@@ -152,3 +152,25 @@ func TestAutoParallel(t *testing.T) {
 		t.Log("memória desconhecida nesta máquina")
 	}
 }
+
+// Evaluating one task again keeps the other tasks' results of the last round.
+func TestBenchOneTaskKeepsTheRest(t *testing.T) {
+	if _, err := exec.LookPath("go"); err != nil {
+		t.Skip("sem go")
+	}
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	t.Setenv("AXYN_OPENCODE", benchAgent(t))
+	var o, e strings.Builder
+	if code := runBenchCmd([]string{"--models", "bom", "--timeout", "2m"}, &o, &e); code != exitOK {
+		t.Fatalf("bench: %d %s", code, e.String())
+	}
+	if code := runBenchCmd([]string{"--models", "bom", "--tasks", "plan", "--timeout", "2m"}, &o, &e); code != exitOK {
+		t.Fatalf("bench --tasks plan: %d %s", code, e.String())
+	}
+	p, _ := loadProfile()
+	for _, task := range []string{"plan-001", "code-001", "tests-001", "fix-001"} {
+		if findResult(p.Results, "bom", task) == nil {
+			t.Errorf("%s sumiu ao refazer só o plano", task)
+		}
+	}
+}

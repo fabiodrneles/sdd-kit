@@ -162,6 +162,7 @@ O que sair da guia é reprovado com o código `[guia]`, e os portões de sempre 
 | Quero | Comando |
 |---|---|
 | Ver a última avaliação | `axyn bench --show` |
+| Refazer só uma etapa, sem perder as outras | `axyn bench --tasks plan` (ou `code`, `tests`, `fix`; dá para juntar com `--models A,B`) |
 | Avaliar de novo agora | `axyn bench` |
 | Só alguns modelos, ou também os pagos | `axyn bench --models A,B` ou `axyn bench --all` |
 | Mais confiança (cada tarefa várias vezes) | `axyn bench --runs 3` |

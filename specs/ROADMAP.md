@@ -130,11 +130,18 @@ O motor em Go como cérebro do opencode, com o modelo que o usuário tiver (spec
 - [x] **T75** Escada de modelos e registro do modelo, das tentativas e do custo — 021 FR-6, FR-7, AC-2
 - [x] **T77** Recuperação sem trocar de modelo: diagnóstico exato, mais contexto, várias tentativas, ticket dividido, plano antes do código e pergunta ao usuário — 021 FR-8, AC-6
 - [x] **T78** O motor conduz o laço: /axyn chama só axyn_run, e o axyn usa o opencode run para o código — 021 FR-9, AC-7
-- [ ] **T76** Instalação por um comando e o teste de aceitação do dono (landing page com modelo gratuito; e2e com agente falso no CI) — 021 FR-1, AC-5
-  - Falta o teste de aceitação do dono (AC-5, primeira parte): `/axyn crie uma landing page` no opencode com modelo gratuito. O e2e com agente falso já roda no CI.
+- [x] **T76** Instalação por um comando e o teste de aceitação do dono (landing page com modelo gratuito; e2e com agente falso no CI) — 021 FR-1, AC-5
+  - A pedido do dono, o teste de aceitação com modelo gratuito real (AC-5, primeira parte) foi para a #316, com a próxima release; o e2e com agente falso roda no CI, e o fluxo passou com o opencode real e um modelo falso.
 - [x] **T79** axyn sem Go: binários na release, instalação num comando e guia do usuário — 021 FR-1, AC-5
+- [x] **T80** O axyn prepara o projeto sem CI: templates embutidos, stack detectada ou perguntada, pré-requisitos com o comando de instalação e `axyn init` — 021 FR-4, AC-4
+- [x] **T81** `axyn setup`/`axyn doctor`: o repositório configurado por um comando e a seção "O que o repositório precisa" no README — 021 FR-1, AC-5
+- [x] **T82** `axyn history`: um arquivo com tudo o que a execução fez, sem segredos — 021 FR-7
+- [x] **T83** `axyn run`: cada ticket a partir da base, branches únicas e slug sem acentos quebrados — 021 FR-9, AC-7
+- [x] **T84** README: passo a passo para iniciantes, do terminal ao PR mesclado — 021 FR-1, AC-5
 
 ## Próximas fases (visão, sem versão)
+
+- Teste de aceitação do dono do axyn com modelo gratuito real (#316), junto com a próxima release (customizar interface, depois features).
 
 Ideias aprovadas pelo dono em 2026-10-03, em ordem de impacto. Cada uma vira spec e fase quando chegar a vez.
 

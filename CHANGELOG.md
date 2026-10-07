@@ -4,6 +4,22 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-10-07
+
+### Adicionado
+
+- prepare projects without CI from embedded templates (#307)
+- print the full install command for missing tools (#310)
+- axyn doctor and axyn setup configure the repository (#311)
+- axyn history writes one file with everything a run did (#312)
+- step-by-step guide for beginners in the README, from the terminal to a merged PR (#314)
+
+### Corrigido
+
+- never reopen a delivered phase in sdd-on-release-merge.sh (#302)
+- make /axyn work in the real opencode (#303)
+- start every ticket from the base branch, with unique names (#309)
+
 ## [1.14.0] - 2026-10-07
 
 ### Adicionado

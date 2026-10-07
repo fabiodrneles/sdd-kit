@@ -58,6 +58,7 @@ type ticket struct {
 type plan struct {
 	Spec    string   `json:"spec"`
 	Tickets []ticket `json:"tickets"`
+	Base    string   `json:"base,omitempty"` // branch every ticket starts from (FR-9)
 }
 
 // mcpServer holds the gate settings. They come from how the engine started the
@@ -462,6 +463,47 @@ func (s *mcpServer) git(args ...string) (string, error) {
 
 var slugRe = regexp.MustCompile(`[^a-z0-9]+`)
 
+var translit = strings.NewReplacer(
+	"á", "a", "à", "a", "â", "a", "ã", "a", "ä", "a", "é", "e", "è", "e", "ê", "e", "ë", "e",
+	"í", "i", "ì", "i", "î", "i", "ï", "i", "ó", "o", "ò", "o", "ô", "o", "õ", "o", "ö", "o",
+	"ú", "u", "ù", "u", "û", "u", "ü", "u", "ç", "c", "ñ", "n")
+
+// slugify turns a title into a branch-name part: lower case, accents transliterated,
+// everything else a hyphen, at most max bytes.
+func slugify(text string, max int) string {
+	slug := strings.Trim(slugRe.ReplaceAllString(translit.Replace(strings.ToLower(text)), "-"), "-")
+	if len(slug) > max {
+		slug = strings.Trim(slug[:max], "-")
+	}
+	return slug
+}
+
+// specSlug is the spec's name without its number: specs/003-landing-page/spec.md → landing-page.
+func specSlug(spec string) string {
+	name := filepath.Base(filepath.Dir(spec))
+	if i := strings.Index(name, "-"); i > 0 && strings.Trim(name[:i], "0123456789") == "" {
+		name = name[i+1:]
+	}
+	if name == "." || name == "specs" {
+		return ""
+	}
+	return slugify(name, 30)
+}
+
+// uniqueBranch adds -2, -3… while a local branch with the name exists (a second request
+// numbers its tickets from 1 again).
+func (s *mcpServer) uniqueBranch(name string) string {
+	for i := 1; ; i++ {
+		cand := name
+		if i > 1 {
+			cand = fmt.Sprintf("%s-%d", name, i)
+		}
+		if _, err := s.git("rev-parse", "--verify", "--quiet", "refs/heads/"+cand); err != nil {
+			return cand
+		}
+	}
+}
+
 // toolShip commits, pushes and opens the PR, but only after the gates pass on this very diff.
 func (s *mcpServer) toolShip(a gateArgs, msg string) (string, error) {
 	if strings.TrimSpace(msg) == "" {
@@ -494,19 +536,21 @@ func (s *mcpServer) deliver(msg string, newBranch bool) (string, error) {
 	}
 
 	branch, _ := s.git("rev-parse", "--abbrev-ref", "HEAD")
+	base := ""
 	if newBranch || branch == "main" || branch == "master" || branch == "HEAD" {
+		base = branch
 		subject := msg
 		if i := strings.Index(subject, ":"); i > 0 && i < 12 {
 			subject = subject[i+1:]
 		}
-		slug := strings.Trim(slugRe.ReplaceAllString(strings.ToLower(subject), "-"), "-")
-		if len(slug) > 40 {
-			slug = strings.Trim(slug[:40], "-")
-		}
+		slug := slugify(subject, 40)
 		if t != nil {
 			slug = fmt.Sprintf("%d-%s", t.ID, slug)
+			if sp := specSlug(pl.Spec); sp != "" {
+				slug = sp + "-" + slug
+			}
 		}
-		branch = "feat/" + slug
+		branch = s.uniqueBranch("feat/" + slug)
 		if out, err := s.git("checkout", "-b", branch); err != nil {
 			return "", fmt.Errorf("git checkout falhou: %s", out)
 		}
@@ -525,7 +569,11 @@ func (s *mcpServer) deliver(msg string, newBranch bool) (string, error) {
 		}
 		notes = append(notes, "push feito")
 		if _, err := exec.LookPath("gh"); err == nil {
-			cmd := exec.Command("gh", "pr", "create", "--title", msg, "--body", "Entregue pelo axyn com o portão verde.")
+			args := []string{"pr", "create", "--title", msg, "--body", "Entregue pelo axyn com o portão verde.", "--head", branch}
+			if base != "" && base != "HEAD" {
+				args = append(args, "--base", base)
+			}
+			cmd := exec.Command("gh", args...)
 			cmd.Dir = s.dir
 			b, err := cmd.CombinedOutput()
 			if err != nil {

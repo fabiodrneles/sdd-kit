@@ -214,7 +214,7 @@ func (s *mcpServer) exhausted(t *ticket, models []model) string {
 func (s *mcpServer) saveWIP(t *ticket, why string) string {
 	branch, _ := s.git("rev-parse", "--abbrev-ref", "HEAD")
 	if branch == "main" || branch == "master" || branch == "HEAD" {
-		branch = fmt.Sprintf("feat/%d-wip", t.ID)
+		branch = s.uniqueBranch(fmt.Sprintf("feat/%d-wip", t.ID))
 		if out, err := s.git("checkout", "-b", branch); err != nil {
 			return "WIP não gravado: " + out
 		}

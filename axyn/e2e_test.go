@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -38,13 +37,12 @@ func TestE2ELandingPage(t *testing.T) {
 	if code, out := runLanding(t, dir); code != exitOK {
 		t.Fatalf("code %d\n%s", code, out)
 	}
-	got := strings.Join(subjects(t, dir), "|")
-	if want := "init|docs: spec demo|feat: Um|feat: Dois"; got != want {
-		t.Fatalf("commits %s, want %s", got, want)
-	}
-	for _, f := range []string{"index1.html", "index2.html"} {
-		if _, err := os.Stat(filepath.Join(dir, f)); err != nil {
-			t.Errorf("falta %s: %v", f, err)
+	for branch, f := range map[string]string{"feat/demo-1-um": "index1.html", "feat/demo-2-dois": "index2.html"} {
+		if got := strings.Join(branchSubjects(t, dir, branch), "|"); !strings.HasSuffix(got, "|docs: spec demo|feat: "+map[string]string{"index1.html": "Um", "index2.html": "Dois"}[f]) {
+			t.Errorf("%s: commits %s", branch, got)
+		}
+		if _, err := (&mcpServer{dir: dir}).git("cat-file", "-e", branch+":"+f); err != nil {
+			t.Errorf("falta %s em %s", f, branch)
 		}
 	}
 }

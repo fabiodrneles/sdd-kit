@@ -171,8 +171,25 @@ func (s *mcpServer) startRun(request string, resume bool) (string, error) {
 	return st.ID, nil
 }
 
-// spawnWorker is replaced in tests.
+// spawnWorker is replaced in tests. It starts the worker through a short-lived middle
+// process (`run --detach`), so the worker is not a descendant of the MCP server: when
+// opencode exits it kills the server's whole process tree, and a direct child died with
+// it, its run left "rodando" forever.
 var spawnWorker = func(dir, id string) error {
+	exe, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command(exe, "run", "--dir", dir, "--detach", id)
+	detach(cmd)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%v: %s", err, strings.TrimSpace(string(out)))
+	}
+	return nil
+}
+
+// startDetached is the middle process: it starts the worker in its own session and exits.
+func startDetached(dir, id string) error {
 	exe, err := os.Executable()
 	if err != nil {
 		return err
@@ -463,8 +480,16 @@ func runRunCmd(args []string, stdout, stderr io.Writer) int {
 	resume := fs.Bool("resume", false, "retoma o plano aberto, sem planejar de novo")
 	dir := fs.String("dir", ".", "raiz do repositório")
 	job := fs.String("job", "", "(interno) id da execução a conduzir")
+	detachID := fs.String("detach", "", "(interno) inicia a execução fora da árvore de processos do chamador")
 	if err := fs.Parse(args); err != nil {
 		return exitUsage
+	}
+	if *detachID != "" {
+		if err := startDetached(*dir, *detachID); err != nil {
+			_, _ = fmt.Fprintf(stderr, "axyn run: %v\n", err)
+			return exitFail
+		}
+		return exitOK
 	}
 	if *job != "" {
 		return runJob(*dir, *job, stdout)

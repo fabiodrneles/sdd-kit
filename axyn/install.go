@@ -36,10 +36,12 @@ func axynConfig() map[string]map[string]any {
 				"enabled": true,
 			},
 		},
+		// mode "all": o motor chama os agentes com `opencode run --agent`, que recusa um
+		// "subagent" e cai no agente padrão, sem o prompt nem as ferramentas do axyn.
 		"agent": {
 			"axyn-plan": map[string]any{
 				"description": "Escreve a spec e os tickets de um pedido, pelo axyn",
-				"mode":        "subagent",
+				"mode":        "all",
 				"prompt":      planPrompt,
 				"tools": map[string]any{
 					"axyn_*": true, "read": true, "glob": true, "grep": true, "list": true,
@@ -48,7 +50,7 @@ func axynConfig() map[string]map[string]any {
 			},
 			"axyn-code": map[string]any{
 				"description": "Escreve o código de um ticket, só com as ferramentas de código",
-				"mode":        "subagent",
+				"mode":        "all",
 				"prompt":      codePrompt,
 				"tools": map[string]any{
 					"axyn_*": false, "read": true, "glob": true, "grep": true, "list": true,

@@ -128,7 +128,7 @@ func TestRecoveryAskRecordsDecisionInSpec(t *testing.T) {
 	for i := 0; i < maxFailsPerModel-1 && !strings.Contains(text, "pergunta ao usuário (as tentativas"); i++ {
 		text = gateText(t, s, "{}")
 	}
-	if !strings.Contains(text, "A) ") || !strings.Contains(text, "axyn_decide") {
+	if !strings.Contains(text, "A) ") || !strings.Contains(text, "decisão na spec") {
 		t.Fatalf("question with options expected: %q", text)
 	}
 	out, err := s.call("axyn_decide", json.RawMessage(`{"question":"qual arquivo?","answer":"só x.go"}`))

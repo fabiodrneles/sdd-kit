@@ -317,7 +317,7 @@ func golangciVersion() string {
 
 // missingMessage says what is missing and the exact commands to install it.
 func missingMessage(stack string, miss []string) string {
-	return fmt.Sprintf("o projeto %s precisa de %s para o `make ci` rodar. Para instalar, rode:\n\n  %s\n\ne depois rode axyn_run de novo com resume (nenhuma tentativa foi gasta).",
+	return fmt.Sprintf("o projeto %s precisa de %s para o `make ci` rodar. Para instalar, rode:\n\n  %s\n\ne depois peça para continuar (no terminal, na raiz do projeto: axyn run --resume). Nenhuma tentativa foi gasta.",
 		stack, strings.Join(miss, ", "), strings.Join(installCommands(miss, hostOS), "\n  "))
 }
 
@@ -406,7 +406,7 @@ func (r *runner) prepare() string {
 		return ""
 	}
 	if _, err := os.Stat(filepath.Join(dir, "Makefile")); err == nil {
-		return "o Makefile do projeto não tem o alvo ci, que os portões rodam (`make ci`); adicione um alvo ci com o lint e os testes do projeto e rode axyn_run de novo com resume"
+		return "o Makefile do projeto não tem o alvo ci, que os portões rodam (`make ci`); adicione um alvo ci com o lint e os testes do projeto e depois peça para continuar (axyn run --resume)"
 	}
 	stack := ""
 	if pl, _, err := r.s.loadPlan(); err == nil {
@@ -418,7 +418,7 @@ func (r *runner) prepare() string {
 		stack = detectStack(dir, r.st.Request)
 	}
 	if stack == "" {
-		return "o axyn precisa de uma resposta sua; grave com axyn_decide e rode axyn_run de novo com resume:\n" +
+		return "O axyn precisa de uma resposta sua para seguir:\n" +
 			askMarker + "o projeto não tem CI e não deu para saber a stack) " + stackQuestion +
 			" Responda com uma destas: " + strings.Join(stacks, ", ") + "."
 	}

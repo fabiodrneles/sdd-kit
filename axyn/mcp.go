@@ -47,6 +47,7 @@ type ticket struct {
 	Body  string   `json:"body"`
 	ACs   []string `json:"acs"`
 	Done  bool     `json:"done"`
+	WIP   string   `json:"wip,omitempty"` // branch with the last attempt that did not pass (#324)
 
 	// Record of the delivery (spec 021 FR-7).
 	Attempts []attempt `json:"attempts,omitempty"`

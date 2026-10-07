@@ -110,7 +110,7 @@ func TestRunAgentDeletingTestIsNotDelivered(t *testing.T) {
 			t.Errorf("ticket entregue com um teste apagado: %s", s)
 		}
 	}
-	if !strings.Contains(out, "parado") || !strings.Contains(out, "axyn_decide") || !strings.Contains(out, "arquivo de teste apagado") {
+	if !strings.Contains(out, "parado") || !strings.Contains(out, "precisa de uma resposta sua") || !strings.Contains(out, "arquivo de teste apagado") {
 		t.Errorf("status sem o motivo e a pergunta:\n%s", out)
 	}
 	s := &mcpServer{dir: dir}

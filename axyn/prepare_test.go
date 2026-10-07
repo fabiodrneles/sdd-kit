@@ -158,7 +158,7 @@ func TestRunStopsOnMissingToolBeforeAnyAttempt(t *testing.T) {
 	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `printf 'x\n' > "f$n.html"`))
 
 	code, out := runRequest(t, dir, "crie uma landing page")
-	if code == exitOK || !strings.Contains(out, "precisa de node") || !strings.Contains(out, "Para instalar, rode:") || !strings.Contains(out, "nenhuma tentativa foi gasta") {
+	if code == exitOK || !strings.Contains(out, "precisa de node") || !strings.Contains(out, "Para instalar, rode:") || !strings.Contains(out, "Nenhuma tentativa foi gasta") {
 		t.Fatalf("deveria parar pedindo o node, code %d\n%s", code, out)
 	}
 	if calls, _ := os.ReadFile(os.Getenv("FAKE_LOG")); strings.Contains(string(calls), "axyn-code") {
@@ -362,7 +362,7 @@ func TestRunStopsOnMissingLinterOfExistingCI(t *testing.T) {
 	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `printf 'x\n' > "f$n.go"`))
 
 	code, out := runRequest(t, dir, "adicione uma opção")
-	if code == exitOK || !strings.Contains(out, "go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v") || !strings.Contains(out, "nenhuma tentativa foi gasta") {
+	if code == exitOK || !strings.Contains(out, "go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v") || !strings.Contains(out, "Nenhuma tentativa foi gasta") {
 		t.Fatalf("deveria parar com o go install do golangci-lint, code %d\n%s", code, out)
 	}
 	if calls, _ := os.ReadFile(os.Getenv("FAKE_LOG")); strings.Contains(string(calls), "axyn-code") {

@@ -96,7 +96,7 @@ func loadRun(dir, id string) (*runState, error) {
 			}
 		}
 		if len(names) == 0 {
-			return nil, fmt.Errorf("nenhuma execução: rode axyn_run antes")
+			return nil, fmt.Errorf("nenhuma execução ainda: peça uma tarefa com /axyn no opencode, ou rode axyn run \"seu pedido\" na raiz do projeto")
 		}
 		sort.Strings(names)
 		id = names[len(names)-1]
@@ -361,6 +361,7 @@ func (r *runner) run() {
 		}
 		_, _ = r.s.git("reset", "-q") // intent-to-add left by an interrupted gate
 		note := r.s.saveWIP(t, "tentativa interrompida")
+		r.recordWIP(t.ID)
 		_, _ = fmt.Fprintln(r.log, note)
 	}
 	if !r.st.Opts.Resume {
@@ -420,6 +421,17 @@ func (r *runner) run() {
 // ticket drives the open ticket to delivery. It returns a status only when the run must stop.
 func (r *runner) ticket() (string, string) {
 	feedback := ""
+	if _, t := r.s.openTicket(); t != nil {
+		if green, report, ok := r.gateWIP(t); ok {
+			if green {
+				return r.ship(t)
+			}
+			if strings.HasPrefix(report, "o `make ci` precisa") {
+				return runStopped, report
+			}
+			feedback = report
+		}
+	}
 	bound := maxFailsPerModel*len(r.ladder()) + 2
 	for i := 0; i < bound; i++ {
 		_, t := r.s.openTicket()
@@ -461,25 +473,32 @@ func (r *runner) ticket() (string, string) {
 		}
 		r.st.Gate = firstLine(report)
 		if green {
-			r.set("entrega")
-			out, err := r.s.deliver("feat: "+strings.TrimSpace(t.Title), true)
-			if err != nil {
-				return runStopped, err.Error()
-			}
-			r.st.Delivered = append(r.st.Delivered, fmt.Sprintf("ticket %d «%s» — %s", t.ID, t.Title, strings.ReplaceAll(out, "\n", "; ")))
-			return "", ""
+			return r.ship(t)
 		}
 		_, _ = fmt.Fprintf(r.log, "%s\n", report)
 		switch {
 		case strings.Contains(report, askMarker):
 			note := r.s.saveWIP(t, "à espera da resposta do usuário")
-			return runStopped, "o axyn precisa de uma resposta sua; grave com axyn_decide e rode axyn_run de novo com resume:\n" + extractAsk(report) + "\n" + note
+			help := r.publishHelp(t.ID)
+			return runStopped, "O axyn precisa de uma resposta sua para seguir:\n" + extractAsk(report) + "\n" + note + "\n" + help
 		case strings.Contains(report, exhaustedMark):
-			return runStopped, report
+			help := r.publishHelp(t.ID)
+			return runStopped, report + "\n" + help + "\npara dar mais chances com outro modelo: axyn model, e depois axyn run --resume"
 		}
 		feedback = report
 	}
 	return runStopped, "teto de tentativas do ticket " + r.st.Title
+}
+
+// ship delivers a ticket whose diff passed the gates.
+func (r *runner) ship(t *ticket) (string, string) {
+	r.set("entrega")
+	out, err := r.s.deliver("feat: "+strings.TrimSpace(t.Title), true)
+	if err != nil {
+		return runStopped, err.Error()
+	}
+	r.st.Delivered = append(r.st.Delivered, fmt.Sprintf("ticket %d «%s» — %s", t.ID, t.Title, strings.ReplaceAll(out, "\n", "; ")))
+	return "", ""
 }
 
 // planSnapshot keeps the plan as it was before the coding agent runs. The plan lives

@@ -122,15 +122,16 @@ Também entraram na `v0.1.0`: checagem da `description` da skill (#13), README c
 
 O motor em Go como cérebro do opencode, com o modelo que o usuário tiver (spec 021, aprovada em 2026-10-06).
 
-- [ ] **T70** `axyn/`: esqueleto em Go, `axyn version`, `make ci` e CI do kit cobrindo o Go — 021 FR-1
-- [ ] **T71** `axyn gate`: CI do projeto, teste afrouxado, caminhos protegidos e limite de diff — 021 FR-5, AC-1
-- [ ] **T72** `axyn mcp`: `axyn_plan`, `axyn_next`, `axyn_gate` e `axyn_ship` — 021 FR-3, AC-1
-- [ ] **T73** `axyn install`: servidor MCP, agentes e o comando `/axyn` no opencode, sem apagar o que existe — 021 FR-2, AC-3
-- [ ] **T74** Template `web` e preparo de repositório vazio — 021 FR-4, AC-4
-- [ ] **T75** Escada de modelos e registro do modelo, das tentativas e do custo — 021 FR-6, FR-7, AC-2
-- [ ] **T77** Recuperação sem trocar de modelo: diagnóstico exato, mais contexto, várias tentativas, ticket dividido, plano antes do código e pergunta ao usuário — 021 FR-8, AC-6
-- [ ] **T78** O motor conduz o laço: /axyn chama só axyn_run, e o axyn usa o opencode run para o código — 021 FR-9, AC-7
-- [ ] **T76** Instalação por um comando e o teste de aceitação do dono (landing page com modelo gratuito; e2e com agente falso no CI) — 021 FR-1, AC-5
+- [x] **T70** `axyn/`: esqueleto em Go, `axyn version`, `make ci` e CI do kit cobrindo o Go — 021 FR-1
+- [x] **T71** `axyn gate`: CI do projeto, teste afrouxado, caminhos protegidos e limite de diff — 021 FR-5, AC-1
+- [x] **T72** `axyn mcp`: `axyn_plan`, `axyn_next`, `axyn_gate` e `axyn_ship` — 021 FR-3, AC-1
+- [x] **T73** `axyn install`: servidor MCP, agentes e o comando `/axyn` no opencode, sem apagar o que existe — 021 FR-2, AC-3
+- [x] **T74** Template `web` e preparo de repositório vazio — 021 FR-4, AC-4
+- [x] **T75** Escada de modelos e registro do modelo, das tentativas e do custo — 021 FR-6, FR-7, AC-2
+- [x] **T77** Recuperação sem trocar de modelo: diagnóstico exato, mais contexto, várias tentativas, ticket dividido, plano antes do código e pergunta ao usuário — 021 FR-8, AC-6
+- [x] **T78** O motor conduz o laço: /axyn chama só axyn_run, e o axyn usa o opencode run para o código — 021 FR-9, AC-7
+- [x] **T76** Instalação por um comando e o teste de aceitação do dono (landing page com modelo gratuito; e2e com agente falso no CI) — 021 FR-1, AC-5
+- [x] **T79** axyn sem Go: binários na release, instalação num comando e guia do usuário — 021 FR-1, AC-5
 
 ## Próximas fases (visão, sem versão)
 

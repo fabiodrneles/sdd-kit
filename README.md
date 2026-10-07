@@ -25,6 +25,7 @@ O kit nasceu do [cv-craft](https://github.com/fabiodrneles/cv-craft), que saiu d
 - [Comandos e verificações](#comandos-e-verificações)
 - [Motor orientado a eventos](#motor-orientado-a-eventos)
 - [Atualização automática](#atualização-automática)
+- [axyn](#axyn)
 - [Instalar a skill](#instalar-a-skill)
 - [Script de adoção](#script-de-adoção)
 - [Perguntas frequentes](#perguntas-frequentes)
@@ -250,6 +251,41 @@ Quando a versão nova cria ou muda arquivos em `.github/workflows/`, o `GITHUB_T
 Para o workflow abrir PRs, ative em *Settings → Actions → General* a opção **"Allow GitHub Actions to create and approve pull requests"**. Sem ela, o job envia a branch `sdd-kit/sync`, grava no resumo o link para abrir o PR e termina com um aviso, não com falha.
 
 Quem adotou até a `v1.3.0` e vê a sincronização falhar com `Syntax error`: o script antigo se sobrescrevia enquanto rodava. Rode uma vez uma cópia dele, na raiz do repositório, e abra o PR com o resultado: `cp scripts/sdd-sync.sh /tmp/sdd-sync.sh && sh /tmp/sdd-sync.sh`. Da `v1.3.1` em diante, o próprio script faz isso.
+
+## axyn
+
+O **axyn** leva o processo para o [opencode](https://opencode.ai) com modelos gratuitos ou locais: você descreve o que quer, ele escreve a spec, abre os tickets e entrega **um PR por ticket**, só avançando quando os portões passam (o `make ci` do projeto, teste afrouxado ou apagado, arquivos protegidos e tamanho do diff). É um binário único, sem dependências.
+
+**1. Instalar, num comando.** Dentro do repositório clonado do projeto (o binário vai para `~/.local/bin`; sem o Go, baixa da release e confere o sha256, e no fim já roda `axyn install` para configurar o opencode):
+
+```text
+curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.sh | sh
+```
+
+No Windows (PowerShell), dentro do repositório, o binário vai para `%LOCALAPPDATA%\axyn` e o `axyn install` também roda no fim:
+
+```text
+irm https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.ps1 | iex
+```
+
+**2. Configurar um modelo gratuito no opencode.** A chave fica só numa variável de ambiente, nunca em arquivo do repositório. Com o [OpenRouter](https://openrouter.ai), exporte `OPENROUTER_API_KEY`, abra o opencode e escolha um modelo com sufixo `:free` em `/models`. Para rodar local, use o [Ollama](https://ollama.com) e o provedor Ollama do opencode.
+
+**3. Escada de modelos (opcional).** Em `~/.config/axyn/config.yaml`, a lista em ordem: se um modelo não passa nos portões, o axyn tenta o próximo. `key_env` é o nome da variável, nunca a chave (uma chave literal no arquivo é recusada):
+
+```yaml
+models:
+  - id: openrouter/qwen/qwen3-coder:free
+    key_env: OPENROUTER_API_KEY
+  - id: ollama/qwen2.5-coder
+```
+
+**4. Rodar.** No opencode, dentro do repositório:
+
+```text
+/axyn crie uma landing page
+```
+
+O axyn escreve a spec, abre os tickets, implementa cada um numa branch própria, roda os portões e abre um PR por ticket; o merge continua sendo seu. Para ver o andamento (ticket, portões, modelo e tentativas), rode `axyn status` num terminal.
 
 ## Instalar a skill
 

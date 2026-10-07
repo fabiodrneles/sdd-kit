@@ -79,6 +79,14 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: ./tests/adopt.ps1
+      - if: runner.os == 'Windows'
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: axyn/go.mod
+      - name: install-axyn.ps1 (spec 021 FR-1)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./tests/install-axyn.ps1
 
   template:
     name: Template (${{ matrix.lang }})

@@ -1,20 +1,71 @@
 #!/bin/sh
-# Instalação do axyn por um comando (spec 021 FR-1): o script instala o binário e `axyn version` roda.
+# Instalação do axyn por um comando (spec 021 FR-1, AC-5): com o Go (go install) e sem o Go
+# (binário da release, com sha256), sem rede.
 set -eu
 cd "$(dirname "$0")/.."
+root="$PWD"
 
-bin="$(mktemp -d)"
-trap 'rm -rf "$bin"' EXIT
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+fail() { echo "FAIL: $*" >&2; exit 1; }
 
-out="$(GOBIN="$bin" AXYN_SRC="$PWD/axyn" sh scripts/install-axyn.sh)"
-[ -x "$bin/axyn" ] || { echo "FAIL: $bin/axyn não foi criado"; exit 1; }
-"$bin/axyn" version | grep -q . || { echo "FAIL: axyn version sem saída"; exit 1; }
-echo "$out" | grep -q "axyn instalado em $bin/axyn" || { echo "FAIL: saída sem o destino: $out"; exit 1; }
+bin="$tmp/gobin"
+out="$(GOBIN="$bin" AXYN_SRC="$root/axyn" sh scripts/install-axyn.sh)"
+[ -x "$bin/axyn" ] || fail "$bin/axyn não foi criado"
+"$bin/axyn" version | grep -q . || fail "axyn version sem saída"
+echo "$out" | grep -q "axyn instalado em $bin/axyn" || fail "saída sem o destino: $out"
 
-# sem Go no PATH, o script para com o motivo
-if PATH=/nonexistent /bin/sh scripts/install-axyn.sh 2>"$bin/err"; then
-	echo "FAIL: deveria falhar sem o Go"
-	exit 1
+# sem Go (nem curl) no PATH, o script para com o motivo
+if PATH=/nonexistent /bin/sh scripts/install-axyn.sh 2>"$tmp/err"; then
+	fail "deveria falhar sem o Go"
 fi
-grep -q "Go" "$bin/err" || { echo "FAIL: sem o motivo"; exit 1; }
+grep -q "Go" "$tmp/err" || fail "sem o motivo"
+
+# build-axyn.sh: os cinco binários e o arquivo de checksums
+dist="$tmp/dist"
+AXYN_VERSION=v9.9.9 sh scripts/build-axyn.sh "$dist" > /dev/null
+for f in axyn_linux_amd64 axyn_linux_arm64 axyn_darwin_amd64 axyn_darwin_arm64 axyn_windows_amd64.exe; do
+	[ -s "$dist/$f" ] || fail "build-axyn.sh não gerou $f"
+	grep -q " \*\{0,1\}$f\$" "$dist/axyn_checksums.txt" || fail "$f fora do axyn_checksums.txt"
+done
+[ "$(wc -l < "$dist/axyn_checksums.txt")" -eq 5 ] || fail "axyn_checksums.txt deveria ter 5 linhas"
+
+# sem o Go no PATH: um PATH só com as ferramentas do script
+nogo="$tmp/nogo"
+mkdir "$nogo"
+for t in sh uname curl sha256sum shasum awk mkdir mktemp cp chmod mv rm git dirname cat sed grep head tr; do
+	p="$(command -v "$t" 2>/dev/null || true)"
+	case "$p" in /*) ln -s "$p" "$nogo/$t" ;; esac
+done
+PATH="$nogo" command -v go > /dev/null 2>&1 && fail "o PATH de teste ainda tem o Go"
+
+repo="$tmp/repo"
+mkdir "$repo"
+git -C "$repo" init -q
+home="$tmp/home"
+mkdir "$home"
+out="$(cd "$repo" && PATH="$nogo" HOME="$home" AXYN_BIN="$home/bin" AXYN_RELEASE_URL="file://$dist" /bin/sh "$root/scripts/install-axyn.sh")" ||
+	fail "instalação sem Go falhou: $out"
+[ -x "$home/bin/axyn" ] || fail "binário não foi instalado em $home/bin"
+"$home/bin/axyn" version | grep -q "v9.9.9" || fail "axyn version não traz a versão do build"
+echo "$out" | grep -q "axyn instalado em $home/bin/axyn" || fail "saída sem o destino: $out"
+[ -f "$repo/opencode.json" ] || fail "axyn install não rodou no repositório git"
+
+# fora de um repositório git, só orienta
+plain="$tmp/plain"
+mkdir "$plain"
+out="$(cd "$plain" && PATH="$nogo" HOME="$home" AXYN_BIN="$home/bin2" AXYN_RELEASE_URL="file://$dist" /bin/sh "$root/scripts/install-axyn.sh")"
+[ ! -e "$plain/opencode.json" ] || fail "criou opencode.json fora de um repositório git"
+echo "$out" | grep -q "axyn install" || fail "sem a orientação do axyn install"
+
+# checksum errado: para com o motivo e não instala nada
+bad="$tmp/bad"
+cp -r "$dist" "$bad"
+sed 's/^[0-9a-f]\{8\}/00000000/' "$dist/axyn_checksums.txt" > "$bad/axyn_checksums.txt"
+if (cd "$repo" && PATH="$nogo" HOME="$home" AXYN_BIN="$home/bin3" AXYN_RELEASE_URL="file://$bad" /bin/sh "$root/scripts/install-axyn.sh") 2>"$tmp/err"; then
+	fail "checksum errado deveria falhar"
+fi
+grep -q "sha256" "$tmp/err" || fail "sem o motivo do checksum: $(cat "$tmp/err")"
+[ ! -e "$home/bin3/axyn" ] || fail "instalou com checksum errado"
+
 echo "ok: install-axyn"

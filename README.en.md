@@ -514,14 +514,20 @@ axyn writes the spec and the tickets, prepares the project (the `Makefile`, CI a
 
 ### 9. Follow progress
 
-In a **second terminal**, in the same folder:
+**Where to run:** in a **second terminal**, at the project root (the same folder as in step 5). opencode may stay closed: axyn works in the background.
 
 ```bash
-axyn status
-# Shows the current ticket, the gates, the model and the attempts.
+axyn status --watch
+# Stays open and prints a line at each change (ticket, phase, attempt, gates).
+# When it ends, stops or asks something, it beeps and shows a notification.
+# Ctrl + C leaves the watch (axyn keeps working).
 ```
 
+To see just the current moment, once: `axyn status`.
+
 ### 10. Review and merge the PRs
+
+**Where to run:** in the terminal, at the project root.
 
 ```bash
 gh pr list
@@ -534,7 +540,7 @@ gh pr merge 1 --merge --delete-branch
 # Merges PR 1 and deletes its branch.
 ```
 
-Repeat for each PR. Then bring the result to your machine:
+Repeat for each PR. Then bring the result to your machine (at the project root):
 
 ```bash
 git checkout main
@@ -542,6 +548,8 @@ git pull
 ```
 
 ### 11. See the result
+
+**Where to run:** in the terminal, at the project root.
 
 ```bash
 # Linux
@@ -557,34 +565,91 @@ start index.html
 
 ### 12. When something goes wrong
 
+**Where to run:** in the terminal, at the project root.
+
 ```bash
 axyn history
-# Writes to .axyn/ a file with everything the run did (no keys or tokens).
+# Writes to .axyn/ a file with everything the run did, including the code of each attempt
+# that did not pass (no keys or tokens).
 axyn history --out ~/Downloads/axyn_history.md
 # The same, to a folder you choose (on Windows: --out $HOME\Downloads\axyn_history.md).
 ```
 
-Attach that file when asking for help: with it, whoever helps sees exactly what happened.
+Attach that file when asking for help: with it, whoever helps sees exactly what happened. The most common cases, with the fix, are in [Common problems and how to fix them](#common-problems-and-how-to-fix-them).
 
 ### Commands you may need
 
-| Command | What it does |
-|---|---|
-| `axyn model` | picks or switches axyn's model, from a numbered list of the free ones (`axyn model ID` switches straight away) |
-| `axyn doctor` | checks what the repository and the machine need, with the command for each missing thing |
-| `axyn setup` | configures through GitHub what it can (repository, Actions, auto-merge) |
-| `axyn setup --protect-main` | also requires a green `make ci` before merging into `main` |
-| `axyn init` | prepares the project by hand (`Makefile`, CI, lint); `axyn init --stack python` picks the stack |
-| `axyn status` | progress of the current run |
-| `axyn run --resume` | resumes a run that stopped on a question, after the answer |
-| `axyn history` | file with everything the run did, to ask for help |
-| `axyn version` | installed version |
-| `gh pr list` / `gh pr view N --web` | lists the PRs / opens PR N in the browser |
-| `gh pr checks N` | PR N's CI |
-| `gh pr merge N --merge --delete-branch` | merges PR N and deletes the branch |
-| `git status` | what changed in the folder |
-| `git checkout main && git pull` | back to `main`, bringing what was merged |
-| `git log --oneline -10` | the last 10 commits |
+| Command | Where to run | What it does |
+|---|---|---|
+| `axyn model` | any folder | picks or switches axyn's model, from a numbered list of the free ones (`axyn model ID` switches straight away) |
+| `axyn doctor` | project root | checks what the repository and the machine need, with the command for each missing thing |
+| `axyn setup` | project root | configures through GitHub what it can (repository, Actions, auto-merge) |
+| `axyn setup --protect-main` | project root | also requires a green `make ci` before merging into `main` |
+| `axyn init` | project root | prepares the project by hand (`Makefile`, CI, lint); `axyn init --stack python` picks the stack |
+| `axyn run "request"` | project root | the same as opencode's `/axyn`, straight from the terminal |
+| `axyn status` | project root | the run's progress, once |
+| `axyn status --watch` | project root | follows and warns when it ends, stops or asks something |
+| `axyn run --resume` | project root | continues where it stopped (after a question, a crash or a fix of yours) |
+| `axyn history` | project root | file with everything the run did, to ask for help |
+| `axyn version` | any folder | installed version |
+| `gh pr list` / `gh pr view N --web` | project root | lists the PRs / opens PR N in the browser |
+| `gh pr checks N` | project root | PR N's CI |
+| `gh pr merge N --merge --delete-branch` | project root | merges PR N and deletes the branch |
+| `git status` | project root | what changed in the folder |
+| `git checkout main && git pull` | project root | back to `main`, bringing what was merged |
+| `git log --oneline -10` | project root | the last 10 commits |
+
+### Common problems and how to fix them
+
+Each case says what shows up, why it happens and what to type. "Project root" is the folder from step 5 (in PowerShell, the line shows the project name before the `>`); check with `pwd` and `git status`.
+
+**"The term 'axyn' is not recognized" (or `axyn: command not found`)**
+The terminal was opened before the install and does not know the new PATH. Close and reopen the terminal. If it persists, on Windows (any folder):
+
+```powershell
+[Environment]::SetEnvironmentVariable('Path', "$env:LOCALAPPDATA\axyn;" + [Environment]::GetEnvironmentVariable('Path','User'), 'User')
+```
+
+Close and reopen PowerShell again. On Linux/macOS: `export PATH="$HOME/.local/bin:$PATH"`, and open a new terminal.
+
+**I pasted a command and the AI talked about it instead of running it**
+The command was pasted inside opencode. Leave with `Ctrl + C` (or `/exit`) until the terminal line shows up (`PS ...>` or `...$`), and paste it there. opencode is only for `/models` and `/axyn`.
+
+**The installer says the folder is not a git repository**
+You are outside the project root. Go into it (`cd path/to/project`) and run `axyn install`, then `axyn doctor`.
+
+**`axyn doctor` (or axyn) says a tool is missing (`node`, `make`, `golangci-lint`…)**
+Copy and paste the command it shows, in any folder, close and reopen the terminal, and run `axyn doctor` again at the project root. The `go install` of `golangci-lint` compiles for several minutes without printing anything: wait for the terminal line to come back. To download it ready-made on Windows: `winget install -e --id GolangCI.golangci-lint`.
+
+**The computer froze, or the terminal closed, in the middle of a task**
+`axyn status` shows "interrompida" (interrupted). At the project root, `axyn run --resume`: axyn keeps the half-done code in a WIP commit (nothing is lost) and continues the ticket.
+
+**"Já estou trabalhando nisso" (I am already working on it)**
+A task is already running; follow it with `axyn status --watch` (project root). To stop it for good (any folder): `Stop-Process -Name axyn -Force` on Windows, or `pkill -f "axyn run"` on Linux/macOS; then, to continue: `axyn run --resume`.
+
+**The model could not pass the gates**
+After 10 attempts per model (each with the previous one's errors, and more help every time), axyn stops. The last attempt's code is on a `feat/…-wip` branch, published as a **draft PR** with the errors and a text ready to paste into another AI (without GitHub, in `.axyn/ajuda-ticket-N.md`). Three ways out, at the project root:
+
+1. More chances with another model: `axyn model` (pick another) and `axyn run --resume`.
+2. Fix it yourself (or with another AI) and let axyn check:
+
+   ```bash
+   git checkout feat/BRANCH-NAME-wip
+   # edit the files, or paste the other AI's fix
+   git add -A
+   git commit -m "fix: fixed by hand"
+   git checkout main
+   axyn run --resume
+   # the gates run on your code first; if it passes, the ticket is delivered
+   ```
+
+3. Answer axyn's question in opencode (it carries on with your instruction).
+
+**I want to see the code the model wrote**
+`axyn history` (the file has the code of each attempt that did not pass), or open the draft PR with `gh pr list` and `gh pr view N --web`.
+
+**The computer slows down or freezes during `make ci`**
+Lint and tests use a lot of memory. Close opencode and other programs while axyn works: it does not need opencode open.
 
 ## Installing the skill
 

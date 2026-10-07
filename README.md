@@ -27,6 +27,7 @@ O kit nasceu do [cv-craft](https://github.com/fabiodrneles/cv-craft), que saiu d
 - [Atualização automática](#atualização-automática)
 - [axyn](#axyn)
 - [Passo a passo para iniciantes](#passo-a-passo-para-iniciantes)
+- [Problemas comuns e como resolver](#problemas-comuns-e-como-resolver)
 - [Instalar a skill](#instalar-a-skill)
 - [Script de adoção](#script-de-adoção)
 - [Perguntas frequentes](#perguntas-frequentes)
@@ -571,14 +572,20 @@ O axyn escreve a spec e os tickets, prepara o projeto (o `Makefile`, o CI e o li
 
 ### 9. Acompanhar o andamento
 
-Num **segundo terminal**, na mesma pasta:
+**Onde rodar:** num **segundo terminal**, na raiz do projeto (a mesma pasta do passo 5). O opencode pode ficar fechado: o axyn trabalha em segundo plano.
 
 ```bash
-axyn status
-# Mostra o ticket atual, os portões, o modelo e as tentativas.
+axyn status --watch
+# Fica aberto e escreve uma linha a cada mudança (ticket, fase, tentativa, portões).
+# Quando termina, para ou faz uma pergunta, dá um bipe e mostra uma notificação.
+# Ctrl + C sai do acompanhamento (o axyn continua trabalhando).
 ```
 
+Para ver só o momento atual, uma vez: `axyn status`.
+
 ### 10. Revisar e mesclar os PRs
+
+**Onde rodar:** no terminal, na raiz do projeto.
 
 ```bash
 gh pr list
@@ -591,7 +598,7 @@ gh pr merge 1 --merge --delete-branch
 # Mescla o PR 1 e apaga a branch dele.
 ```
 
-Repita para cada PR. Depois, traga o resultado para a sua máquina:
+Repita para cada PR. Depois, traga o resultado para a sua máquina (na raiz do projeto):
 
 ```bash
 git checkout main
@@ -599,6 +606,8 @@ git pull
 ```
 
 ### 11. Ver o resultado
+
+**Onde rodar:** no terminal, na raiz do projeto.
 
 ```bash
 # Linux
@@ -614,34 +623,91 @@ start index.html
 
 ### 12. Quando algo der errado
 
+**Onde rodar:** no terminal, na raiz do projeto.
+
 ```bash
 axyn history
-# Grava em .axyn/ um arquivo com tudo o que a execução fez (sem chaves nem tokens).
+# Grava em .axyn/ um arquivo com tudo o que a execução fez, inclusive o código de cada
+# tentativa que não passou (sem chaves nem tokens).
 axyn history --out ~/Downloads/axyn_history.md
 # O mesmo, numa pasta à sua escolha (no Windows: --out $HOME\Downloads\axyn_history.md).
 ```
 
-Anexe esse arquivo ao pedir ajuda: com ele, quem for ajudar vê exatamente o que aconteceu.
+Anexe esse arquivo ao pedir ajuda: com ele, quem for ajudar vê exatamente o que aconteceu. Os casos mais comuns, com a solução, estão em [Problemas comuns e como resolver](#problemas-comuns-e-como-resolver).
 
 ### Comandos que você pode precisar
 
-| Comando | O que faz |
-|---|---|
-| `axyn model` | escolhe ou troca o modelo do axyn, numa lista numerada dos gratuitos (`axyn model ID` troca direto) |
-| `axyn doctor` | confere o que o repositório e a máquina precisam, com o comando de cada coisa que falta |
-| `axyn setup` | configura pelo GitHub o que dá (repositório, Actions, merge automático) |
-| `axyn setup --protect-main` | também exige o `make ci` verde antes do merge na `main` |
-| `axyn init` | prepara o projeto à mão (`Makefile`, CI, lint); `axyn init --stack python` escolhe a stack |
-| `axyn status` | andamento da execução atual |
-| `axyn run --resume` | retoma uma execução que parou numa pergunta, depois da resposta |
-| `axyn history` | arquivo com tudo o que a execução fez, para pedir ajuda |
-| `axyn version` | versão instalada |
-| `gh pr list` / `gh pr view N --web` | lista os PRs / abre o PR N no navegador |
-| `gh pr checks N` | CI do PR N |
-| `gh pr merge N --merge --delete-branch` | mescla o PR N e apaga a branch |
-| `git status` | o que mudou na pasta |
-| `git checkout main && git pull` | volta para a `main` e traz o que foi mesclado |
-| `git log --oneline -10` | os 10 últimos commits |
+| Comando | Onde rodar | O que faz |
+|---|---|---|
+| `axyn model` | qualquer pasta | escolhe ou troca o modelo do axyn, numa lista numerada dos gratuitos (`axyn model ID` troca direto) |
+| `axyn doctor` | raiz do projeto | confere o que o repositório e a máquina precisam, com o comando de cada coisa que falta |
+| `axyn setup` | raiz do projeto | configura pelo GitHub o que dá (repositório, Actions, merge automático) |
+| `axyn setup --protect-main` | raiz do projeto | também exige o `make ci` verde antes do merge na `main` |
+| `axyn init` | raiz do projeto | prepara o projeto à mão (`Makefile`, CI, lint); `axyn init --stack python` escolhe a stack |
+| `axyn run "pedido"` | raiz do projeto | o mesmo que o `/axyn` do opencode, direto do terminal |
+| `axyn status` | raiz do projeto | andamento da execução, uma vez |
+| `axyn status --watch` | raiz do projeto | acompanha e avisa quando termina, para ou pergunta algo |
+| `axyn run --resume` | raiz do projeto | continua de onde parou (depois de uma pergunta, de um travamento ou de uma correção sua) |
+| `axyn history` | raiz do projeto | arquivo com tudo o que a execução fez, para pedir ajuda |
+| `axyn version` | qualquer pasta | versão instalada |
+| `gh pr list` / `gh pr view N --web` | raiz do projeto | lista os PRs / abre o PR N no navegador |
+| `gh pr checks N` | raiz do projeto | CI do PR N |
+| `gh pr merge N --merge --delete-branch` | raiz do projeto | mescla o PR N e apaga a branch |
+| `git status` | raiz do projeto | o que mudou na pasta |
+| `git checkout main && git pull` | raiz do projeto | volta para a `main` e traz o que foi mesclado |
+| `git log --oneline -10` | raiz do projeto | os 10 últimos commits |
+
+### Problemas comuns e como resolver
+
+Cada caso diz o que aparece, por que acontece e o que digitar. "Raiz do projeto" é a pasta do passo 5 (no PowerShell, a linha mostra o nome do projeto antes do `>`); confira com `pwd` e `git status`.
+
+**"O termo 'axyn' não é reconhecido" (ou `axyn: command not found`)**
+O terminal foi aberto antes da instalação, e não conhece o PATH novo. Feche e abra o terminal. Se continuar, no Windows (em qualquer pasta):
+
+```powershell
+[Environment]::SetEnvironmentVariable('Path', "$env:LOCALAPPDATA\axyn;" + [Environment]::GetEnvironmentVariable('Path','User'), 'User')
+```
+
+Feche e abra o PowerShell de novo. No Linux/macOS: `export PATH="$HOME/.local/bin:$PATH"`, e abra um terminal novo.
+
+**Colei um comando e a IA respondeu sobre ele, em vez de rodar**
+O comando foi colado dentro do opencode. Saia com `Ctrl + C` (ou `/exit`) até aparecer a linha do terminal (`PS ...>` ou `...$`), e cole lá. O opencode só serve para `/models` e `/axyn`.
+
+**O instalador diz que a pasta não é um repositório git**
+Você está fora da raiz do projeto. Entre nela (`cd caminho\do\projeto`) e rode `axyn install` e depois `axyn doctor`.
+
+**O `axyn doctor` (ou o axyn) diz que falta uma ferramenta (`node`, `make`, `golangci-lint`…)**
+Copie e cole o comando que ele mostra, em qualquer pasta, feche e abra o terminal, e rode `axyn doctor` de novo na raiz do projeto. O `go install` do `golangci-lint` compila por vários minutos sem mostrar nada: espere a linha do terminal voltar. Para baixar pronto no Windows: `winget install -e --id GolangCI.golangci-lint`.
+
+**O computador travou, ou o terminal fechou, no meio de uma tarefa**
+O `axyn status` mostra "interrompida". Na raiz do projeto, `axyn run --resume`: o axyn guarda num commit WIP o código que estava pela metade (nada se perde) e continua o ticket.
+
+**"Já estou trabalhando nisso"**
+Já há uma tarefa rodando; acompanhe com `axyn status --watch` (raiz do projeto). Para parar de vez (em qualquer pasta): `Stop-Process -Name axyn -Force` no Windows, ou `pkill -f "axyn run"` no Linux/macOS; depois, para continuar: `axyn run --resume`.
+
+**O modelo não conseguiu passar nos portões**
+Depois de 10 tentativas por modelo (cada uma com os erros da anterior, e com mais ajuda a cada vez), o axyn para. O código da última tentativa fica numa branch `feat/…-wip`, publicada como **PR em rascunho** com os erros e um texto pronto para colar noutra IA (sem GitHub, em `.axyn/ajuda-ticket-N.md`). Três saídas, na raiz do projeto:
+
+1. Dar mais chances com outro modelo: `axyn model` (escolha outro) e `axyn run --resume`.
+2. Corrigir você mesmo (ou com outra IA) e deixar o axyn conferir:
+
+   ```bash
+   git checkout feat/NOME-DA-BRANCH-wip
+   # edite os arquivos, ou cole a correção da outra IA
+   git add -A
+   git commit -m "fix: correção à mão"
+   git checkout main
+   axyn run --resume
+   # os portões rodam primeiro no seu código; se passar, o ticket é entregue
+   ```
+
+3. Responder à pergunta do axyn no opencode (ele segue com a sua instrução).
+
+**Quero ver o código que o modelo escreveu**
+`axyn history` (o arquivo traz o código de cada tentativa que não passou), ou abra o PR em rascunho com `gh pr list` e `gh pr view N --web`.
+
+**O computador fica lento ou trava durante o `make ci`**
+O lint e os testes usam bastante memória. Feche o opencode e outros programas enquanto o axyn trabalha: ele não precisa do opencode aberto.
 
 ## Instalar a skill
 

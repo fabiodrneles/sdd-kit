@@ -41,6 +41,8 @@ case "$url" in
     grep -qx "${url##*/}" "$G/tags" ;;
   repos/o/r/actions/workflows/release-tag.yml/runs*)
     jq -r "$jq" < "$G/runs" ;;
+  repos/o/r/issues\?labels*state=closed*)
+    jq -r "$jq" < "$G/closed_epics" ;;
   repos/o/r/issues\?labels*)
     jq -r "$jq" < "$G/epics" ;;
   *) echo "gh falso: $url" >&2; exit 1 ;;
@@ -56,7 +58,7 @@ SH
 # shellcheck disable=SC2016 # literal: crases e $ do texto gerado
 printf '#!/bin/sh\necho "$*" >> "$G/epic"\n' > "$tmp/epic.sh"
 export PATH="$tmp/bin:$PATH" G SDD_RELEASE_SH="$tmp/release.sh" SDD_EPIC_SH="$tmp/epic.sh"
-echo '[]' > "$G/epics"; : > "$G/epic"; : > "$G/closed"; echo '[{"state":"open"}]' > "$G/subs"
+echo '[]' > "$G/epics"; echo '[]' > "$G/closed_epics"; : > "$G/epic"; : > "$G/closed"; echo '[{"state":"open"}]' > "$G/subs"
 
 echo "true chore/release-v1.2.3 o/r" > "$G/pr.10"
 echo "true feat/9-algo o/r" > "$G/pr.11"
@@ -126,4 +128,16 @@ echo '[{"state":"closed"},{"state":"closed"}]' > "$G/subs"; : > "$G/epic"; echo 
 out="$(cd "$tmp/proj" && run 22 2>&1)" || fail "fechamento com épico entregue falhou: $out"
 [ "$(cat "$G/closed")" = 5 ] || fail "não fechou o épico entregue #5: $out"
 [ "$(cat "$G/epic")" = "--repo o/r 2" ] || fail "não abriu a Fase 2 depois de fechar o épico: $(cat "$G/epic") / $out"
+# #292: a fase do ROADMAP com caixa aberta já tem épico fechado (o PR de fechamento não
+# marcou o ROADMAP): o motor fecha o épico entregue, mas não reabre a fase.
+echo '[{"number":5}]' > "$G/epics"; : > "$G/epic"; : > "$G/closed"; echo "true chore/release-v1.2.7 o/r" > "$G/pr.23"
+echo '[{"number":3,"title":"Fase 1 — A"},{"number":4,"title":"Fase 2 — B"}]' > "$G/closed_epics"
+out="$(cd "$tmp/proj" && run 23 2>&1)" || fail "fechamento com fase já entregue falhou: $out"
+[ ! -s "$G/epic" ] || fail "reabriu a Fase 2, já entregue no épico #4: $(cat "$G/epic")"
+case "$out" in *"épico #4"*) ;; *) fail "sem o aviso da fase já entregue: $out" ;; esac
+# A Fase 12 entregue não conta como Fase 1.
+echo '[{"number":9,"title":"Fase 12 — X"}]' > "$G/closed_epics"; echo "true chore/release-v1.2.8 o/r" > "$G/pr.24"
+printf '## Fase 1 — B (P1)\n\n- [ ] **T2** b\n' > "$tmp/proj/specs/ROADMAP.md"
+out="$(cd "$tmp/proj" && run 24 2>&1)" || fail "fechamento com outra fase entregue falhou: $out"
+[ "$(cat "$G/epic")" = "--repo o/r 1" ] || fail "a Fase 12 fechada impediu a Fase 1: $(cat "$G/epic") / $out"
 echo "sdd-on-release-merge: ok"

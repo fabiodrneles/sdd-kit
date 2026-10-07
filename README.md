@@ -26,6 +26,7 @@ O kit nasceu do [cv-craft](https://github.com/fabiodrneles/cv-craft), que saiu d
 - [Motor orientado a eventos](#motor-orientado-a-eventos)
 - [Atualização automática](#atualização-automática)
 - [axyn](#axyn)
+- [Passo a passo para iniciantes](#passo-a-passo-para-iniciantes)
 - [Instalar a skill](#instalar-a-skill)
 - [Script de adoção](#script-de-adoção)
 - [Perguntas frequentes](#perguntas-frequentes)
@@ -256,6 +257,8 @@ Quem adotou até a `v1.3.0` e vê a sincronização falhar com `Syntax error`: o
 
 O **axyn** leva o processo para o [opencode](https://opencode.ai) com modelos gratuitos ou locais: você descreve o que quer, ele escreve a spec, abre os tickets e entrega **um PR por ticket**, só avançando quando os portões passam (o `make ci` do projeto, teste afrouxado ou apagado, arquivos protegidos e tamanho do diff). É um binário único, sem dependências.
 
+Nunca usou um terminal? Siga o [passo a passo para iniciantes](#passo-a-passo-para-iniciantes).
+
 **1. Instalar, num comando.** Dentro do repositório clonado do projeto (o binário vai para `~/.local/bin`; sem o Go, baixa da release e confere o sha256, e no fim já roda `axyn install` para configurar o opencode):
 
 ```text
@@ -305,6 +308,339 @@ Rode `axyn doctor` no repositório: ele confere cada item abaixo, uma linha por 
 | Proteção da branch principal (opcional) | só entra no `main` o que passou no `make ci` | com `axyn setup --protect-main` (o plano gratuito não tem em repositório privado: ele avisa e segue) | *Settings → Branches* |
 | Ferramentas do `make ci` da stack (`make`, `node`…) | os portões rodam o `make ci` na sua máquina | mostra o comando completo para colar (`apt`, `dnf`, `pacman`, `brew` ou `winget`) | instalar pelo gerenciador do sistema |
 | `opencode` e um modelo | é onde o `/axyn` roda | mostra o comando de instalação | a chave do modelo só em variável de ambiente |
+
+## Passo a passo para iniciantes
+
+Do terminal recém-aberto até o seu primeiro PR mesclado com o axyn. Cada passo traz o comando para **Linux/macOS** e para **Windows (PowerShell)**. Copie, cole e aperte Enter. As linhas que começam com `#` são explicações e não precisam ser digitadas.
+
+### 1. Abrir o terminal
+
+- **Windows:** tecla Windows, digite `PowerShell` e abra o **Windows PowerShell** (ou o **Terminal**).
+- **macOS:** `Cmd + Espaço`, digite `Terminal` e aperte Enter.
+- **Linux:** `Ctrl + Alt + T`.
+
+### 2. Instalar as ferramentas
+
+São quatro: o **git** (versiona o código), o **gh** (fala com o GitHub), o **node** (roda o opencode e confere o HTML) e o **make** (roda o `make ci`, que os portões usam).
+
+Ubuntu/Debian:
+
+```bash
+sudo apt-get update && sudo apt-get install -y git make curl nodejs npm gh
+```
+
+macOS (o primeiro comando instala o git e o make; o segundo instala o Homebrew, se você ainda não tem):
+
+```bash
+xcode-select --install
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install gh node
+```
+
+Windows (feche e abra o PowerShell de novo depois, para ele achar os programas novos):
+
+```powershell
+winget install -e --id Git.Git
+winget install -e --id GitHub.cli
+winget install -e --id OpenJS.NodeJS.LTS
+winget install -e --id ezwinports.make
+```
+
+Confira se deu certo (cada comando imprime uma versão; se algum disser "não encontrado", repita a instalação dele):
+
+```bash
+git --version
+gh --version
+node --version
+make --version
+```
+
+### 3. Entrar no GitHub
+
+Se você ainda não tem conta, crie uma em <https://github.com/signup>. Depois:
+
+```bash
+gh auth login
+# Responda: GitHub.com → HTTPS → Yes → Login with a web browser.
+# Ele mostra um código; o navegador abre; cole o código e autorize.
+```
+
+Diga ao git o seu nome e e-mail (aparecem nos commits; o `axyn setup` do passo 7 também faz isso por você, com os dados da sua conta):
+
+```bash
+git config --global user.name "Seu Nome"
+git config --global user.email "voce@exemplo.com"
+```
+
+### 4. Instalar o opencode e escolher um modelo gratuito
+
+O **opencode** é o programa onde você conversa com a IA no terminal. O **modelo** é a IA em si; aqui usamos um modelo gratuito do **OpenRouter**, um site que dá acesso a vários modelos com uma conta só.
+
+#### 4.1. Instalar o opencode
+
+Linux/macOS:
+
+```bash
+curl -fsSL https://opencode.ai/install | bash
+```
+
+Windows:
+
+```powershell
+npm install -g opencode-ai
+```
+
+Feche e abra o terminal, e confira (deve imprimir um número de versão):
+
+```bash
+opencode --version
+```
+
+#### 4.2. Criar a conta no OpenRouter
+
+1. Abra o navegador em <https://openrouter.ai>.
+2. Clique em **Sign up** (canto superior direito) e entre com a sua conta Google ou GitHub, ou com um e-mail. Não precisa de cartão para os modelos gratuitos.
+
+#### 4.3. Criar a chave (a "senha" que o opencode usa para falar com o OpenRouter)
+
+1. Já logado, abra <https://openrouter.ai/settings/keys> (ou clique na sua foto, no canto superior direito, e depois em **Keys**).
+2. Clique em **Create Key**. Em **Name**, escreva `axyn`; deixe o resto como está e clique em **Create**.
+3. Aparece uma chave que começa com `sk-or-v1-...`. Clique no ícone de copiar, ao lado dela. **Ela só aparece uma vez**: se fechar a janela sem copiar, apague essa chave e crie outra.
+4. Não cole a chave em nenhum arquivo do projeto, nem em mensagem ou print: quem tem a chave usa a sua conta.
+
+#### 4.4. Guardar a chave numa variável de ambiente
+
+Uma **variável de ambiente** é um valor guardado no seu usuário do computador, que os programas leem pelo nome; assim a chave nunca fica dentro do projeto. No comando abaixo, troque `sua-chave` pela chave que você copiou (mantenha as aspas). No terminal, colar é `Ctrl + Shift + V` no Linux, `Cmd + V` no macOS e o botão direito do mouse no PowerShell.
+
+Linux (o terminal padrão usa o bash):
+
+```bash
+echo 'export OPENROUTER_API_KEY="sua-chave"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+macOS (o terminal padrão usa o zsh):
+
+```bash
+echo 'export OPENROUTER_API_KEY="sua-chave"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+Windows (depois, **feche e abra o PowerShell**: a variável só vale em janelas novas):
+
+```powershell
+setx OPENROUTER_API_KEY "sua-chave"
+```
+
+O `~` quer dizer a sua pasta de usuário (`/home/seu-nome` no Linux, `/Users/seu-nome` no macOS); `.bashrc` e `.zshrc` são arquivos que o terminal lê toda vez que abre, e por isso a chave vale em todo terminal novo. Confira se ficou guardada (deve aparecer `sk-or-v1-` e o resto da chave):
+
+```bash
+echo $OPENROUTER_API_KEY
+```
+
+```powershell
+echo $env:OPENROUTER_API_KEY
+```
+
+#### 4.5. Escolher o modelo gratuito
+
+1. Abra <https://openrouter.ai/models?q=free>: a lista mostra só os modelos gratuitos (o nome termina em `:free`).
+2. Para código, prefira um com **coder** no nome. Clique nele: o nome completo aparece embaixo do título, por exemplo `qwen/qwen3-coder:free`. Clique no ícone de copiar, ao lado.
+3. No axyn, esse nome vai com `openrouter/` na frente: `openrouter/qwen/qwen3-coder:free`.
+
+#### 4.6. Dizer ao axyn qual modelo usar
+
+O axyn roda agentes **em segundo plano**, um para o plano e um para cada ticket, e cada um precisa saber qual modelo usar. Quem diz isso é o arquivo `config.yaml` do axyn, que fica na pasta `.config/axyn`, dentro da sua pasta de usuário. Os comandos abaixo criam a pasta e o arquivo. Se você escolheu outro modelo no 4.5, troque `qwen/qwen3-coder:free` nas duas linhas.
+
+Linux/macOS:
+
+```bash
+mkdir -p ~/.config/axyn
+printf 'models:\n  - id: openrouter/qwen/qwen3-coder:free\n    key_env: OPENROUTER_API_KEY\n' > ~/.config/axyn/config.yaml
+```
+
+Windows:
+
+```powershell
+New-Item -ItemType Directory -Force "$HOME\.config\axyn" | Out-Null
+Set-Content "$HOME\.config\axyn\config.yaml" "models:`n  - id: openrouter/qwen/qwen3-coder:free`n    key_env: OPENROUTER_API_KEY"
+```
+
+Confira o arquivo (deve mostrar as 3 linhas abaixo):
+
+```bash
+cat ~/.config/axyn/config.yaml
+```
+
+```powershell
+Get-Content "$HOME\.config\axyn\config.yaml"
+```
+
+```yaml
+models:
+  - id: openrouter/qwen/qwen3-coder:free
+    key_env: OPENROUTER_API_KEY
+```
+
+A linha `key_env` traz o **nome** da variável do 4.4, nunca a chave: o axyn recusa um arquivo com a chave escrita nele.
+
+#### 4.7. Sem internet (opcional)
+
+Para rodar a IA no seu computador, sem conta nem chave: instale o [Ollama](https://ollama.com) (botão **Download**), rode `ollama pull qwen2.5-coder` no terminal e, no `config.yaml` do 4.6, use `- id: ollama/qwen2.5-coder` (sem a linha `key_env`). Precisa de um computador com bastante memória (16 GB ou mais).
+
+### 5. Ter o repositório do projeto
+
+**Caminho A: um repositório que já existe no GitHub.** Troque `seu-usuario/seu-repo`:
+
+```bash
+gh repo clone seu-usuario/seu-repo
+cd seu-repo
+```
+
+**Caminho B: um projeto novo, do zero.** Troque `meu-site` pelo nome que quiser:
+
+```bash
+mkdir meu-site
+cd meu-site
+git init -b main
+echo "# meu-site" > README.md
+git add README.md
+git commit -m "chore: first commit"
+# O repositório no GitHub é criado no passo 7, pelo axyn setup.
+```
+
+### 6. Instalar o axyn
+
+Sempre **dentro da pasta do projeto** (a do passo 5). O instalador baixa o axyn, confere a assinatura, configura o opencode do projeto (`axyn install`) e no fim roda o `axyn doctor`.
+
+Linux/macOS:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.sh | sh
+```
+
+Windows:
+
+```powershell
+irm https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.ps1 | iex
+```
+
+Se ele disser "adicione ao PATH", rode a linha que ele mostrar (é ela que faz o terminal achar o comando `axyn`) e confira:
+
+```bash
+axyn version
+```
+
+### 7. Conferir e configurar o repositório
+
+```bash
+axyn doctor
+# Uma linha por item: "ok" está pronto; "falta" vem com o comando que resolve.
+axyn setup
+# Configura sozinho o que dá: cria o repositório no GitHub (no caminho B, privado),
+# dá ao GitHub Actions permissão de abrir PRs e liga o merge automático.
+axyn doctor
+# Agora deve terminar com "tudo certo".
+```
+
+Se ainda faltar alguma ferramenta, o `doctor` mostra o comando completo para instalar; copie, cole e rode o `axyn doctor` de novo.
+
+### 8. Pedir a primeira tarefa
+
+Abra o opencode na pasta do projeto:
+
+```bash
+opencode
+```
+
+A tela do opencode abre no próprio terminal, com uma caixa de texto embaixo. Escolha o modelo que o opencode usa nesta conversa:
+
+1. Digite `/models` e aperte Enter: abre uma lista de modelos.
+2. Digite parte do nome escolhido no 4.5 (por exemplo `qwen3-coder`) para filtrar a lista.
+3. Com as setas do teclado, vá até o que tem **OpenRouter** e `:free` no nome, e aperte Enter. O nome do modelo aparece embaixo, na barra do opencode.
+
+Se o OpenRouter não aparecer na lista, o opencode não achou a chave: saia com `Ctrl + C`, abra um terminal novo, confira a variável (passo 4.4) e rode `opencode` de novo.
+
+Depois, faça o pedido, escrito do jeito que quiser:
+
+```text
+/axyn crie uma landing page
+```
+
+O axyn escreve a spec e os tickets, prepara o projeto (o `Makefile`, o CI e o lint, se ainda não existem), implementa um ticket por vez, roda os portões e abre **um PR por ticket**. Se ele tiver uma dúvida, a pergunta aparece no opencode: responda ali mesmo, em texto, e ele continua.
+
+### 9. Acompanhar o andamento
+
+Num **segundo terminal**, na mesma pasta:
+
+```bash
+axyn status
+# Mostra o ticket atual, os portões, o modelo e as tentativas.
+```
+
+### 10. Revisar e mesclar os PRs
+
+```bash
+gh pr list
+# Lista os PRs abertos pelo axyn, um por ticket.
+gh pr view 1 --web
+# Abre o PR 1 no navegador para você ler (troque 1 pelo número do PR).
+gh pr checks 1
+# Mostra o CI do PR; espere ficar tudo verde.
+gh pr merge 1 --merge --delete-branch
+# Mescla o PR 1 e apaga a branch dele.
+```
+
+Repita para cada PR. Depois, traga o resultado para a sua máquina:
+
+```bash
+git checkout main
+git pull
+```
+
+### 11. Ver o resultado
+
+```bash
+# Linux
+xdg-open index.html
+# macOS
+open index.html
+```
+
+```powershell
+# Windows
+start index.html
+```
+
+### 12. Quando algo der errado
+
+```bash
+axyn history
+# Grava em .axyn/ um arquivo com tudo o que a execução fez (sem chaves nem tokens).
+axyn history --out ~/Downloads/axyn_history.md
+# O mesmo, numa pasta à sua escolha (no Windows: --out $HOME\Downloads\axyn_history.md).
+```
+
+Anexe esse arquivo ao pedir ajuda: com ele, quem for ajudar vê exatamente o que aconteceu.
+
+### Comandos que você pode precisar
+
+| Comando | O que faz |
+|---|---|
+| `axyn doctor` | confere o que o repositório e a máquina precisam, com o comando de cada coisa que falta |
+| `axyn setup` | configura pelo GitHub o que dá (repositório, Actions, merge automático) |
+| `axyn setup --protect-main` | também exige o `make ci` verde antes do merge na `main` |
+| `axyn init` | prepara o projeto à mão (`Makefile`, CI, lint); `axyn init --stack python` escolhe a stack |
+| `axyn status` | andamento da execução atual |
+| `axyn run --resume` | retoma uma execução que parou numa pergunta, depois da resposta |
+| `axyn history` | arquivo com tudo o que a execução fez, para pedir ajuda |
+| `axyn version` | versão instalada |
+| `gh pr list` / `gh pr view N --web` | lista os PRs / abre o PR N no navegador |
+| `gh pr checks N` | CI do PR N |
+| `gh pr merge N --merge --delete-branch` | mescla o PR N e apaga a branch |
+| `git status` | o que mudou na pasta |
+| `git checkout main && git pull` | volta para a `main` e traz o que foi mesclado |
+| `git log --oneline -10` | os 10 últimos commits |
 
 ## Instalar a skill
 

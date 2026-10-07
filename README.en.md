@@ -579,6 +579,8 @@ Attach that file when asking for help: with it, whoever helps sees exactly what 
 
 ### Updating axyn (when a new version is out)
 
+axyn tells you on its own: `axyn doctor`, `axyn status` and the `/axyn` answers show when a new version is out, with what is new and the command to update (at most one check a day; `AXYN_NO_UPDATE_CHECK=1` turns the notice off).
+
 What is new in each version is in the [releases](https://github.com/fabiodrneles/sdd-kit/releases), in plain words and with "How to update" at the end (the full history is in the [CHANGELOG](CHANGELOG.md)). To update:
 
 **Where to run:** in the terminal, with opencode closed, **at the root of each project** where you use axyn (the installer also updates that project's opencode configuration).

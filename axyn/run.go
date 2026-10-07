@@ -243,7 +243,7 @@ func (s *mcpServer) toolRun(request string, resume bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("Comecei a trabalhar no seu pedido (execução %s). Vou mostrando o andamento por aqui; num terminal, axyn status --watch avisa a cada mudança.", id), nil
+	return withUpdate(fmt.Sprintf("Comecei a trabalhar no seu pedido (execução %s). Vou mostrando o andamento por aqui; num terminal, axyn status --watch avisa a cada mudança.", id)), nil
 }
 
 func (s *mcpServer) toolStatus(id string) (string, error) {
@@ -251,7 +251,7 @@ func (s *mcpServer) toolStatus(id string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return renderStatus(st), nil
+	return withUpdate(renderStatus(st)), nil
 }
 
 type runner struct {
@@ -653,6 +653,6 @@ func runStatusCmd(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintf(stderr, "axyn status: %v\n", err)
 		return exitFail
 	}
-	_, _ = fmt.Fprintln(stdout, renderStatus(st))
+	_, _ = fmt.Fprintln(stdout, withUpdate(renderStatus(st)))
 	return exitOK
 }

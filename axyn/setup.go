@@ -301,6 +301,9 @@ func runSetupCmd(args []string, stdout, stderr io.Writer, fix bool) int {
 			missing++
 		}
 	}
+	if n := updateNotice(); n != "" {
+		_, _ = fmt.Fprintf(stdout, "\n%s\n", n)
+	}
 	if missing > 0 {
 		if !fix {
 			_, _ = fmt.Fprintf(stdout, "\n%d item(ns) faltando; o axyn setup configura o que dá, e os outros mostram o comando a rodar.\n", missing)

@@ -13,6 +13,13 @@ function Stop-Install([string]$Message) {
   throw "install-axyn: $Message"
 }
 
+# O Invoke-WebRequest do PowerShell 7 não aceita file:// (base local dos testes).
+function Get-Asset([string]$Uri, [string]$OutFile) {
+  $u = [Uri]$Uri
+  if ($u.IsFile) { Copy-Item -LiteralPath $u.LocalPath -Destination $OutFile }
+  else { Invoke-WebRequest -UseBasicParsing -Uri $Uri -OutFile $OutFile }
+}
+
 $name = 'axyn_windows_amd64.exe'
 if ($env:AXYN_RELEASE_URL) { $base = $env:AXYN_RELEASE_URL }
 elseif ($env:AXYN_VERSION) { $base = "https://github.com/fabiodrneles/sdd-kit/releases/download/$($env:AXYN_VERSION)" }
@@ -22,8 +29,8 @@ $tmp = Join-Path ([IO.Path]::GetTempPath()) ("axyn-" + [guid]::NewGuid())
 New-Item -ItemType Directory -Path $tmp | Out-Null
 try {
   try {
-    Invoke-WebRequest -UseBasicParsing -Uri "$base/$name" -OutFile (Join-Path $tmp $name)
-    Invoke-WebRequest -UseBasicParsing -Uri "$base/axyn_checksums.txt" -OutFile (Join-Path $tmp 'sums')
+    Get-Asset "$base/$name" (Join-Path $tmp $name)
+    Get-Asset "$base/axyn_checksums.txt" (Join-Path $tmp 'sums')
   } catch { Stop-Install "não consegui baixar de ${base}: $($_.Exception.Message)" }
 
   $want = $null

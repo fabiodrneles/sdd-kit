@@ -638,6 +638,8 @@ Anexe esse arquivo ao pedir ajuda: com ele, quem for ajudar vê exatamente o que
 
 ### Atualizar o axyn (quando sair uma versão nova)
 
+O axyn avisa sozinho: o `axyn doctor`, o `axyn status` e as respostas do `/axyn` mostram quando sai uma versão nova, com as novidades e o comando para atualizar (no máximo uma consulta por dia; `AXYN_NO_UPDATE_CHECK=1` desliga o aviso).
+
 As novidades de cada versão estão nas [releases](https://github.com/fabiodrneles/sdd-kit/releases), em linguagem simples e com o "Como atualizar" no fim (o histórico completo fica no [CHANGELOG](CHANGELOG.md)). Para atualizar:
 
 **Onde rodar:** no terminal, com o opencode fechado, **na raiz de cada projeto** em que você usa o axyn (o instalador também atualiza a configuração do opencode daquele projeto).

@@ -47,6 +47,7 @@ type runOpts struct {
 // runState is the file the status reads. It lives in .axyn/ (ignored by git), so the
 // work survives the end of the session.
 type runState struct {
+	PID       int       `json:"pid,omitempty"` // the worker process; a dead one means the run was interrupted
 	ID        string    `json:"id"`
 	Request   string    `json:"request"`
 	Status    string    `json:"status"`
@@ -114,11 +115,24 @@ func loadRun(dir, id string) (*runState, error) {
 	return &st, nil
 }
 
+// alive says whether a run marked "rodando" still has its worker (spec 021 FR-8): a
+// worker that died (the computer froze, the terminal was killed) leaves the state behind,
+// and the run must be resumable at once, not after staleAfter.
+func alive(st *runState) bool {
+	if st.Status != runRunning || time.Since(st.Updated) > staleAfter {
+		return false
+	}
+	return st.PID == 0 || processAlive(st.PID)
+}
+
 // renderStatus is the progress shown to the user: ticket, gates, model and attempts.
 func renderStatus(st *runState) string {
 	status := st.Status
-	if st.Status == runRunning && time.Since(st.Updated) > staleAfter {
-		status = "interrompida (sem sinal há " + time.Since(st.Updated).Round(time.Minute).String() + ")"
+	switch {
+	case st.Status == runRunning && time.Since(st.Updated) > staleAfter:
+		status = "interrompida (sem sinal há " + time.Since(st.Updated).Round(time.Minute).String() + "); para continuar: axyn run --resume"
+	case st.Status == runRunning && !alive(st):
+		status = "interrompida (o processo do axyn parou, talvez o computador travou ou o terminal fechou); para continuar: axyn run --resume"
 	}
 	var b strings.Builder
 	fmt.Fprintf(&b, "execução %s: %s\npedido: %s\n", st.ID, status, oneLine(st.Request))
@@ -151,8 +165,12 @@ func (s *mcpServer) startRun(request string, resume bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if last, err := loadRun(abs, ""); err == nil && last.Status == runRunning && time.Since(last.Updated) < staleAfter {
-		return "", fmt.Errorf("já há a execução %s em andamento; veja com axyn_status", last.ID)
+	last, lastErr := loadRun(abs, "")
+	if lastErr == nil && alive(last) {
+		return "", errRunning{last}
+	}
+	if resume && strings.TrimSpace(request) == "" && lastErr == nil {
+		request = last.Request // the status keeps showing what was asked
 	}
 	st := &runState{
 		ID: time.Now().Format("20060102-150405"), Request: request, Status: runRunning, Phase: "iniciando",
@@ -208,12 +226,24 @@ func startDetached(dir, id string) error {
 	return cmd.Process.Release()
 }
 
+// errRunning is a run already going on: not an error for the user, who gets its progress.
+type errRunning struct{ st *runState }
+
+func (e errRunning) Error() string {
+	return "Já estou trabalhando nisso (execução " + e.st.ID + "). Andamento agora:\n" + renderStatus(e.st) +
+		"\nPara acompanhar sem rodar nada à mão: axyn status --watch"
+}
+
 func (s *mcpServer) toolRun(request string, resume bool) (string, error) {
 	id, err := s.startRun(request, resume)
+	var running errRunning
+	if errors.As(err, &running) {
+		return running.Error(), nil
+	}
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("execução %s iniciada em segundo plano; acompanhe com axyn_status (id %s). Só mostre o andamento: o axyn conduz o resto.", id, id), nil
+	return fmt.Sprintf("Comecei a trabalhar no seu pedido (execução %s). Vou mostrando o andamento por aqui; num terminal, axyn status --watch avisa a cada mudança.", id), nil
 }
 
 func (s *mcpServer) toolStatus(id string) (string, error) {
@@ -317,11 +347,22 @@ func (r *runner) planModel() string {
 
 // run is the whole loop. It returns when every ticket is delivered or the engine must stop.
 func (r *runner) run() {
-	if out, err := r.s.git("status", "--porcelain"); err != nil || strings.TrimSpace(out) != "" {
-		r.stop(runStopped, "a árvore de trabalho tem alterações (ou não é um repositório git); faça commit ou guarde-as antes do axyn_run")
-		return
-	}
 	start, _ := r.s.git("rev-parse", "--abbrev-ref", "HEAD")
+	if out, err := r.s.git("status", "--porcelain"); err != nil {
+		r.stop(runStopped, "esta pasta não é um repositório git; rode o axyn na raiz do projeto")
+		return
+	} else if strings.TrimSpace(out) != "" {
+		// A resumed run finds the code of the interrupted attempt: it goes to a WIP commit
+		// (nothing is lost) and the ticket starts again from the base (spec 021 FR-8).
+		_, t := r.s.openTicket()
+		if !r.st.Opts.Resume || t == nil {
+			r.stop(runStopped, "a pasta do projeto tem alterações que não são do axyn; faça commit delas (ou guarde com git stash) e peça de novo")
+			return
+		}
+		_, _ = r.s.git("reset", "-q") // intent-to-add left by an interrupted gate
+		note := r.s.saveWIP(t, "tentativa interrompida")
+		_, _ = fmt.Fprintln(r.log, note)
+	}
 	if !r.st.Opts.Resume {
 		if err := r.plan(); err != nil {
 			r.stop(runStopped, err.Error())
@@ -501,6 +542,8 @@ func runJob(dir, id string, out io.Writer) int {
 		_, _ = fmt.Fprintf(out, "axyn: %v\n", err)
 		return exitFail
 	}
+	st.PID = os.Getpid()
+	_ = saveRun(dir, st)
 	s := &mcpServer{dir: dir, ci: st.Opts.CI, base: st.Opts.Base, maxLines: st.Opts.MaxLines, config: st.Opts.Config, fallback: true}
 	r := &runner{s: s, st: st, log: out}
 	r.run()
@@ -546,6 +589,11 @@ func runRunCmd(args []string, stdout, stderr io.Writer) int {
 	s := &mcpServer{dir: *dir, ci: *ci, base: *base, maxLines: *maxLines, config: *config}
 	if !*wait {
 		id, err := s.startRun(request, *resume)
+		var running errRunning
+		if errors.As(err, &running) {
+			_, _ = fmt.Fprintln(stdout, running.Error())
+			return exitOK
+		}
 		if err != nil {
 			_, _ = fmt.Fprintf(stderr, "axyn run: %v\n", err)
 			return exitFail

@@ -172,7 +172,9 @@ func gitDiff(dir, base string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	// intent-to-add makes untracked files show up in `git diff` as additions.
+	// intent-to-add makes untracked files show up in `git diff` as additions; it is undone
+	// right after, or it stays in the index and breaks `git stash` ("not uptodate").
+	var added []string
 	for _, p := range strings.Split(strings.TrimSpace(untracked), "\n") {
 		if p == "" {
 			continue
@@ -180,7 +182,13 @@ func gitDiff(dir, base string) (string, error) {
 		if _, err := git("add", "-N", "--", p); err != nil {
 			return "", err
 		}
+		added = append(added, p)
 	}
+	defer func() {
+		if len(added) > 0 {
+			_, _ = git(append([]string{"reset", "-q", "--"}, added...)...)
+		}
+	}()
 	return git("diff", "--no-color", "--no-ext-diff", base)
 }
 
@@ -204,7 +212,10 @@ func evalGate(dir, base string, maxLines int, ci string, extraProtect []string, 
 	findings = append(findings, checkSize(files, maxLines)...)
 
 	if strings.TrimSpace(ci) != "" {
-		cmd := exec.Command("sh", "-c", ci)
+		cmd, err := shellCommand(ci)
+		if err != nil {
+			return 0, nil, err // a missing tool is not a failed attempt: the run stops with how to fix it
+		}
 		cmd.Dir = dir
 		cmd.Stdout, cmd.Stderr = ciOut, ciOut
 		if err := cmd.Run(); err != nil {

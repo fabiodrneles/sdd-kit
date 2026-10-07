@@ -184,7 +184,9 @@ func TestMCPRunStartsInBackgroundAndStatusShowsIt(t *testing.T) {
 	if text, _ = callTool(t, dir, "axyn_status", map[string]any{}); !strings.Contains(text, started) {
 		t.Errorf("sem id, o status deveria mostrar a última execução: %q", text)
 	}
-	if text, isErr = callTool(t, dir, "axyn_run", map[string]any{"request": "outro"}); !isErr || !strings.Contains(text, "em andamento") {
+	// 021 FR-9 (#320): a run going on is not an error; the user gets its progress, and no
+	// second run starts.
+	if text, isErr = callTool(t, dir, "axyn_run", map[string]any{"request": "outro"}); isErr || !strings.Contains(text, "Já estou trabalhando nisso") || !strings.Contains(text, started) {
 		t.Errorf("duas execuções ao mesmo tempo: isErr %v, %q", isErr, text)
 	}
 	if out, _ := (&mcpServer{dir: dir}).git("status", "--porcelain"); out != "" {

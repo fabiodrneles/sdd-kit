@@ -24,3 +24,9 @@ func processAlive(pid int) bool {
 	}
 	return code == stillActive
 }
+
+// hideWindow starts a helper with no console of its own (CREATE_NO_WINDOW), so it can
+// neither show a window nor touch the user's terminal.
+func hideWindow(cmd *exec.Cmd) {
+	cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: 0x08000000, HideWindow: true}
+}

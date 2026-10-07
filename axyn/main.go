@@ -26,6 +26,9 @@ Uso:
   axyn model [ID] [--all] [--only] [--key-env VAR]
                       escolhe o modelo do axyn: sem ID, mostra os modelos gratuitos do opencode
                       numa lista numerada; com ID, troca direto (grava o config.yaml)
+  axyn decide RESPOSTA [--no-resume]
+                      responde a pergunta de uma execução parada (A, B ou a instrução entre aspas):
+                      grava a decisão na spec e retoma a execução em segundo plano
   axyn history [ID] [--out ARQ]
                       grava num arquivo tudo o que uma execução fez (pedido, plano, tentativas,
                       portões, perguntas, commits, ambiente e log), sem chaves nem tokens
@@ -67,6 +70,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runGate(args[1:], stdout, stderr)
 	case "model":
 		return runModelCmd(args[1:], stdout, stderr)
+	case "decide":
+		return runDecideCmd(args[1:], stdout, stderr)
 	case "history":
 		return runHistoryCmd(args[1:], stdout, stderr)
 	case "doctor":

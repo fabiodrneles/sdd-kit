@@ -51,6 +51,7 @@ type ticket struct {
 
 	// Record of the delivery (spec 021 FR-7).
 	Attempts []attempt `json:"attempts,omitempty"`
+	Earlier  []attempt `json:"earlier,omitempty"` // attempts before the user's last decision
 	Model    string    `json:"model,omitempty"`
 	Strategy string    `json:"strategy,omitempty"`
 	CostUSD  float64   `json:"cost_usd,omitempty"`
@@ -466,6 +467,9 @@ func (s *mcpServer) toolNext() (string, error) {
 					break
 				}
 			}
+		}
+		if d := decisions(string(spec)); d != "" {
+			b.WriteString("\nDecisões do usuário (siga à risca):\n" + d)
 		}
 		b.WriteString("\nCada AC acima deve ser citado num teste. Não altere specs, workflows nem a configuração do axyn.")
 		return b.String(), nil

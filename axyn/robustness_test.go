@@ -94,7 +94,7 @@ func TestStoppedTicketHelpAndFixOnResume(t *testing.T) {
 	dir := repo(t)
 	base, _ := (&mcpServer{dir: dir}).git("rev-parse", "--abbrev-ref", "HEAD")
 	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `rm -f x_test.go`))
-	if code, out := runLoopIn(t, dir); code == exitOK || !strings.Contains(out, "precisa de uma resposta sua") {
+	if code, out := runLoopIn(t, dir); code == exitOK || !strings.Contains(out, "e precisa de você") {
 		t.Fatalf("deveria parar com a pergunta: %d\n%s", code, out)
 	}
 	if cur, _ := (&mcpServer{dir: dir}).git("rev-parse", "--abbrev-ref", "HEAD"); cur != base {

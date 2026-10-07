@@ -273,7 +273,7 @@ irm https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-
 
 **2. Configurar um modelo gratuito no opencode.** A chave fica só numa variável de ambiente, nunca em arquivo do repositório. Com o [OpenRouter](https://openrouter.ai), exporte `OPENROUTER_API_KEY`, abra o opencode e escolha um modelo com sufixo `:free` em `/models`. Para rodar local, use o [Ollama](https://ollama.com) e o provedor Ollama do opencode.
 
-**3. Escada de modelos (opcional).** Em `~/.config/axyn/config.yaml`, a lista em ordem: se um modelo não passa nos portões, o axyn tenta o próximo. `key_env` é o nome da variável, nunca a chave (uma chave literal no arquivo é recusada):
+**3. Escolher o modelo.** Rode `axyn model` e escolha pelo número na lista dos gratuitos (ou `axyn model ID`). A escada, opcional: Em `~/.config/axyn/config.yaml`, a lista em ordem: se um modelo não passa nos portões, o axyn tenta o próximo. `key_env` é o nome da variável, nunca a chave (uma chave literal no arquivo é recusada):
 
 ```yaml
 models:
@@ -336,7 +336,7 @@ Para sair do opencode e voltar ao terminal: `Ctrl + C` (duas vezes, se precisar)
 
 ### 2. Instalar as ferramentas
 
-São quatro: o **git** (versiona o código), o **gh** (fala com o GitHub), o **node** (roda o opencode e confere o HTML) e o **make** (roda o `make ci`, que os portões usam).
+São quatro: o **git** (versiona o código), o **gh** (fala com o GitHub), o **node** (roda o opencode e confere o HTML) e o **make** (roda o `make ci`, que os portões usam). A linguagem do seu projeto (Go, Python, Java…) e o linter dela só são necessários se o projeto for nela; não instale nada além disso agora: o `axyn doctor` do passo 7 diz exatamente o que falta para o **seu** projeto, com o comando para colar.
 
 Ubuntu/Debian:
 
@@ -457,51 +457,13 @@ echo $OPENROUTER_API_KEY
 echo $env:OPENROUTER_API_KEY
 ```
 
-#### 4.5. Escolher o modelo gratuito
+#### 4.5. O modelo
 
-1. Abra <https://openrouter.ai/models?q=free>: a lista mostra só os modelos gratuitos (o nome termina em `:free`).
-2. Para código, prefira um com **coder** no nome. Clique nele: o nome completo aparece embaixo do título, por exemplo `qwen/qwen3-coder:free`. Clique no ícone de copiar, ao lado.
-3. No axyn, esse nome vai com `openrouter/` na frente: `openrouter/qwen/qwen3-coder:free`.
+O modelo é escolhido no **passo 7**, depois de instalar o axyn, com um comando só (`axyn model`), que mostra a lista dos gratuitos para você escolher pelo número. Não precisa anotar nada agora. Se quiser ver a lista do OpenRouter no site: <https://openrouter.ai/models?q=free> (o nome termina em `:free`). O opencode também traz modelos gratuitos próprios, do **OpenCode Zen** (o nome começa com `opencode/` e termina em `-free`), que funcionam sem conta nem chave.
 
-#### 4.6. Dizer ao axyn qual modelo usar
+#### 4.6. Sem internet (opcional)
 
-O axyn roda agentes **em segundo plano**, um para o plano e um para cada ticket, e cada um precisa saber qual modelo usar. Quem diz isso é o arquivo `config.yaml` do axyn, que fica na pasta `.config/axyn`, dentro da sua pasta de usuário. Os comandos abaixo criam a pasta e o arquivo. Se você escolheu outro modelo no 4.5, troque `qwen/qwen3-coder:free` nas duas linhas.
-
-Linux/macOS:
-
-```bash
-mkdir -p ~/.config/axyn
-printf 'models:\n  - id: openrouter/qwen/qwen3-coder:free\n    key_env: OPENROUTER_API_KEY\n' > ~/.config/axyn/config.yaml
-```
-
-Windows:
-
-```powershell
-New-Item -ItemType Directory -Force "$HOME\.config\axyn" | Out-Null
-Set-Content "$HOME\.config\axyn\config.yaml" "models:`n  - id: openrouter/qwen/qwen3-coder:free`n    key_env: OPENROUTER_API_KEY"
-```
-
-Confira o arquivo (deve mostrar as 3 linhas abaixo):
-
-```bash
-cat ~/.config/axyn/config.yaml
-```
-
-```powershell
-Get-Content "$HOME\.config\axyn\config.yaml"
-```
-
-```yaml
-models:
-  - id: openrouter/qwen/qwen3-coder:free
-    key_env: OPENROUTER_API_KEY
-```
-
-A linha `key_env` traz o **nome** da variável do 4.4, nunca a chave: o axyn recusa um arquivo com a chave escrita nele.
-
-#### 4.7. Sem internet (opcional)
-
-Para rodar a IA no seu computador, sem conta nem chave: instale o [Ollama](https://ollama.com) (botão **Download**), rode `ollama pull qwen2.5-coder` no terminal e, no `config.yaml` do 4.6, use `- id: ollama/qwen2.5-coder` (sem a linha `key_env`). Precisa de um computador com bastante memória (16 GB ou mais).
+Para rodar a IA no seu computador, sem conta nem chave: instale o [Ollama](https://ollama.com) (botão **Download**), rode `ollama pull qwen2.5-coder` no terminal e, no passo 7, escolha o `ollama/qwen2.5-coder` no `axyn model` (ou rode `axyn model ollama/qwen2.5-coder`). Precisa de um computador com bastante memória (16 GB ou mais).
 
 ### 5. Ter o repositório do projeto
 
@@ -560,6 +522,17 @@ axyn version
 
 **No terminal, com o opencode fechado**, na pasta do projeto:
 
+Primeiro, escolha o modelo que o axyn vai usar (ele passa esse modelo a cada agente que roda em segundo plano):
+
+```bash
+axyn model
+# Mostra o modelo atual e uma lista numerada dos modelos gratuitos do seu opencode.
+# Digite o número do modelo e aperte Enter. Se for do OpenRouter, ele pergunta o nome
+# da variável da chave: aperte Enter para aceitar OPENROUTER_API_KEY (a do passo 4.4).
+```
+
+Para trocar de modelo outro dia, é o mesmo comando: `axyn model`. Depois, confira e configure o repositório:
+
 ```bash
 axyn doctor
 # Uma linha por item: "ok" está pronto; "falta" vem com o comando que resolve.
@@ -583,7 +556,7 @@ opencode
 A tela do opencode abre no próprio terminal, com uma caixa de texto embaixo. Escolha o modelo que o opencode usa nesta conversa:
 
 1. Digite `/models` e aperte Enter: abre uma lista de modelos.
-2. Digite parte do nome escolhido no 4.5 (por exemplo `qwen3-coder`) para filtrar a lista.
+2. Digite parte do nome escolhido no `axyn model` do passo 7 (por exemplo `qwen3-coder`) para filtrar a lista.
 3. Com as setas do teclado, vá até o que tem **OpenRouter** e `:free` no nome, e aperte Enter. O nome do modelo aparece embaixo, na barra do opencode.
 
 Se o OpenRouter não aparecer na lista, o opencode não achou a chave: saia com `Ctrl + C`, abra um terminal novo, confira a variável (passo 4.4) e rode `opencode` de novo.
@@ -654,6 +627,7 @@ Anexe esse arquivo ao pedir ajuda: com ele, quem for ajudar vê exatamente o que
 
 | Comando | O que faz |
 |---|---|
+| `axyn model` | escolhe ou troca o modelo do axyn, numa lista numerada dos gratuitos (`axyn model ID` troca direto) |
 | `axyn doctor` | confere o que o repositório e a máquina precisam, com o comando de cada coisa que falta |
 | `axyn setup` | configura pelo GitHub o que dá (repositório, Actions, merge automático) |
 | `axyn setup --protect-main` | também exige o `make ci` verde antes do merge na `main` |

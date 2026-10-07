@@ -291,7 +291,7 @@ func (r *runner) plan() error {
 	prompt := "Pedido do usuário: " + r.st.Request
 	for try := 1; try <= planTries; try++ {
 		r.set("planejando")
-		if err := r.agent("axyn-plan", r.st.Opts.Model, prompt); err != nil {
+		if err := r.agent("axyn-plan", r.planModel(), prompt); err != nil {
 			return err
 		}
 		if pl, _, err := r.s.loadPlan(); err == nil && pl.Spec != oldSpec && len(pl.Tickets) > 0 {
@@ -300,6 +300,19 @@ func (r *runner) plan() error {
 		prompt += "\n\nO plano não foi gravado: chame a ferramenta axyn_plan com a spec (com FR-N e AC-N) e os tickets, cada um citando um AC."
 	}
 	return fmt.Errorf("o agente axyn-plan não gravou um plano válido em %d tentativas", planTries)
+}
+
+// planModel is the model the planner runs on: the forced one, else the first of the
+// ladder (axyn model), else opencode's default. Before, the planner always took
+// opencode's default, which may be a model the user has no key for.
+func (r *runner) planModel() string {
+	if r.st.Opts.Model != "" {
+		return r.st.Opts.Model
+	}
+	if ms := r.ladder(); len(ms) > 0 && ms[0].ID != placeholder {
+		return ms[0].ID
+	}
+	return ""
 }
 
 // run is the whole loop. It returns when every ticket is delivered or the engine must stop.

@@ -23,6 +23,9 @@ Uso:
   axyn version        mostra a versão
   axyn gate [--base REF] [--max-lines N] [--ci CMD] [--protect CAMINHO]
                       portões do diff: CI, teste afrouxado, caminhos protegidos e tamanho
+  axyn model [ID] [--all] [--only] [--key-env VAR]
+                      escolhe o modelo do axyn: sem ID, mostra os modelos gratuitos do opencode
+                      numa lista numerada; com ID, troca direto (grava o config.yaml)
   axyn history [ID] [--out ARQ]
                       grava num arquivo tudo o que uma execução fez (pedido, plano, tentativas,
                       portões, perguntas, commits, ambiente e log), sem chaves nem tokens
@@ -60,6 +63,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return exitOK
 	case "gate":
 		return runGate(args[1:], stdout, stderr)
+	case "model":
+		return runModelCmd(args[1:], stdout, stderr)
 	case "history":
 		return runHistoryCmd(args[1:], stdout, stderr)
 	case "doctor":

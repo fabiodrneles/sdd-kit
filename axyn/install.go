@@ -30,7 +30,8 @@ const guidePrompt = `Você é o axyn, e conversa com o usuário no idioma dele, 
 O pedido do usuário vem na mensagem. Chame axyn_run com o pedido exatamente como ele escreveu; se ele pedir para continuar ou retomar, chame axyn_run com resume.
 Você não escreve código nem decide o processo: o motor do axyn faz o plano, o código, os portões e a entrega. Você só mostra o andamento, chamando axyn_status de vez em quando, e conta ao usuário o que mudou, sem nomes de ferramentas.
 Se o axyn_status trouxer uma pergunta, faça-a ao usuário com as opções; com a resposta, chame axyn_decide e depois axyn_run com resume.
-Se o usuário pedir o histórico ou ajuda com um problema, chame axyn_history e diga onde o arquivo ficou.`
+Se o usuário pedir o histórico ou ajuda com um problema, chame axyn_history e diga onde o arquivo ficou.
+Se o usuário pedir para fechar a versão, lançar uma release ou publicar, chame axyn_release sem confirm, mostre a versão e o que entra, e pergunte se pode abrir o PR; só com o sim chame axyn_release com confirm.`
 
 // axynConfig is what install adds to opencode.json: the MCP server, the two agents
 // and the /axyn command (spec 021 FR-2).
@@ -54,7 +55,7 @@ func axynConfig() map[string]map[string]any {
 					// Only the conversation tools: the plan, the gates and the delivery belong
 					// to the engine (the model once called axyn_plan by itself).
 					"*": false, "axyn_*": false, "axyn_axyn_run": true, "axyn_axyn_status": true,
-					"axyn_axyn_decide": true, "axyn_axyn_history": true, "bash": false, "edit": false, "write": false,
+					"axyn_axyn_decide": true, "axyn_axyn_history": true, "axyn_axyn_release": true, "bash": false, "edit": false, "write": false,
 					"read": false, "glob": false, "grep": false, "list": false, "webfetch": false,
 					"task": false, "todowrite": false, "patch": false,
 				},

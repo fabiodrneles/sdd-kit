@@ -226,7 +226,7 @@ func TestCommandIsASingleInstruction(t *testing.T) {
 	}
 	tools := cfg["agent"]["axyn"].(map[string]any)["tools"].(map[string]any)
 	for name, on := range tools {
-		if on == true && name != "axyn_axyn_run" && name != "axyn_axyn_status" && name != "axyn_axyn_decide" && name != "axyn_axyn_history" {
+		if on == true && name != "axyn_axyn_run" && name != "axyn_axyn_status" && name != "axyn_axyn_decide" && name != "axyn_axyn_history" && name != "axyn_axyn_release" {
 			t.Errorf("o agente axyn não pode ter a ferramenta %s", name)
 		}
 	}

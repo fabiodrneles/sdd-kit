@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -75,7 +77,7 @@ func TestLiveLine(t *testing.T) {
 	now := time.Now()
 	st := &runState{Phase: "avaliando modelos", PhaseSince: now.Add(-10 * time.Minute), Done: 4, Of: 16, Detail: "modelo-x, testes"}
 	got := liveLine(st, 0, now)
-	for _, want := range []string{"⠋", "avaliando modelos", "10m00s", "█████", "░", "4/16", "faltam ~30m00s", "modelo-x, testes", cYellow, cWhite} {
+	for _, want := range []string{"⠋", "avaliando modelos", "10:00", "━", "╸", " 25%", "4/16", "faltam ~30:00", "modelo-x, testes", cYellow, cWhite, "38;5;220"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("a linha não traz %q: %q", want, got)
 		}
@@ -83,7 +85,18 @@ func TestLiveLine(t *testing.T) {
 	if got := liveLine(&runState{Phase: "código", Started: now.Add(-time.Minute), Ticket: 1, Total: 3, Attempts: 2}, 3, now); !strings.Contains(got, "ticket 1 de 3, tentativa 3") || strings.Contains(got, "faltam") {
 		t.Errorf("sem progresso conhecido, só o tempo e o ticket: %q", got)
 	}
-	if clock(65*time.Minute+5*time.Second) != "1h05m05s" {
+	if clock(65*time.Minute+5*time.Second) != "1:05:05" {
 		t.Error("relógio com horas")
+	}
+}
+
+func TestLiveLineDemo(t *testing.T) {
+	if os.Getenv("AXYN_DEMO") == "" {
+		t.Skip()
+	}
+	now := time.Now()
+	st := &runState{Phase: "avaliando modelos", PhaseSince: now.Add(-12*time.Minute - 5*time.Second), Done: 5, Of: 16, Detail: "nemotron, testes"}
+	for f := 0; f < 3; f++ {
+		fmt.Println(liveLine(st, f, now))
 	}
 }

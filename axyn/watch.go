@@ -129,28 +129,28 @@ func clock(d time.Duration) string {
 	d = d.Round(time.Second)
 	h, m, s := int(d.Hours()), int(d.Minutes())%60, int(d.Seconds())%60
 	if h > 0 {
-		return fmt.Sprintf("%dh%02dm%02ds", h, m, s)
+		return fmt.Sprintf("%d:%02d:%02d", h, m, s)
 	}
-	return fmt.Sprintf("%dm%02ds", m, s)
+	return fmt.Sprintf("%02d:%02d", m, s)
 }
 
-// liveLine is the animated line: spinner, phase, elapsed time and, when the phase knows
-// how far it is, a progress bar, the count, an estimate of what is left and the detail.
+// liveLine is the animated line, in the style the community knows: the "dots" spinner of
+// cli-spinners (npm, pnpm, Vercel) and the progress bar of Python's Rich (pip), in the
+// axyn colors: yellow fading to white on the filled part, dim gray on the rest.
 func liveLine(st *runState, frame int, now time.Time) string {
 	since := st.PhaseSince
 	if since.IsZero() {
 		since = st.Started
 	}
 	var b strings.Builder
-	fmt.Fprintf(&b, "%s%s%s %s%s%s  %s%s%s", cYellow, spinner[frame%len(spinner)], cReset, cWhite, st.Phase, cReset, cYellow, clock(now.Sub(since)), cReset)
+	fmt.Fprintf(&b, "%s%s%s %s%s%s", cYellow, spinner[frame%len(spinner)], cReset, cWhite, st.Phase, cReset)
 	if st.Of > 0 {
-		const width = 20
-		fill := st.Done * width / st.Of
-		fmt.Fprintf(&b, "  %s%s%s%s%s %s%d/%d%s", cYellow, strings.Repeat("█", fill), cGray, strings.Repeat("░", width-fill), cReset, cWhite, st.Done, st.Of, cReset)
-		if st.Done > 0 && st.Done < st.Of {
-			left := time.Duration(float64(now.Sub(since)) / float64(st.Done) * float64(st.Of-st.Done))
-			fmt.Fprintf(&b, "  %sfaltam ~%s%s", cWhite, clock(left), cReset)
-		}
+		fmt.Fprintf(&b, "  %s  %s%3d%%%s  %d/%d", richBar(st.Done, st.Of, 30), cWhite, 100*st.Done/st.Of, cReset, st.Done, st.Of)
+	}
+	fmt.Fprintf(&b, "  %s%s%s", cYellow, clock(now.Sub(since)), cReset)
+	if st.Of > 0 && st.Done > 0 && st.Done < st.Of {
+		left := time.Duration(float64(now.Sub(since)) / float64(st.Done) * float64(st.Of-st.Done))
+		fmt.Fprintf(&b, "  %sfaltam ~%s%s", cWhite, clock(left), cReset)
 	}
 	detail := st.Detail
 	if detail == "" && st.Ticket > 0 {
@@ -159,6 +159,25 @@ func liveLine(st *runState, frame int, now time.Time) string {
 	if detail != "" {
 		fmt.Fprintf(&b, "  %s· %s%s", cGray, detail, cReset)
 	}
+	return b.String()
+}
+
+// gradient goes from the axyn yellow to white (256-color codes).
+var gradient = []int{220, 221, 222, 223, 229, 230, 231}
+
+// richBar is Rich's bar: ━ filled with a ╸ tip, ━ dim for the rest.
+func richBar(done, of, width int) string {
+	fill := done * width / of
+	var b strings.Builder
+	for i := 0; i < fill; i++ {
+		fmt.Fprintf(&b, "\x1b[38;5;%dm━", gradient[i*len(gradient)/width])
+	}
+	rest := width - fill
+	if rest > 0 && fill > 0 {
+		fmt.Fprintf(&b, "\x1b[38;5;%dm╸", gradient[len(gradient)-1])
+		rest--
+	}
+	fmt.Fprintf(&b, "%s%s%s", cGray, strings.Repeat("━", rest), cReset)
 	return b.String()
 }
 

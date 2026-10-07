@@ -12,7 +12,6 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"sort"
 	"strings"
 )
@@ -41,6 +40,7 @@ var stackTools = map[string][]string{
 // command (the user runs what axyn prints, like a framework's own hint).
 var pkgs = map[string]map[string]string{
 	"git":     {"apt": "git", "dnf": "git", "pacman": "git", "brew": "git", "winget": "Git.Git"},
+	"sh":      {"apt": "dash", "dnf": "bash", "pacman": "bash", "brew": "bash", "winget": "Git.Git"},
 	"gh":      {"apt": "gh", "dnf": "gh", "pacman": "github-cli", "brew": "gh", "winget": "GitHub.cli"},
 	"make":    {"apt": "make", "dnf": "make", "pacman": "make", "brew": "make", "winget": "ezwinports.make"},
 	"node":    {"apt": "nodejs npm", "dnf": "nodejs npm", "pacman": "nodejs npm", "brew": "node", "winget": "OpenJS.NodeJS.LTS"},
@@ -252,8 +252,12 @@ func missingTools(stack string) []string { return missingToolsFor(stack, "") }
 // tools that Makefile mentions (a project's ci may not use the template's linter).
 func missingToolsFor(stack, makefile string) []string {
 	var out []string
-	for _, t := range append([]string{"git"}, stackTools[stack]...) {
-		if makefile != "" && t != "git" && t != "make" && !strings.Contains(makefile, t) {
+	tools := append([]string{"git"}, stackTools[stack]...)
+	if hostOS == "windows" {
+		tools = append(tools, "sh") // the CI runs under sh: Git for Windows brings it
+	}
+	for _, t := range tools {
+		if makefile != "" && t != "git" && t != "make" && t != "sh" && !strings.Contains(makefile, t) {
 			continue
 		}
 		if !toolPresent(t) {
@@ -266,6 +270,10 @@ func missingToolsFor(stack, makefile string) []string {
 // toolPresent finds a tool on the PATH; golangci-lint also in GOPATH/bin, where
 // `go install` puts it and where the go template's Makefile looks first.
 func toolPresent(t string) bool {
+	if t == "sh" {
+		sh, _ := gitShell()
+		return sh != ""
+	}
 	if _, err := lookPath(t); err == nil {
 		return true
 	}
@@ -273,7 +281,7 @@ func toolPresent(t string) bool {
 		return false
 	}
 	name := "golangci-lint"
-	if runtime.GOOS == "windows" {
+	if hostOS == "windows" {
 		name += ".exe"
 	}
 	dir := goBinDir()
@@ -309,8 +317,8 @@ func golangciVersion() string {
 
 // missingMessage says what is missing and the exact commands to install it.
 func missingMessage(stack string, miss []string) string {
-	return fmt.Sprintf("o projeto %s precisa de %s para o `make ci` rodar. Para instalar, rode:\n\n  %s\n\ne depois rode axyn_run de novo com resume (nenhuma tentativa foi gasta).",
-		stack, strings.Join(miss, ", "), strings.Join(installCommands(miss, runtime.GOOS), "\n  "))
+	return fmt.Sprintf("o projeto %s precisa de %s para o `make ci` rodar. Para instalar, rode:\n\n  %s\n\ne depois peça para continuar (no terminal, na raiz do projeto: axyn run --resume). Nenhuma tentativa foi gasta.",
+		stack, strings.Join(miss, ", "), strings.Join(installCommands(miss, hostOS), "\n  "))
 }
 
 // applyTemplate writes template/common, template/<stack> and template/seed into dir,
@@ -398,7 +406,7 @@ func (r *runner) prepare() string {
 		return ""
 	}
 	if _, err := os.Stat(filepath.Join(dir, "Makefile")); err == nil {
-		return "o Makefile do projeto não tem o alvo ci, que os portões rodam (`make ci`); adicione um alvo ci com o lint e os testes do projeto e rode axyn_run de novo com resume"
+		return "o Makefile do projeto não tem o alvo ci, que os portões rodam (`make ci`); adicione um alvo ci com o lint e os testes do projeto e depois peça para continuar (axyn run --resume)"
 	}
 	stack := ""
 	if pl, _, err := r.s.loadPlan(); err == nil {
@@ -410,7 +418,7 @@ func (r *runner) prepare() string {
 		stack = detectStack(dir, r.st.Request)
 	}
 	if stack == "" {
-		return "o axyn precisa de uma resposta sua; grave com axyn_decide e rode axyn_run de novo com resume:\n" +
+		return "O axyn precisa de uma resposta sua para seguir:\n" +
 			askMarker + "o projeto não tem CI e não deu para saber a stack) " + stackQuestion +
 			" Responda com uma destas: " + strings.Join(stacks, ", ") + "."
 	}
@@ -467,7 +475,7 @@ func runInitCmd(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintln(stdout, "aviso: o Makefile já existia sem o alvo ci; adicione um alvo ci para os portões do axyn")
 	}
 	if miss := missingTools(s); len(miss) > 0 {
-		_, _ = fmt.Fprintf(stdout, "falta %s para o make ci. Para instalar, rode:\n\n  %s\n", strings.Join(miss, ", "), strings.Join(installCommands(miss, runtime.GOOS), "\n  "))
+		_, _ = fmt.Fprintf(stdout, "falta %s para o make ci. Para instalar, rode:\n\n  %s\n", strings.Join(miss, ", "), strings.Join(installCommands(miss, hostOS), "\n  "))
 	}
 	return exitOK
 }

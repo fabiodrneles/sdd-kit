@@ -44,7 +44,9 @@ Uso:
   axyn run [--wait] [--resume] [--model M] "PEDIDO"
                       o motor conduz o laço: planeja, escolhe o ticket, chama o opencode run para o
                       código, portões, recuperação e entrega; em segundo plano, a menos de --wait
-  axyn status [ID]    andamento de uma execução: ticket, portões, modelo e tentativas
+  axyn status [ID] [--watch]
+                      andamento de uma execução: ticket, portões, modelo e tentativas; com --watch,
+                      fica acompanhando e avisa (bipe e notificação) quando termina, para ou pergunta
   axyn help         mostra esta ajuda
 `
 

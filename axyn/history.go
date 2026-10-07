@@ -116,6 +116,11 @@ func buildHistory(dir string, st *runState) string {
 			}
 			w("\n")
 		}
+		for _, t := range pl.Tickets {
+			if d := s.wipDiff(pl.Base, t.WIP); d != "" {
+				w("### Código da última tentativa do ticket %d (branch `%s`)\n\n```diff\n%s\n```\n\n", t.ID, t.WIP, strings.TrimRight(d, "\n"))
+			}
+		}
 		if spec, err := os.ReadFile(filepath.Join(dir, pl.Spec)); err == nil {
 			w("### Spec\n\n````markdown\n%s\n````\n", strings.TrimRight(string(spec), "\n"))
 		}

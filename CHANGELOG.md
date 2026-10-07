@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.18.1] - 2026-10-07
+
+### Corrigido
+
+- medir a cobertura quando o lint da base falha e voltar sempre à base (#338)
+
 ## [1.18.0] - 2026-10-07
 
 ### Adicionado

@@ -231,6 +231,8 @@ models:
 
 axyn writes the spec, opens the tickets, implements each on its own branch, runs the gates and opens one PR per ticket; merging stays with you. To follow progress (ticket, gates, model and attempts), run `axyn status` in a terminal.
 
+**No CI in the project? axyn sets it up.** In an empty repository or one without `make ci`, before the first ticket axyn applies the stack's template (detected from the files, or from the request in an empty repository: a landing page means `web`) with the `Makefile`, the GitHub CI and the lint, in a commit of its own, without changing existing files. When it cannot tell the stack, it asks; when a tool is missing (`make`, `node`…), it stops right away and says what to install. To do it by hand: `axyn init` (or `axyn init --stack python`).
+
 ## Installing the skill
 
 In Claude Code:

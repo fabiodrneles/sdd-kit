@@ -326,6 +326,16 @@ func (r *runner) run() {
 		}
 		base = pl.Base
 	}
+	if cur, _ := r.s.git("rev-parse", "--abbrev-ref", "HEAD"); base != "" && cur != base {
+		if out, err := r.s.git("checkout", base); err != nil {
+			r.stop(runStopped, "não consegui voltar à branch base "+base+": "+out)
+			return
+		}
+	}
+	if msg := r.prepare(); msg != "" {
+		r.stop(runStopped, msg)
+		return
+	}
 	for {
 		pl, t := r.s.openTicket()
 		switch {

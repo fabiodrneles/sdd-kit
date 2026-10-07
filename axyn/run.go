@@ -396,6 +396,13 @@ func (r *runner) run() {
 		r.stop(runStopped, msg)
 		return
 	}
+	if msg := r.measureCoverage(); msg != "" {
+		_, _ = fmt.Fprintln(r.log, msg)
+	}
+	if q := r.coverageQuestion(); q != "" {
+		r.stop(runStopped, q)
+		return
+	}
 	for {
 		pl, t := r.s.openTicket()
 		switch {
@@ -498,6 +505,9 @@ func (r *runner) ticket() (string, string) {
 // ship delivers a ticket whose diff passed the gates.
 func (r *runner) ship(t *ticket) (string, string) {
 	r.set("entrega")
+	if msg := r.raiseCoverage(); msg != "" {
+		_, _ = fmt.Fprintln(r.log, msg)
+	}
 	out, err := r.s.deliver("feat: "+strings.TrimSpace(t.Title), true)
 	if err != nil {
 		return runStopped, err.Error()

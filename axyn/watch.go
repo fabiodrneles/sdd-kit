@@ -75,7 +75,7 @@ func watchRun(dir, id string, interval time.Duration, out io.Writer) int {
 			case st.Status == runDone:
 				notify("axyn: pronto", "Os tickets foram entregues: "+fmt.Sprint(len(st.Delivered))+" PR(s) para revisar.")
 				return exitOK
-			case strings.Contains(st.Message, "precisa de uma resposta sua") || strings.Contains(st.Message, "e precisa de você"):
+			case strings.Contains(st.Message, "precisa de uma resposta sua") || strings.Contains(st.Message, "e precisa de você") || strings.Contains(st.Message, "axyn coverage auto"):
 				notify("axyn: precisa de você", "O axyn tem uma pergunta: abra o opencode ou rode axyn status.")
 			default:
 				notify("axyn: parou", firstLine(renderStatus(st)))

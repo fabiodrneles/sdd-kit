@@ -62,9 +62,15 @@ func meaning(reason string) (what, hint string) {
 	case strings.Contains(r, "[protected]") || strings.Contains(r, "[tests]") || strings.Contains(r, "[plan]"):
 		return "o modelo mexeu no que não podia (testes, specs, workflows ou o plano do axyn).",
 			"não mexa em testes existentes, specs nem workflows"
+	case strings.Contains(r, "[coverage]"):
+		return "o código novo do ticket não está coberto por testes: as linhas citadas acima não rodam em nenhum teste.",
+			"escreva testes que passem pelas linhas sem teste citadas acima"
+	case strings.Contains(r, "sem nenhum teste novo"):
+		return "o ticket mudou código sem escrever nenhum teste; todo código novo precisa de teste.",
+			"escreva um teste para cada critério de aceite do ticket, citando o AC no nome ou num comentário"
 	case strings.Contains(r, "cobertura abaixo do mínimo") || strings.Contains(r, "coverage"):
-		return "o código pode estar certo, mas o projeto exige uma porcentagem mínima do código coberta por testes (COVERAGE_MIN no Makefile) e ainda não chega lá. Num projeto que tinha poucos ou nenhum teste, um ticket só não chega a esse mínimo.",
-			"escreva testes para o código deste ticket e para as funções que ele toca, até a cobertura passar do mínimo"
+		return "a cobertura de testes do projeto caiu abaixo do mínimo: o código novo entrou com poucos testes.",
+			"escreva testes para o código deste ticket e para as funções que ele toca"
 	case strings.Contains(r, "errcheck"):
 		return "o lint (golangci-lint) exige que todo erro devolvido por uma função seja tratado, e o código ignorou algum.",
 			"trate todo erro que o lint apontou: if err != nil { return err }, ou _ = f() quando o erro pode ser ignorado"
@@ -130,9 +136,6 @@ func (r *runner) explainStop(ticketID int, help string) string {
 	w("  2. Trocar de modelo (o novo modelo ganha outras %d tentativas):\n       axyn model\n       axyn run --resume\n", maxFailsPerModel)
 	if t.WIP != "" {
 		w("  3. Corrigir o código você mesmo, ou com outra IA, na branch %s:\n       git checkout %s\n       (corrija e faça commit)\n       git checkout %s\n       axyn run --resume\n", t.WIP, t.WIP, pl.Base)
-	}
-	if l := strings.ToLower(last); strings.Contains(l, "cobertura") || strings.Contains(l, "coverage") {
-		w("  4. Baixar o mínimo de cobertura (o projeto tinha poucos testes): no Makefile, na branch %s, troque o número de COVERAGE_MIN ?= 80 por 0, faça commit e rode:\n       axyn run --resume\n", pl.Base)
 	}
 	if strings.TrimSpace(help) != "" {
 		w("\n%s\n", strings.TrimSpace(help))

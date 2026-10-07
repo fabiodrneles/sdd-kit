@@ -5,10 +5,13 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"path"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -42,6 +45,7 @@ type fileDiff struct {
 	path    string
 	deleted bool
 	added   []string
+	addedAt []int // line number of each added line in the new file
 	removed []string
 }
 
@@ -56,11 +60,13 @@ var (
 	assertRe   = regexp.MustCompile(`\b(assert\w*|expect|require\.\w+|t\.(Error|Errorf|Fatal|Fatalf|Fail|FailNow))\b`)
 	skipRe     = regexp.MustCompile(`(t\.Skip\w*\(|pytest\.mark\.(skip|xfail)|pytest\.skip\(|\b(it|test|describe)\.skip\b|\bx(it|describe)\(|@Disabled|@Ignore)`)
 	diffFileRe = regexp.MustCompile(`^diff --git a/(.*) b/(.*)$`)
+	hunkRe     = regexp.MustCompile(`^@@ -\d+(?:,\d+)? \+(\d+)`)
 )
 
 // parseDiff reads `git diff` output into per-file added and removed lines.
 func parseDiff(r io.Reader) []fileDiff {
 	var files []fileDiff
+	newLine := 0
 	sc := bufio.NewScanner(r)
 	sc.Buffer(make([]byte, 1<<20), 1<<26)
 	for sc.Scan() {
@@ -77,10 +83,18 @@ func parseDiff(r io.Reader) []fileDiff {
 		case strings.HasPrefix(line, "deleted file mode"):
 			f.deleted = true
 		case strings.HasPrefix(line, "+++"), strings.HasPrefix(line, "---"):
+		case strings.HasPrefix(line, "@@"):
+			if m := hunkRe.FindStringSubmatch(line); m != nil {
+				newLine, _ = strconv.Atoi(m[1])
+			}
 		case strings.HasPrefix(line, "+"):
 			f.added = append(f.added, line[1:])
+			f.addedAt = append(f.addedAt, newLine)
+			newLine++
 		case strings.HasPrefix(line, "-"):
 			f.removed = append(f.removed, line[1:])
+		case strings.HasPrefix(line, " "):
+			newLine++
 		}
 	}
 	return files
@@ -210,6 +224,7 @@ func evalGate(dir, base string, maxLines int, ci string, extraProtect []string, 
 	findings = append(findings, checkProtected(files, protected)...)
 	findings = append(findings, checkLoosenedTests(files)...)
 	findings = append(findings, checkSize(files, maxLines)...)
+	findings = append(findings, checkCodeHasTests(files)...)
 
 	if strings.TrimSpace(ci) != "" {
 		cmd, err := shellCommand(ci)
@@ -220,7 +235,23 @@ func evalGate(dir, base string, maxLines int, ci string, extraProtect []string, 
 		var out strings.Builder
 		w := io.MultiWriter(ciOut, &out)
 		cmd.Stdout, cmd.Stderr = w, w
-		if err := cmd.Run(); err != nil {
+		floor, ok := coverageFloor(dir)
+		if ok {
+			if cmd.Env == nil {
+				cmd.Env = os.Environ()
+			}
+			cmd.Env = append(cmd.Env, fmt.Sprintf("COVERAGE_MIN=%d", floor))
+		}
+		lastCoverage = -1
+		started := time.Now()
+		err = cmd.Run()
+		if c, found := parseCoverage(out.String()); found {
+			lastCoverage = c
+		}
+		if err == nil {
+			findings = append(findings, checkPatchCoverage(dir, files, started)...)
+		}
+		if err != nil {
 			msg := fmt.Sprintf("`%s` falhou: %v", ci, err)
 			if lines := ciErrors(out.String(), 6); len(lines) > 0 {
 				msg += "; erros: " + strings.Join(lines, " | ")

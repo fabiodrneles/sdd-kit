@@ -90,6 +90,7 @@ func TestMCPGateFailsAndShipRefuses(t *testing.T) {
 func TestMCPShipGreen(t *testing.T) {
 	dir := repo(t)
 	write(t, dir, "y.go", "package x\n")
+	write(t, dir, "y_new_test.go", "package x\n") // new code comes with a test (#334)
 	text, isErr := callTool(t, dir, "axyn_ship", map[string]any{"message": "feat: add y"})
 	if isErr || !strings.Contains(text, "commit em feat/add-y") {
 		t.Fatalf("isErr %v, %q", isErr, text)
@@ -123,6 +124,7 @@ func TestMCPPlanAndNext(t *testing.T) {
 	}
 
 	write(t, dir, "z.go", "package x\n")
+	write(t, dir, "z_new_test.go", "package x\n") // new code comes with a test (#334)
 	if text, isErr := callTool(t, dir, "axyn_ship", map[string]any{"message": "feat: z"}); isErr {
 		t.Fatalf("ship: %q", text)
 	}

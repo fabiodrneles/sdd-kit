@@ -326,7 +326,6 @@ func missingMessage(stack string, miss []string) string {
 func applyTemplate(dir, stack string) ([]string, error) {
 	project, owner, repo := templateValues(dir)
 	repl := strings.NewReplacer("{{PROJECT}}", project, "{{OWNER}}", owner, "{{REPO}}", repo)
-	untested := codeWithoutTests(dir)
 	var created []string
 	for _, part := range []string{"common", stack, "seed"} {
 		root := path.Join("templates", part)
@@ -351,9 +350,6 @@ func applyTemplate(dir, stack string) ([]string, error) {
 				mode = 0o755
 			}
 			text := repl.Replace(string(b))
-			if rel == "Makefile" && untested {
-				text = coverageFrom(text)
-			}
 			if err := os.WriteFile(dst, []byte(text), mode); err != nil {
 				return err
 			}
@@ -487,38 +483,3 @@ func runInitCmd(args []string, stdout, stderr io.Writer) int {
 
 var sourceExt = map[string]bool{".go": true, ".js": true, ".ts": true, ".jsx": true, ".tsx": true, ".py": true,
 	".java": true, ".kt": true, ".cs": true, ".rs": true}
-
-// codeWithoutTests says whether the project already has code and no test at all. Such a
-// project starts at 0% coverage: a minimum of 80% would fail every ticket however good its
-// code (#330, the go-checker run), so the prepared Makefile starts the minimum at 0.
-func codeWithoutTests(dir string) bool {
-	code, tests := false, false
-	_ = filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return nil
-		}
-		if d.IsDir() {
-			switch d.Name() {
-			case ".git", "node_modules", "vendor", "bin", "obj", "target", "dist", ".axyn":
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		if !sourceExt[filepath.Ext(p)] {
-			return nil
-		}
-		code = true
-		if strings.Contains(strings.ToLower(d.Name()), "test") || strings.Contains(strings.ToLower(filepath.ToSlash(p)), "/tests/") {
-			tests = true
-			return filepath.SkipAll
-		}
-		return nil
-	})
-	return code && !tests
-}
-
-var coverageLine = regexp.MustCompile(`(?m)^COVERAGE_MIN \?= \d+$`)
-
-func coverageFrom(makefile string) string {
-	return coverageLine.ReplaceAllString(makefile, "# O projeto não tinha testes quando o axyn o preparou: o mínimo começa em 0 e sobe\n# conforme os testes chegam (por exemplo, para 80 quando a cobertura passar disso).\nCOVERAGE_MIN ?= 0")
-}

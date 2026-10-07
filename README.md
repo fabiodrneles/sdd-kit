@@ -685,6 +685,7 @@ Uma execução que estava parada continua com `axyn run --resume`, já na versã
 | `axyn run --resume` | raiz do projeto | continua de onde parou (depois de uma pergunta, de um travamento ou de uma correção sua) |
 | `axyn history` | raiz do projeto | arquivo com tudo o que a execução fez, para pedir ajuda |
 | `axyn version` | qualquer pasta | versão instalada |
+| `axyn logs` | raiz do projeto | acompanha ao vivo, de forma legível, o que o axyn e os modelos estão fazendo (execução ou avaliação) |
 | `axyn bench` | qualquer pasta | avalia os seus modelos gratuitos em cada etapa (plano, código, testes, conserto) e escolhe sozinho o melhor para cada uma; roda sozinho na primeira execução |
 | `axyn release` | raiz do projeto | fecha uma versão: mostra a versão calculada e o que entra nela e, com o seu sim, abre o PR de fechamento com o CHANGELOG |
 | o instalador de novo (acima) | raiz de cada projeto | atualiza o axyn para a versão nova |

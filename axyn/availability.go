@@ -13,7 +13,7 @@ import (
 // the same work goes to the next model able to do it. Both conditions are needed, because
 // the word "timeout" may well be the ticket itself.
 
-var downRe = regexp.MustCompile(`(?i)(\b429\b|too many requests|rate[ _-]?limit|quota|insufficient[_ ]?(quota|credits|balance)|limit (exceeded|reached)|exceeded your|tokens? per (minute|day)|\b50[234]\b|service unavailable|bad gateway|overloaded|econnrefused|econnreset|enotfound|fetch failed|network error|connection (refused|reset)|model (not found|is not available|unavailable)|provider (error|unavailable))`)
+var downRe = regexp.MustCompile(`(?i)(\b429\b|too many requests|rate[ _-]?limit|quota|insufficient[_ ]?(quota|credits|balance)|limit (exceeded|reached)|exceeded your|tokens? per (minute|day)|\b50[234]\b|service unavailable|bad gateway|overloaded|econnrefused|econnreset|enotfound|fetch failed|network error|connection (refused|reset)|model (not found|is not available|unavailable)|cannot find any route|no endpoints found|model_not_found|provider (error|unavailable))`)
 
 // downReason is why the model looks down, or "" when it just worked (well or badly).
 func downReason(out string, changed bool) string {

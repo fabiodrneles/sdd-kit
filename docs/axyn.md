@@ -173,11 +173,7 @@ O que sair da guia é reprovado com o código `[guia]`, e os portões de sempre 
 | Fixar à mão o modelo de uma etapa | `axyn bench --set plano=MODELO` (desfazer: `--set plano=`) |
 | Desligar e voltar à escada do `axyn model` | `axyn bench --off` (religar: `--apply`) |
 
-Arquivos: `~/.config/axyn/bench/profile.json` (o resultado em uso), `bench-DATA.md` (o relatório de cada rodada, com a nota e o motivo de cada tentativa) e `bench-DATA.log` (a saída completa dos modelos) e a pasta `bench-DATA/`, com o código que o modelo escreveu em cada tentativa (um `.diff` por tentativa). Com os três, dá para conferir se cada nota foi justa e ajustar o processo de avaliação. Para acompanhar o log ao vivo no Windows, noutra janela do PowerShell:
-
-```powershell
-Get-Content (Get-ChildItem "$HOME\.config\axyn\bench\bench-*.log" | Sort-Object LastWriteTime | Select-Object -Last 1) -Wait -Tail 10 -Encoding UTF8
-```
+Arquivos: `~/.config/axyn/bench/profile.json` (o resultado em uso), `bench-DATA.md` (o relatório de cada rodada, com a nota e o motivo de cada tentativa) e `bench-DATA.log` (a saída completa dos modelos) e a pasta `bench-DATA/`, com o código que o modelo escreveu em cada tentativa (um `.diff` por tentativa). Com os três, dá para conferir se cada nota foi justa e ajustar o processo de avaliação. Para acompanhar ao vivo o que os modelos estão fazendo, noutra janela do terminal: `axyn logs`. O comando mostra o log mais recente, de uma execução deste projeto ou de uma avaliação, de forma legível: um cabeçalho por tentativa, uma linha por ação, erros em vermelho, notas em verde, indisponíveis em amarelo e JSON longo resumido com o tamanho. Para ver o texto completo, sem formatação, use `axyn logs --raw`.
 
 Os logs, relatórios e históricos do axyn são gravados em UTF-8 com a marca (BOM) no início, para o PowerShell 5.1 e os editores mostrarem os acentos certos. As tarefas são em Go e precisam do Go instalado.
 
@@ -204,6 +200,7 @@ Rode todos estes comandos na raiz do projeto:
 
 | Pergunta | Comando ou arquivo |
 |---|---|
+| O que o modelo está fazendo agora, ao vivo? | `axyn logs` (ou `axyn logs --raw` para o texto completo) |
 | O que está acontecendo agora? | `axyn status`, ou `axyn status --watch`: uma linha a cada mudança e, num terminal, um indicador animado (amarelo e branco) com o tempo da fase e, na avaliação dos modelos, a barra de progresso, a contagem e quanto falta |
 | O que aconteceu, do começo ao fim? | `axyn history`, que grava `.axyn/axyn_history-<ID>.md` com o pedido, o plano, cada tentativa, os portões, as perguntas, os commits, o ambiente e o log, sem chaves nem tokens |
 | Qual foi a saída exata do `make ci`? | `.axyn/runs/<ID>.log` |

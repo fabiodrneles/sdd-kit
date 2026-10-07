@@ -33,6 +33,9 @@ Uso:
                       código, testes, conserto), com notas só de verificações automáticas e veto a
                       quem enfraquece teste, e manda cada etapa para o modelo que melhor a resolve;
                       roda sozinho na primeira execução e quando a avaliação vence
+  axyn logs [--raw] [--once] [ARQUIVO]
+                      acompanha ao vivo o log mais recente (execução ou avaliação), legível: uma
+                      linha por ação, erros em vermelho, notas em destaque e JSON longo resumido
   axyn release [--yes] [--tag X.Y.Z]
                       fecha uma versão do projeto: mostra a versão (go-release-manager) e o que entra,
                       e com o seu sim abre o PR de fechamento com o CHANGELOG
@@ -89,6 +92,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runGate(args[1:], stdout, stderr)
 	case "model":
 		return runModelCmd(args[1:], stdout, stderr)
+	case "logs":
+		return runLogsCmd(args[1:], stdout, stderr)
 	case "bench":
 		return runBenchCmd(args[1:], stdout, stderr)
 	case "release":

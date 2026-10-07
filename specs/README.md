@@ -49,5 +49,6 @@ Convenções: `MUST`/`SHOULD`/`MAY` seguem a RFC 2119. Prioridades: **P0** (bloq
 | 019 | [Relé na prática](019-relay-in-practice/spec.md) | P1 | Done |
 | 020 | [Agente enxuto do relé](020-lean-agent/spec.md) | P1 | Done |
 | 021 | [axyn: o sdd-kit no opencode, com o modelo do usuário](021-axyn/spec.md) | P1 | Done |
+| 022 | [axyn runtime: os modelos sem depender de um caminho só](022-axyn-runtime/spec.md) | P1 | Draft |
 
 Status possíveis: `Draft` → `Approved` → `In Progress` → `Done`.

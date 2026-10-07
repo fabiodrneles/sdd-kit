@@ -742,7 +742,9 @@ func runBenchCmd(args []string, stdout, stderr io.Writer) int {
 			}
 		}
 	}
-	p := benchCore(models, chosen, *runs, *parallel, *timeout, *minScore, stdout, nil)
+	out, progress, stop := liveBench(stdout)
+	p := benchCore(models, chosen, *runs, *parallel, *timeout, *minScore, out, progress)
+	stop()
 	prev := p.prevForReport
 	text := report(p, prev)
 	mdPath := filepath.Join(benchDir(), "bench-"+p.Date.Format("20060102-150405")+".md")
@@ -801,6 +803,10 @@ func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout 
 	if parallel < 1 {
 		parallel = autoParallel()
 	}
+	for _, n := range benchNotes {
+		_, _ = fmt.Fprintln(out, n)
+	}
+	benchNotes = nil
 	total := len(models) * len(chosen) * runs
 	benchRoundDir = filepath.Join(benchDir(), "bench-"+p.Date.Format("20060102-150405"))
 	defer func() { benchRoundDir = "" }()
@@ -961,8 +967,16 @@ func benchModels(only string, all bool) ([]string, error) {
 	if err != nil && len(out) == 0 {
 		return nil, err
 	}
+	skipped := map[string]bool{}
 	for _, m := range list {
+		if !keyAvailable(m) {
+			skipped[strings.SplitN(m, "/", 2)[0]] = true
+			continue
+		}
 		add(m)
+	}
+	for prov := range skipped {
+		benchNotes = append(benchNotes, fmt.Sprintf("os modelos %s/... ficaram de fora: falta a chave (%s); para incluí-los: %s, ou opencode auth login", prov, defaultKeyEnv(prov+"/x"), setEnvHint(defaultKeyEnv(prov+"/x"))))
 	}
 	if len(out) == 0 {
 		return nil, fmt.Errorf("nenhum modelo para avaliar; veja os modelos com: opencode models")
@@ -1078,3 +1092,74 @@ func autoParallel() int {
 	}
 	return 2
 }
+
+// liveBench draws the live line (#356) under the bench's own lines when stdout is a
+// terminal: the same spinner, bar, count and estimate as axyn status --watch.
+func liveBench(stdout io.Writer) (io.Writer, func(done, total int, detail string), func()) {
+	if !isTerminal(stdout) {
+		return stdout, nil, func() {}
+	}
+	enableVT()
+	lw := &liveWriter{w: stdout, st: &runState{Phase: "avaliando modelos", PhaseSince: time.Now()}}
+	done := make(chan struct{})
+	go func() {
+		for frame := 0; ; frame++ {
+			select {
+			case <-done:
+				return
+			case <-time.After(120 * time.Millisecond):
+			}
+			lw.mu.Lock()
+			_, _ = fmt.Fprint(lw.w, "\r\x1b[K"+liveLine(lw.st, frame, time.Now()))
+			lw.mu.Unlock()
+		}
+	}()
+	progress := func(d, total int, detail string) {
+		lw.mu.Lock()
+		lw.st.Done, lw.st.Of, lw.st.Detail = d, total, detail
+		lw.mu.Unlock()
+	}
+	return lw, progress, func() {
+		close(done)
+		lw.mu.Lock()
+		_, _ = fmt.Fprint(lw.w, "\r\x1b[K")
+		lw.mu.Unlock()
+	}
+}
+
+type liveWriter struct {
+	mu sync.Mutex
+	w  io.Writer
+	st *runState
+}
+
+// Write clears the live line before a normal line, so both stay readable.
+func (l *liveWriter) Write(b []byte) (int, error) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	_, _ = fmt.Fprint(l.w, "\r\x1b[K")
+	return l.w.Write(b)
+}
+
+// keyAvailable says whether the model's provider has a key: in its environment variable
+// or saved by opencode auth login. A model without one only fails, so the bench skips it.
+func keyAvailable(id string) bool {
+	env := defaultKeyEnv(id)
+	if env == "" || os.Getenv(env) != "" {
+		return true
+	}
+	provider := strings.SplitN(id, "/", 2)[0]
+	home, _ := os.UserHomeDir()
+	for _, p := range []string{os.Getenv("XDG_DATA_HOME"), filepath.Join(home, ".local", "share")} {
+		if p == "" {
+			continue
+		}
+		if b, err := os.ReadFile(filepath.Join(p, "opencode", "auth.json")); err == nil && strings.Contains(string(b), `"`+provider+`"`) {
+			return true
+		}
+	}
+	return false
+}
+
+// benchNotes are the warnings of the model list (skipped providers), shown before a round.
+var benchNotes []string

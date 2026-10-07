@@ -190,3 +190,24 @@ func TestOnlyCleanupFailed(t *testing.T) {
 		t.Error("sem erro de limpeza, nada a relevar")
 	}
 }
+
+func TestKeyAvailable(t *testing.T) {
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("OPENROUTER_API_KEY", "")
+	if keyAvailable("openrouter/x:free") {
+		t.Error("sem a chave, o modelo do OpenRouter fica de fora")
+	}
+	if !keyAvailable("opencode/nemotron-free") {
+		t.Error("modelo do opencode não precisa de chave")
+	}
+	t.Setenv("OPENROUTER_API_KEY", "x")
+	if !keyAvailable("openrouter/x:free") {
+		t.Error("com a chave na variável, entra")
+	}
+	t.Setenv("OPENROUTER_API_KEY", "")
+	write(t, filepath.Join(os.Getenv("XDG_DATA_HOME"), "opencode"), "auth.json", `{"openrouter":{"type":"api","key":"k"}}`)
+	if !keyAvailable("openrouter/x:free") {
+		t.Error("com a chave do opencode auth login, entra")
+	}
+}

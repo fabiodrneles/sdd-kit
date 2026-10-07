@@ -142,3 +142,44 @@ func TestCoverageChoiceFromEnv(t *testing.T) {
 		t.Errorf("manual não cria ticket: %+v", pl)
 	}
 }
+
+// #337: when the base's CI fails before the tests (lint), the coverage is measured with
+// make test, the base errors are recorded for the user and the model, and choosing who
+// writes the tests gives the open tickets new attempts.
+func TestCoverageWhenBaseLintFails(t *testing.T) {
+	dir := repo(t)
+	write(t, dir, "Makefile", "COVERAGE_MIN ?= 80\n\nci: lint test\n\nlint:\n\t@echo 'checker/checker.go:42:12: Error return value of `resp.Body.Close` is not checked (errcheck)'; exit 1\n\ntest:\n\t@echo 'cobertura: 0.0% (mínimo 0%)'\n")
+	s := &mcpServer{dir: dir, ci: defaultCICmd}
+	p, _ := s.statePath()
+	_ = s.savePlan(&plan{Spec: "specs/x.md", Tickets: []ticket{{ID: 1, Title: "pedido", Attempts: []attempt{{Model: "m"}, {Model: "m"}}}}}, p)
+	r := &runner{s: s, st: &runState{}}
+	msg := r.measureCoverage()
+	if !strings.Contains(msg, "já falha na branch base") || !strings.Contains(msg, "errcheck") || !strings.Contains(msg, "cobertura atual do projeto: 0.0%") {
+		t.Errorf("medição com o lint quebrado na base: %q", msg)
+	}
+	t.Setenv("AXYN_COVERAGE", "")
+	if q := r.coverageQuestion(); !strings.Contains(q, "não tem testes") {
+		t.Errorf("deveria perguntar quem escreve os testes: %q", q)
+	}
+	if prompt, _ := s.toolNext(); !strings.Contains(prompt, "já falhava antes deste ticket") || !strings.Contains(prompt, "errcheck") {
+		t.Errorf("o modelo deveria saber dos erros da base:\n%s", prompt)
+	}
+	if err := applyCoverageChoice(s, "manual"); err != nil {
+		t.Fatal(err)
+	}
+	if pl, _, _ := s.loadPlan(); len(pl.Tickets[0].Attempts) != 0 || len(pl.Tickets[0].Earlier) != 2 {
+		t.Errorf("a escolha deveria dar novas tentativas: %+v", pl.Tickets[0])
+	}
+	if what, _ := meaning("[tests] o ticket muda código (x.go) sem nenhum teste novo ou alterado; [ci] falhou"); !strings.Contains(what, "sem escrever nenhum teste") {
+		t.Errorf("código sem teste em palavras simples: %q", what)
+	}
+}
+
+func TestFixMojibake(t *testing.T) {
+	if got := fixMojibake("cobertura: 0.0% (mÃ­nimo 80%)"); got != "cobertura: 0.0% (mínimo 80%)" {
+		t.Errorf("acentos: %q", got)
+	}
+	if got := fixMojibake("já está certo"); got != "já está certo" {
+		t.Errorf("texto certo não muda: %q", got)
+	}
+}

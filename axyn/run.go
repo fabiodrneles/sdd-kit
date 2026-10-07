@@ -424,6 +424,12 @@ func (r *runner) run() {
 		}
 		r.st.Ticket, r.st.Total, r.st.Title, r.st.Attempts, r.st.Gate = t.ID, len(pl.Tickets), t.Title, len(t.Attempts), ""
 		if status, msg := r.ticket(); status != "" {
+			if cur, _ := r.s.git("rev-parse", "--abbrev-ref", "HEAD"); base != "" && cur != base {
+				if out, _ := r.s.git("status", "--porcelain"); strings.TrimSpace(out) != "" {
+					_ = r.s.saveWIP(t, "parada")
+				}
+				_, _ = r.s.git("checkout", "-q", base) // the user ends where the run started
+			}
 			r.stop(status, msg)
 			return
 		}

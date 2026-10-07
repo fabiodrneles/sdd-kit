@@ -28,6 +28,7 @@ O kit nasceu do [cv-craft](https://github.com/fabiodrneles/cv-craft), que saiu d
 - [axyn](#axyn)
 - [Passo a passo para iniciantes](#passo-a-passo-para-iniciantes)
 - [Problemas comuns e como resolver](#problemas-comuns-e-como-resolver)
+- [Atualizar o axyn](#atualizar-o-axyn-quando-sair-uma-versão-nova)
 - [Instalar a skill](#instalar-a-skill)
 - [Script de adoção](#script-de-adoção)
 - [Perguntas frequentes](#perguntas-frequentes)
@@ -635,6 +636,31 @@ axyn history --out ~/Downloads/axyn_history.md
 
 Anexe esse arquivo ao pedir ajuda: com ele, quem for ajudar vê exatamente o que aconteceu. Os casos mais comuns, com a solução, estão em [Problemas comuns e como resolver](#problemas-comuns-e-como-resolver).
 
+### Atualizar o axyn (quando sair uma versão nova)
+
+As novidades de cada versão estão nas [releases](https://github.com/fabiodrneles/sdd-kit/releases), em linguagem simples e com o "Como atualizar" no fim (o histórico completo fica no [CHANGELOG](CHANGELOG.md)). Para atualizar:
+
+**Onde rodar:** no terminal, com o opencode fechado, **na raiz de cada projeto** em que você usa o axyn (o instalador também atualiza a configuração do opencode daquele projeto).
+
+```powershell
+irm https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.ps1 | iex
+```
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.sh | sh
+```
+
+Depois, feche e abra o terminal, volte à raiz do projeto e confira:
+
+```bash
+axyn version
+# Mostra a versão instalada; deve ser a da release nova.
+axyn doctor
+# Confere se a versão nova precisa de alguma ferramenta a mais.
+```
+
+Uma execução que estava parada continua com `axyn run --resume`, já na versão nova.
+
 ### Comandos que você pode precisar
 
 | Comando | Onde rodar | O que faz |
@@ -650,6 +676,7 @@ Anexe esse arquivo ao pedir ajuda: com ele, quem for ajudar vê exatamente o que
 | `axyn run --resume` | raiz do projeto | continua de onde parou (depois de uma pergunta, de um travamento ou de uma correção sua) |
 | `axyn history` | raiz do projeto | arquivo com tudo o que a execução fez, para pedir ajuda |
 | `axyn version` | qualquer pasta | versão instalada |
+| o instalador de novo (acima) | raiz de cada projeto | atualiza o axyn para a versão nova |
 | `gh pr list` / `gh pr view N --web` | raiz do projeto | lista os PRs / abre o PR N no navegador |
 | `gh pr checks N` | raiz do projeto | CI do PR N |
 | `gh pr merge N --merge --delete-branch` | raiz do projeto | mescla o PR N e apaga a branch |

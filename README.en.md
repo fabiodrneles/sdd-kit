@@ -577,6 +577,31 @@ axyn history --out ~/Downloads/axyn_history.md
 
 Attach that file when asking for help: with it, whoever helps sees exactly what happened. The most common cases, with the fix, are in [Common problems and how to fix them](#common-problems-and-how-to-fix-them).
 
+### Updating axyn (when a new version is out)
+
+What is new in each version is in the [releases](https://github.com/fabiodrneles/sdd-kit/releases), in plain words and with "How to update" at the end (the full history is in the [CHANGELOG](CHANGELOG.md)). To update:
+
+**Where to run:** in the terminal, with opencode closed, **at the root of each project** where you use axyn (the installer also updates that project's opencode configuration).
+
+```powershell
+irm https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.ps1 | iex
+```
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.sh | sh
+```
+
+Then close and reopen the terminal, go back to the project root and check:
+
+```bash
+axyn version
+# Shows the installed version; it should be the new release's.
+axyn doctor
+# Checks whether the new version needs any extra tool.
+```
+
+A run that had stopped continues with `axyn run --resume`, already on the new version.
+
 ### Commands you may need
 
 | Command | Where to run | What it does |
@@ -592,6 +617,7 @@ Attach that file when asking for help: with it, whoever helps sees exactly what 
 | `axyn run --resume` | project root | continues where it stopped (after a question, a crash or a fix of yours) |
 | `axyn history` | project root | file with everything the run did, to ask for help |
 | `axyn version` | any folder | installed version |
+| the installer again (above) | root of each project | updates axyn to the new version |
 | `gh pr list` / `gh pr view N --web` | project root | lists the PRs / opens PR N in the browser |
 | `gh pr checks N` | project root | PR N's CI |
 | `gh pr merge N --merge --delete-branch` | project root | merges PR N and deletes the branch |

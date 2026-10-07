@@ -20,10 +20,17 @@ const codePrompt = `Você é o axyn-code. Escreva o código de um único ticket,
 Nunca afrouxe, pule ou apague um teste para o CI passar; se o teste estiver certo, conserte o código.
 Não mexa em caminhos protegidos, nem em workflows, nem na configuração do axyn. Termine quando o ticket estiver pronto.`
 
-const commandTemplate = `Chame a ferramenta axyn_run com o pedido do usuário, exatamente como ele escreveu: $ARGUMENTS
+// commandTemplate is what opencode shows as the user's message for /axyn: a line for
+// people, in their words (#320). The instructions for the model live in guidePrompt.
+const commandTemplate = `axyn, por favor: $ARGUMENTS`
 
-O axyn conduz o resto sozinho (plano, código, portões, recuperação e entrega). Não decida nada do processo e não escreva código: mostre o andamento com axyn_status até ele terminar ou parar.
-Se o axyn_status trouxer uma pergunta, faça-a ao usuário, grave a resposta com axyn_decide e chame axyn_run de novo com resume.`
+// guidePrompt is the agent /axyn runs on. It only has the axyn tools (no shell, no edit),
+// so the conversation's model cannot do the work outside the gates (#321).
+const guidePrompt = `Você é o axyn, e conversa com o usuário no idioma dele, em frases curtas e amigáveis.
+O pedido do usuário vem na mensagem. Chame axyn_run com o pedido exatamente como ele escreveu; se ele pedir para continuar ou retomar, chame axyn_run com resume.
+Você não escreve código nem decide o processo: o motor do axyn faz o plano, o código, os portões e a entrega. Você só mostra o andamento, chamando axyn_status de vez em quando, e conta ao usuário o que mudou, sem nomes de ferramentas.
+Se o axyn_status trouxer uma pergunta, faça-a ao usuário com as opções; com a resposta, chame axyn_decide e depois axyn_run com resume.
+Se o usuário pedir o histórico ou ajuda com um problema, chame axyn_history e diga onde o arquivo ficou.`
 
 // axynConfig is what install adds to opencode.json: the MCP server, the two agents
 // and the /axyn command (spec 021 FR-2).
@@ -39,6 +46,19 @@ func axynConfig() map[string]map[string]any {
 		// mode "all": o motor chama os agentes com `opencode run --agent`, que recusa um
 		// "subagent" e cai no agente padrão, sem o prompt nem as ferramentas do axyn.
 		"agent": {
+			"axyn": map[string]any{
+				"description": "Conduz o pedido pelo axyn e mostra o andamento",
+				"mode":        "primary",
+				"prompt":      guidePrompt,
+				"tools": map[string]any{
+					// Only the conversation tools: the plan, the gates and the delivery belong
+					// to the engine (the model once called axyn_plan by itself).
+					"*": false, "axyn_*": false, "axyn_axyn_run": true, "axyn_axyn_status": true,
+					"axyn_axyn_decide": true, "axyn_axyn_history": true, "bash": false, "edit": false, "write": false,
+					"read": false, "glob": false, "grep": false, "list": false, "webfetch": false,
+					"task": false, "todowrite": false, "patch": false,
+				},
+			},
 			"axyn-plan": map[string]any{
 				"description": "Escreve a spec e os tickets de um pedido, pelo axyn",
 				"mode":        "all",
@@ -70,6 +90,7 @@ func axynConfig() map[string]map[string]any {
 			"axyn": map[string]any{
 				"description": "Constrói o pedido com o processo do axyn",
 				"template":    commandTemplate,
+				"agent":       "axyn",
 			},
 		},
 	}

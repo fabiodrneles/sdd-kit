@@ -210,7 +210,29 @@ func TestCommandIsASingleInstruction(t *testing.T) {
 			t.Errorf("o comando /axyn não deve citar %s: o motor conduz o laço", bad)
 		}
 	}
-	if !strings.Contains(commandTemplate, "axyn_run") || !strings.Contains(commandTemplate, "$ARGUMENTS") {
-		t.Error("o comando /axyn deve chamar axyn_run com $ARGUMENTS")
+	if !strings.Contains(guidePrompt, "axyn_run") || !strings.Contains(commandTemplate, "$ARGUMENTS") {
+		t.Error("o /axyn leva o pedido ($ARGUMENTS) ao agente axyn, que chama axyn_run")
+	}
+	// #320: what opencode shows as the user's message has no internal names.
+	for _, bad := range []string{"axyn_", "resume", "ferramenta"} {
+		if strings.Contains(commandTemplate, bad) {
+			t.Errorf("o texto do /axyn mostrado ao usuário não deve ter %q: %q", bad, commandTemplate)
+		}
+	}
+	// #321: the /axyn agent has only the axyn tools, so the model cannot work outside the gates.
+	cfg := axynConfig()
+	if cfg["command"]["axyn"].(map[string]any)["agent"] != "axyn" {
+		t.Error("o /axyn deve rodar no agente axyn")
+	}
+	tools := cfg["agent"]["axyn"].(map[string]any)["tools"].(map[string]any)
+	for name, on := range tools {
+		if on == true && name != "axyn_axyn_run" && name != "axyn_axyn_status" && name != "axyn_axyn_decide" && name != "axyn_axyn_history" {
+			t.Errorf("o agente axyn não pode ter a ferramenta %s", name)
+		}
+	}
+	for _, need := range []string{"bash", "edit", "write"} {
+		if tools[need] != false {
+			t.Errorf("o agente axyn deve negar %s", need)
+		}
 	}
 }

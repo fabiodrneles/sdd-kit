@@ -199,3 +199,51 @@ func TestCoverageRemeasuredAfterFailedCheck(t *testing.T) {
 		t.Error("a medição deveria ficar no plano")
 	}
 }
+
+// #342: the coverage is measured on every run; a drop under the floor (tests deleted)
+// stops the run with what changed in the tests and the ways forward, and accept is a
+// decision recorded in the spec.
+func TestCoverageDropIsDetected(t *testing.T) {
+	dir := repo(t)
+	write(t, dir, "Makefile", "COVERAGE_MIN ?= 80\n")
+	write(t, filepath.Join(dir, "specs"), "x.md", "# Spec\n")
+	git(t, dir, "add", "-A")
+	git(t, dir, "commit", "-qm", "spec")
+	s := &mcpServer{dir: dir, ci: "echo 'cobertura: 52.0% (mínimo 0%)'"}
+	p, _ := s.statePath()
+	_ = s.savePlan(&plan{Spec: "specs/x.md", CoverageChoice: "manual", Tickets: []ticket{{ID: 1, Title: "pedido"}}}, p)
+	r := &runner{s: s, st: &runState{}}
+	_ = r.measureCoverage()
+	if q := r.coverageQuestion(); q != "" {
+		t.Fatalf("sem queda, nada a perguntar: %q", q)
+	}
+	_ = os.Remove(filepath.Join(dir, "x_test.go"))
+	git(t, dir, "commit", "-qam", "remove tests")
+	s.ci = "echo 'cobertura: 20.0% (mínimo 0%)'"
+	if msg := r.measureCoverage(); !strings.Contains(msg, "caiu para 20.0%") {
+		t.Errorf("a queda deveria aparecer: %q", msg)
+	}
+	q := r.coverageQuestion()
+	for _, want := range []string{"caiu", "mínimo que o projeto já tinha alcançado é 52%", "remove tests: x_test.go", "axyn coverage auto", "axyn coverage accept"} {
+		if !strings.Contains(q, want) {
+			t.Errorf("a mensagem da queda não traz %q:\n%s", want, q)
+		}
+	}
+	if floor, _ := coverageFloor(dir); floor != 52 {
+		t.Errorf("o piso não desce sozinho: %d", floor)
+	}
+	var o, e strings.Builder
+	if code := runCoverageCmd([]string{"--dir", dir, "--no-resume", "accept"}, &o, &e); code != exitOK {
+		t.Fatalf("accept: %d %s", code, e.String())
+	}
+	spec, _ := os.ReadFile(filepath.Join(dir, "specs", "x.md"))
+	if !strings.Contains(string(spec), "aceito o novo mínimo de 20%") {
+		t.Errorf("a decisão deveria estar na spec:\n%s", spec)
+	}
+	if floor, _ := coverageFloor(dir); floor != 20 {
+		t.Errorf("o novo piso: %d", floor)
+	}
+	if q := r.coverageQuestion(); q != "" {
+		t.Errorf("depois do accept, segue: %q", q)
+	}
+}

@@ -196,15 +196,14 @@ func checkPatchCoverage(dir string, files []fileDiff, since time.Time) []finding
 // project's coverage with its own tests. It returns what to tell the user.
 func (r *runner) measureCoverage() string {
 	pl, path, err := r.s.loadPlan()
-	// Only a real measure ends this: v1.18.0 marked the plan as checked before a failed
-	// measure, and v1.18.1 never measured again (#342).
-	if err != nil || pl.CoverageMeasured || strings.TrimSpace(r.s.ci) == "" {
+	// Measured at the start of every run, never once for good (#342): a mark that says
+	// "checked" would hide tests deleted between runs. Only the floor is kept, and it never
+	// goes down by itself.
+	if err != nil || strings.TrimSpace(r.s.ci) == "" {
 		return ""
 	}
 	goal, ok := makefileGoal(r.s.dir)
 	if !ok {
-		pl.CoverageChecked = true // no coverage minimum in this project
-		_ = r.s.savePlan(pl, path)
 		return ""
 	}
 	run := func(command string) (string, error) {
@@ -239,15 +238,25 @@ func (r *runner) measureCoverage() string {
 		_ = r.s.savePlan(pl, path)
 		return strings.Join(append(notes, "não consegui medir a cobertura atual do projeto (os testes não rodaram); vou tentar de novo na próxima execução"), "\n")
 	}
-	pl.CoverageChecked = true
+	first, prevCommit := !pl.CoverageMeasured, pl.CoverageCommit
 	pl.CoverageMeasured, pl.CoverageGoal, pl.CoverageNow = true, goal, c
-	pl.CoverageFloor = min(int(math.Floor(c)), goal)
 	pl.CoverageGaps = coverageGaps(r.s.dir, goal)
-	_ = r.s.savePlan(pl, path)
+	pl.CoverageCommit, _ = r.s.git("rev-parse", "HEAD")
 	prefix := strings.Join(notes, "\n")
 	if prefix != "" {
 		prefix += "\n"
 	}
+	if first {
+		pl.CoverageFloor = min(int(math.Floor(c)), goal)
+	} else if c+0.05 < float64(pl.CoverageFloor) {
+		// Lower than the floor the project had reached: tests were deleted or turned off.
+		pl.CoverageDrop = true
+		pl.CoverageDropFrom = prevCommit
+		_ = r.s.savePlan(pl, path)
+		return prefix + fmt.Sprintf("a cobertura caiu para %.1f%%, abaixo do mínimo garantido de %d%%", c, pl.CoverageFloor)
+	}
+	pl.CoverageDrop = false
+	_ = r.s.savePlan(pl, path)
 	if pl.CoverageFloor >= goal {
 		return prefix + fmt.Sprintf("cobertura atual do projeto: %.1f%% (meta %d%%): já está na meta", c, goal)
 	}
@@ -354,6 +363,9 @@ func goModule(dir string) string {
 // goal: who writes the missing tests. AXYN_COVERAGE=auto|manual answers it in advance.
 func (r *runner) coverageQuestion() string {
 	pl, path, err := r.s.loadPlan()
+	if err == nil && pl.CoverageDrop {
+		return coverageDropMessage(r.s, pl)
+	}
 	if err != nil || !pl.CoverageMeasured || pl.CoverageFloor >= pl.CoverageGoal || pl.CoverageChoice != "" {
 		return ""
 	}
@@ -389,7 +401,10 @@ func applyCoverageChoice(s *mcpServer, choice string) error {
 	if err != nil {
 		return err
 	}
-	pl.CoverageChoice = choice
+	if choice != "accept" {
+		pl.CoverageChoice = choice
+	}
+	pl.CoverageDrop = false
 	// Attempts made before the coverage was sorted out fought a goal no ticket could meet:
 	// they stay in the history (earlier) and the open tickets start the ladder again.
 	for i := range pl.Tickets {
@@ -437,8 +452,23 @@ func runCoverageCmd(args []string, stdout, stderr io.Writer) int {
 		}
 		return exitOK
 	}
-	if choice != "auto" && choice != "manual" {
-		_, _ = fmt.Fprintln(stderr, "axyn coverage: use auto (o axyn escreve os testes) ou manual (você escreve)")
+	if choice == "accept" {
+		if !pl.CoverageDrop {
+			_, _ = fmt.Fprintln(stderr, "axyn coverage: a cobertura não caiu; não há mínimo novo para aceitar")
+			return exitUsage
+		}
+		nf := min(int(math.Floor(pl.CoverageNow)), pl.CoverageGoal)
+		q := fmt.Sprintf("a cobertura caiu de %d%% para %.1f%%", pl.CoverageFloor, pl.CoverageNow)
+		if _, err := s.toolDecide(q, fmt.Sprintf("aceito o novo mínimo de %d%%", nf)); err != nil {
+			_, _ = fmt.Fprintf(stderr, "axyn coverage: %v\n", err)
+			return exitFail
+		}
+		pl, path, _ := s.loadPlan()
+		pl.CoverageFloor, pl.CoverageDrop = nf, false
+		_ = s.savePlan(pl, path)
+		_, _ = fmt.Fprintf(stdout, "novo mínimo de cobertura: %d%% (registrado como decisão na spec)\n", nf)
+	} else if choice != "auto" && choice != "manual" {
+		_, _ = fmt.Fprintln(stderr, "axyn coverage: use auto (o axyn escreve os testes), manual (você escreve) ou accept (aceita o mínimo novo depois de uma queda)")
 		return exitUsage
 	}
 	if err := applyCoverageChoice(s, choice); err != nil {
@@ -447,7 +477,7 @@ func runCoverageCmd(args []string, stdout, stderr io.Writer) int {
 	}
 	if choice == "auto" {
 		_, _ = fmt.Fprintln(stdout, "combinado: o axyn escreve os testes que faltam num ticket antes dos outros")
-	} else {
+	} else if choice == "manual" {
 		_, _ = fmt.Fprintln(stdout, "combinado: você escreve os testes que faltam; o axyn não deixa a cobertura cair e exige teste em todo código novo")
 	}
 	if *noResume {
@@ -468,4 +498,45 @@ var testTargetRe = regexp.MustCompile(`(?m)^test\s*:`)
 func testTarget(dir string) bool {
 	b, err := os.ReadFile(filepath.Join(dir, "Makefile"))
 	return err == nil && testTargetRe.Match(b)
+}
+
+// coverageDropMessage explains a coverage under the floor, with the commits that touched
+// tests since the last measure, and the three ways forward.
+func coverageDropMessage(s *mcpServer, pl *plan) string {
+	var b strings.Builder
+	w := func(f string, a ...any) { fmt.Fprintf(&b, f, a...) }
+	w("A cobertura de testes caiu: hoje os testes cobrem %.1f%% do código, e o mínimo que o projeto já tinha alcançado é %d%%.\n", pl.CoverageNow, pl.CoverageFloor)
+	w("Isso acontece quando um teste é apagado, desligado (skip) ou perde casos. O axyn não começa nenhum ticket com a cobertura abaixo do que já foi conquistado.\n")
+	if pl.CoverageDropFrom != "" {
+		if out, err := s.git("log", "--format=%h %s", "--name-only", pl.CoverageDropFrom+"..HEAD"); err == nil {
+			var hits []string
+			commit := ""
+			for _, l := range strings.Split(out, "\n") {
+				switch {
+				case strings.TrimSpace(l) == "":
+				case !strings.Contains(l, "/") && !strings.Contains(l, ".") || strings.Contains(l, " "):
+					commit = l
+				case isTestPath(l):
+					hits = append(hits, commit+": "+l)
+				}
+			}
+			if len(hits) > 0 {
+				w("\nMudanças em testes desde a última medição:\n")
+				for _, h := range hits {
+					w("  %s\n", h)
+				}
+			}
+		}
+	}
+	if len(pl.CoverageGaps) > 0 {
+		w("\nOnde falta cobertura agora:\n")
+		for _, g := range pl.CoverageGaps {
+			w("  %s\n", g)
+		}
+	}
+	w("\nComo seguir (escolha um; no terminal, na raiz do projeto):\n")
+	w("  1. Restaurar os testes apagados (por exemplo com git revert ou git checkout do arquivo) e rodar: axyn run --resume\n")
+	w("  2. O axyn escreve testes até a cobertura voltar a %d%%, num ticket antes dos outros:\n       axyn coverage auto\n", pl.CoverageFloor)
+	w("  3. Aceitar o novo mínimo de %.0f%% (fica registrado como decisão na spec, para auditoria):\n       axyn coverage accept", math.Floor(pl.CoverageNow))
+	return b.String()
 }

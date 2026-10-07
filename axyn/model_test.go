@@ -129,3 +129,20 @@ func TestDoctorShowsTheModel(t *testing.T) {
 		t.Errorf("com a chave: %d\n%s", code, out)
 	}
 }
+
+// 021 FR-6: the planner runs on the ladder's first model too, not on opencode's default.
+func TestPlannerUsesTheLadderModel(t *testing.T) {
+	dir := repo(t)
+	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `printf 'ticket %s\n' "$n" > "f$n.txt"`))
+	cfg := filepath.Join(t.TempDir(), "config.yaml")
+	write(t, filepath.Dir(cfg), "config.yaml", formatModels([]model{{ID: "opencode/nemotron-3-ultra-free"}}))
+	var out, errb bytes.Buffer
+	if code := runRunCmd([]string{"--wait", "--dir", dir, "--ci", "true", "--config", cfg, "crie uma coisa"}, &out, &errb); code != exitOK {
+		t.Fatalf("code %d\n%s%s", code, out.String(), errb.String())
+	}
+	calls, _ := os.ReadFile(os.Getenv("FAKE_LOG"))
+	first := strings.SplitN(string(calls), "\n", 2)[0]
+	if !strings.HasPrefix(first, "run --agent axyn-plan --model opencode/nemotron-3-ultra-free") {
+		t.Errorf("o plano deveria rodar no modelo da escada: %s", first)
+	}
+}

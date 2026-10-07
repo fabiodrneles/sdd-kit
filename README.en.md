@@ -623,6 +623,7 @@ A run that had stopped continues with `axyn run --resume`, already on the new ve
 | `axyn run --resume` | project root | continues where it stopped (after a question, a crash or a fix of yours) |
 | `axyn history` | project root | file with everything the run did, to ask for help |
 | `axyn version` | any folder | installed version |
+| `axyn release` | project root | closes a version: shows the computed version and what goes in, and with your yes opens the closing PR with the CHANGELOG |
 | the installer again (above) | root of each project | updates axyn to the new version |
 | `gh pr list` / `gh pr view N --web` | project root | lists the PRs / opens PR N in the browser |
 | `gh pr checks N` | project root | PR N's CI |

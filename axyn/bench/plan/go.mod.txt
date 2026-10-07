@@ -1,0 +1,3 @@
+module notas
+
+go 1.22

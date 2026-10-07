@@ -144,15 +144,12 @@ func keyHint(m model) string {
 // carries the diagnosis, so the report need not repeat the CI log. With no ladder, no plan
 // or no open ticket it does nothing.
 func (s *mcpServer) recordAttempt(green bool, findings []finding, plan []string, ciLog string) (advice string, recovered bool) {
-	models, err := loadModels(s.config)
-	if err == nil && len(models) == 0 && s.fallback {
-		models = []model{{ID: placeholder}}
-	}
-	if err != nil || len(models) == 0 {
-		return "", false
-	}
 	pl, t := s.openTicket()
 	if t == nil {
+		return "", false
+	}
+	models := s.ticketLadder(t)
+	if len(models) == 0 {
 		return "", false
 	}
 	_, planPath, _ := s.loadPlan()
@@ -224,4 +221,64 @@ func (s *mcpServer) saveWIP(t *ticket, why string) string {
 		return "WIP não gravado: " + out
 	}
 	return fmt.Sprintf("trabalho guardado num commit WIP em %s; falta o portão passar, nada foi quebrado.", branch)
+}
+
+// ticketLadder is the ladder of one ticket: with an applied bench (#344), the models that did
+// this kind of ticket best come first (tests tickets by the tests step, the others by code
+// and fix); the configured ladder follows, without repeats, keeping each key_env.
+func (s *mcpServer) ticketLadder(t *ticket) []model {
+	base, err := loadModels(s.config)
+	if err != nil {
+		return nil
+	}
+	if len(base) == 0 && s.fallback {
+		base = []model{{ID: placeholder}}
+	}
+	role := roleCode
+	if strings.HasPrefix(t.Title, "Testes para") {
+		role = roleTests
+	}
+	order := routed(role)
+	if role == roleCode {
+		for _, m := range routed(roleFix) {
+			order = append(order, m)
+		}
+	}
+	if len(order) == 0 {
+		return s.skipDown(base)
+	}
+	keys := map[string]string{}
+	for _, m := range base {
+		keys[m.ID] = m.KeyEnv
+	}
+	var out []model
+	seen := map[string]bool{}
+	for _, id := range order {
+		if !seen[id] {
+			seen[id] = true
+			out = append(out, model{ID: id, KeyEnv: keys[id]})
+		}
+	}
+	for _, m := range base {
+		if !seen[m.ID] && m.ID != placeholder {
+			seen[m.ID] = true
+			out = append(out, m)
+		}
+	}
+	return s.skipDown(out)
+}
+
+// skipDown drops the models out of use in this run; with none left it keeps the list, and
+// the engine stops with the explanation instead.
+func (s *mcpServer) skipDown(ms []model) []model {
+	if len(s.down) == 0 {
+		return ms
+	}
+	var out []model
+	for _, m := range ms {
+		if _, down := s.down[m.ID]; !down {
+			out = append(out, m)
+		}
+	}
+	return out
 }

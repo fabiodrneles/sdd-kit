@@ -1,0 +1,9 @@
+// Package slug turns titles into URL slugs.
+package slug
+
+// Make returns the slug of title: lower case, accents removed (á→a, ç→c, ã→a, é→e,
+// ê→e, í→i, ó→o, õ→o, ô→o, ú→u), every run of characters that are not a-z or 0-9
+// becomes one "-", and there is no "-" at the start or at the end.
+func Make(title string) string {
+	return ""
+}

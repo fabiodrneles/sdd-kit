@@ -26,6 +26,12 @@ Uso:
   axyn model [ID] [--all] [--only] [--key-env VAR]
                       escolhe o modelo do axyn: sem ID, mostra os modelos gratuitos do opencode
                       numa lista numerada; com ID, troca direto (grava o config.yaml)
+  axyn bench [--models A,B] [--all] [--tasks plan,code,tests,fix] [--runs N] [--parallel N]
+            [--min-score N] [--ask] [--show] [--apply] [--off] [--set ETAPA=MODELO]
+                      avalia os modelos gratuitos da máquina em tarefas fixas de cada etapa (plano,
+                      código, testes, conserto), com notas só de verificações automáticas e veto a
+                      quem enfraquece teste, e manda cada etapa para o modelo que melhor a resolve;
+                      roda sozinho na primeira execução e quando a avaliação vence
   axyn release [--yes] [--tag X.Y.Z]
                       fecha uma versão do projeto: mostra a versão (go-release-manager) e o que entra,
                       e com o seu sim abre o PR de fechamento com o CHANGELOG
@@ -79,6 +85,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runGate(args[1:], stdout, stderr)
 	case "model":
 		return runModelCmd(args[1:], stdout, stderr)
+	case "bench":
+		return runBenchCmd(args[1:], stdout, stderr)
 	case "release":
 		return runReleaseCmd(args[1:], stdout, stderr)
 	case "retry":

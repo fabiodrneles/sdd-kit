@@ -1,0 +1,19 @@
+package slug
+
+import "testing"
+
+func TestMake(t *testing.T) {
+	cases := map[string]string{
+		"Olá Mundo":                 "ola-mundo",
+		"  Ação & Reação  ":         "acao-reacao",
+		"Go 1.22: o que há de novo?": "go-1-22-o-que-ha-de-novo",
+		"---":                       "",
+		"Pão de Açúcar":             "pao-de-acucar",
+		"ÔNIBUS   rápido":           "onibus-rapido",
+	}
+	for in, want := range cases {
+		if got := Make(in); got != want {
+			t.Errorf("Make(%q) = %q, quer %q", in, got, want)
+		}
+	}
+}

@@ -3,6 +3,7 @@ exclude_path = [
   "node_modules",
   "dist",
   "template", # links com marcadores {{OWNER}}/{{REPO}}, verificados depois da adoção
+  "axyn/templates", # cópia de template/ embutida no axyn (make axyn-templates)
 ]
 
 exclude = [

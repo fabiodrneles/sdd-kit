@@ -4,6 +4,28 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-10-07
+
+### Adicionado
+
+- axyn skeleton in Go with axyn version, covered by make ci (#273)
+- axyn gate with CI, loosened-test, protected-path and diff-size gates (#274)
+- mcp server with axyn_plan, axyn_next, axyn_gate and axyn_ship (#275)
+- sdd-relay.sh --auto-merge merges the ticket PR once its CI is green (#277)
+- install adds the mcp server, agents and /axyn command to opencode.json without erasing the user's config (#278)
+- web template with HTML validation and local link check (spec 021 FR-4, AC-4) (#280)
+- model ladder with per-ticket attempt, model and cost record (#281)
+- recovery without changing model, from exact diagnosis to a question to the user (spec 021 FR-8, AC-6) (#283)
+- auto merge in one command (sdd-auto-merge.sh on|off|status) for every PR (#284)
+- engine drives the loop, /axyn only calls axyn_run (spec 021 FR-9, AC-7) (#286)
+- one-command install script and AC-5 e2e with a fake agent (#287)
+- release binaries, Go-free install and user guide (T79) (#290)
+
+### Corrigido
+
+- isolate the sdd-auto-merge test from the CI runner environment (#285)
+- forbid git stash in the relay agent prompt (#289)
+
 ## [1.13.0] - 2026-10-06
 
 ### Adicionado

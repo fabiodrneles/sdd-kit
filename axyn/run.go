@@ -308,9 +308,27 @@ func (r *runner) run() {
 		r.stop(runStopped, "a árvore de trabalho tem alterações (ou não é um repositório git); faça commit ou guarde-as antes do axyn_run")
 		return
 	}
+	start, _ := r.s.git("rev-parse", "--abbrev-ref", "HEAD")
 	if !r.st.Opts.Resume {
 		if err := r.plan(); err != nil {
 			r.stop(runStopped, err.Error())
+			return
+		}
+	}
+	// Every ticket starts from the plan's base branch (FR-9: one branch and one PR per
+	// ticket); before this, ticket 2 branched from ticket 1 and its PR carried both. The
+	// base lives in the plan, so a --resume from a WIP branch still finds it.
+	base := ""
+	if pl, path, err := r.s.loadPlan(); err == nil {
+		if pl.Base == "" && start != "HEAD" {
+			pl.Base = start
+			_ = r.s.savePlan(pl, path)
+		}
+		base = pl.Base
+	}
+	if cur, _ := r.s.git("rev-parse", "--abbrev-ref", "HEAD"); base != "" && cur != base {
+		if out, err := r.s.git("checkout", base); err != nil {
+			r.stop(runStopped, "não consegui voltar à branch base "+base+": "+out)
 			return
 		}
 	}
@@ -325,8 +343,17 @@ func (r *runner) run() {
 			r.stop(runStopped, "nenhum plano gravado")
 			return
 		case t == nil:
+			if base != "" {
+				_, _ = r.s.git("checkout", base) // the user ends where the run started
+			}
 			r.stop(runDone, fmt.Sprintf("os %d ticket(s) do plano estão entregues", len(pl.Tickets)))
 			return
+		}
+		if cur, _ := r.s.git("rev-parse", "--abbrev-ref", "HEAD"); base != "" && cur != base {
+			if out, err := r.s.git("checkout", base); err != nil {
+				r.stop(runStopped, "não consegui voltar à branch base "+base+": "+out)
+				return
+			}
 		}
 		r.st.Ticket, r.st.Total, r.st.Title, r.st.Attempts, r.st.Gate = t.ID, len(pl.Tickets), t.Title, len(t.Attempts), ""
 		if status, msg := r.ticket(); status != "" {

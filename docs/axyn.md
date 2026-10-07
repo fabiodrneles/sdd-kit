@@ -57,6 +57,8 @@ O agente `axyn-plan` recebe o pedido e grava, pela ferramenta `axyn_plan`:
 - a spec em `specs/NNN-nome/spec.md`, com requisitos (FR-n) e critérios de aceite (AC-n);
 - a lista de tickets, cada um citando os ACs que cumpre.
 
+**Plano gratuito do opencode.** O plano gratuito (OpenCode Zen) recusa pedidos de agentes que não têm as ferramentas de edição e de terminal ("free tier can only be used from within OpenCode"; issues [#50081](https://github.com/anomalyco/opencode/issues/50081) e [#49592](https://github.com/anomalyco/opencode/issues/49592) do opencode). Quando isso acontece, o axyn refaz o plano com o `axyn-plan-open`, o mesmo planejador com essas ferramentas ligadas, e desfaz qualquer arquivo que ele tenha mexido. Só a spec, gravada pelo `axyn_plan` num commit próprio, fica. A recusa não conta como tentativa.
+
 O plano fica em `.git/axyn/plan.json`: dentro do `.git`, para nunca sujar a árvore do projeto. O axyn tenta gravar o plano até 2 vezes. Se o agente não gravar, a execução para com essa mensagem.
 
 ### 3. Cada ticket

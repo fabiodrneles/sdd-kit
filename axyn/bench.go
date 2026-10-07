@@ -914,6 +914,13 @@ func benchOnce(t benchTask, model string, timeout time.Duration, log io.Writer) 
 	_, _ = fmt.Fprintf(log, "\n=== %s em %s (%s)\n", model, t.ID, dir)
 	start := time.Now()
 	out, err := callAgent(dir, t.Agent, model, t.Prompt, timeout, log)
+	if t.Role == roleplan && err == nil && freeTierRefused(out) {
+		// The same fallback the engine uses: the planner with opencode's tools on.
+		out, err = callAgent(dir, planOpenAgent, model, t.Prompt, timeout, log)
+		s := &mcpServer{dir: dir}
+		_, _ = s.git("checkout", "--", ".")
+		_, _ = s.git("clean", "-fdq")
+	}
 	sec := time.Since(start).Seconds()
 	var fe fatalErr
 	if errors.As(err, &fe) {

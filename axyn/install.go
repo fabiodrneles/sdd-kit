@@ -12,6 +12,9 @@ import (
 
 const opencodeSchema = "https://opencode.ai/config.json"
 
+const planOpenNote = `
+As ferramentas de edição e de terminal estão ligadas só por compatibilidade com o opencode: não as use. Leia o projeto se precisar e grave o plano com a ferramenta axyn_plan; qualquer arquivo que você editar é desfeito pelo axyn.`
+
 const planPrompt = `Você é o axyn-plan. Transforme o pedido do usuário em uma spec e em tickets pequenos.
 Chame a ferramenta axyn_plan com o nome, a spec e os tickets; ela valida e grava. Se ela recusar, corrija o que ela apontou e chame de novo.
 Não escreva código do projeto.`
@@ -67,6 +70,19 @@ func axynConfig() map[string]map[string]any {
 				"tools": map[string]any{
 					"axyn_*": true, "read": true, "glob": true, "grep": true, "list": true,
 					"write": false, "edit": false, "bash": false,
+				},
+			},
+			// The same planner with opencode's usual tools on: OpenCode's free tier refuses
+			// requests from agents without them ("free tier can only be used from within
+			// OpenCode", opencode #50081, #49592). The engine uses it only after that refusal
+			// and undoes any file the planner touched, so it still cannot write code.
+			"axyn-plan-open": map[string]any{
+				"description": "O planejador do axyn, com as ferramentas do opencode ligadas (plano gratuito)",
+				"mode":        "all",
+				"prompt":      planPrompt + planOpenNote,
+				"tools": map[string]any{
+					"axyn_*": true, "read": true, "glob": true, "grep": true, "list": true,
+					"write": true, "edit": true, "bash": true,
 				},
 			},
 			"axyn-code": map[string]any{

@@ -122,11 +122,8 @@ func highlights(body string, max int) []string {
 	return out
 }
 
-func updateCommand(goos string) string {
-	if goos == "windows" {
-		return "irm https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.ps1 | iex"
-	}
-	return "curl -fsSL https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.sh | sh"
+func updateCommand(_ string) string {
+	return "axyn update"
 }
 
 // updateNotice is the text to show, or "" when there is nothing newer (or no way to know).

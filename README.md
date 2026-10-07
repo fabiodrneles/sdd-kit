@@ -649,6 +649,8 @@ As novidades de cada versão estão nas [releases](https://github.com/fabiodrnel
 
 **Onde rodar:** no terminal, com o opencode fechado, **na raiz de cada projeto** em que você usa o axyn (o instalador também atualiza a configuração do opencode daquele projeto).
 
+A partir da v1.21.0, basta um comando: `axyn update`. Com uma versão anterior, rode o instalador:
+
 ```powershell
 irm https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.ps1 | iex
 ```

@@ -604,7 +604,7 @@ func report(p, prev *benchProfile) string {
 			}
 		}
 	}
-	w("\n## Detalhes de cada tentativa\n\n")
+	w("\n## Detalhes de cada tentativa\n\nO código que o modelo escreveu em cada tentativa fica na pasta `bench-%s/` ao lado deste relatório, um arquivo `.diff` por tentativa; a saída completa dos modelos, em `bench-%s.log`.\n\n", p.Date.Format("20060102-150405"), p.Date.Format("20060102-150405"))
 	for _, r := range p.Results {
 		for i, x := range r.Runs {
 			w("- %s, %s (tentativa %d): nota %d em %.0fs", r.Model, r.Task, i+1, x.Score, x.Seconds)
@@ -713,7 +713,7 @@ func runBenchCmd(args []string, stdout, stderr io.Writer) int {
 			}
 		}
 	}
-	p := benchCore(models, chosen, *runs, *parallel, *timeout, *minScore, stdout)
+	p := benchCore(models, chosen, *runs, *parallel, *timeout, *minScore, stdout, nil)
 	prev := p.prevForReport
 	text := report(p, prev)
 	mdPath := filepath.Join(benchDir(), "bench-"+p.Date.Format("20060102-150405")+".md")
@@ -741,7 +741,7 @@ func runBenchCmd(args []string, stdout, stderr io.Writer) int {
 
 // benchCore runs the golden set: each model in its own worker (parallel at a time), each
 // task runs times; the profile is saved after every result, so an interruption keeps what ran.
-func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout time.Duration, minScore int, out io.Writer) *benchProfile {
+func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout time.Duration, minScore int, out io.Writer, progress func(done, total int, detail string)) *benchProfile {
 	prev, _ := loadProfile()
 	p := &benchProfile{Date: time.Now(), Axyn: version, Opencode: toolVersion("opencode", "--version"), Models: models, prevForReport: prev}
 	if prev != nil {
@@ -754,6 +754,8 @@ func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout 
 		parallel = 1
 	}
 	total := len(models) * len(chosen) * runs
+	benchRoundDir = filepath.Join(benchDir(), "bench-"+p.Date.Format("20060102-150405"))
+	defer func() { benchRoundDir = "" }()
 	_, _ = fmt.Fprintf(out, "avaliando %d modelo(s) em %d tarefa(s), %d vez(es) cada: %d tentativas, %d modelo(s) por vez (cada tentativa pode levar alguns minutos; o que já rodou fica salvo)\n", len(models), len(chosen), runs, total, parallel)
 	_ = os.MkdirAll(benchDir(), 0o755)
 	var log io.Writer = io.Discard
@@ -774,6 +776,11 @@ func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout 
 			for _, t := range chosen {
 				res := benchResult{Model: m, Task: t.ID, Role: t.Role}
 				for i := 0; i < runs; i++ {
+					if progress != nil {
+						mu.Lock()
+						progress(n, total, fmt.Sprintf("%s, %s", m, roleNames[t.Role]))
+						mu.Unlock()
+					}
 					run := benchOnce(t, m, timeout, log)
 					res.Runs = append(res.Runs, run)
 					verdict := "reprovado"
@@ -788,6 +795,9 @@ func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout 
 					mu.Lock()
 					n++
 					_, _ = fmt.Fprintf(out, "[%d/%d] %s, %s: %s (%.0fs)\n", n, total, m, roleNames[t.Role], verdict, run.Seconds)
+					if progress != nil {
+						progress(n, total, fmt.Sprintf("%s, %s: %s", m, roleNames[t.Role], verdict))
+					}
 					mu.Unlock()
 				}
 				mu.Lock()
@@ -837,6 +847,18 @@ func benchOnce(t benchTask, model string, timeout time.Duration, log io.Writer) 
 	if dir != "" {
 		defer func() { _ = os.RemoveAll(dir) }()
 	}
+	// What the model wrote stays for the audit (was the score fair? should the bench
+	// change?): one .diff per attempt in the round's folder, named in the report.
+	defer func() {
+		if benchRoundDir == "" || dir == "" {
+			return
+		}
+		if d, err := gitDiff(dir, "HEAD"); err == nil {
+			_ = os.MkdirAll(benchRoundDir, 0o755)
+			name := fmt.Sprintf("%s-%s-%d.diff", strings.NewReplacer("/", "_", ":", "_", "\\", "_").Replace(model), t.ID, time.Now().UnixNano()%1e6)
+			_ = os.WriteFile(filepath.Join(benchRoundDir, name), []byte(d), 0o644)
+		}
+	}()
 	if err != nil {
 		return benchRun{Notes: []string{"não consegui preparar a tarefa: " + err.Error()}}
 	}
@@ -938,7 +960,10 @@ func (r *runner) autoBench() {
 	}
 	r.set("avaliando modelos")
 	_, _ = fmt.Fprintf(r.log, "avaliando os modelos gratuitos da máquina antes de começar (%s); o axyn escolhe sozinho o melhor modelo para cada etapa\n", why)
-	p := benchCore(models, benchTasks, 1, 2, 10*time.Minute, 50, r.log)
+	p := benchCore(models, benchTasks, 1, 2, 10*time.Minute, 50, r.log, func(done, total int, detail string) {
+		r.st.Done, r.st.Of, r.st.Detail = done, total, detail
+		_ = saveRun(r.s.dir, r.st)
+	})
 	p.Applied = true
 	_ = saveProfile(p)
 	text := report(p, p.prevForReport)
@@ -979,3 +1004,6 @@ func benchSet(arg string, stdout, stderr io.Writer) int {
 	}
 	return exitOK
 }
+
+// benchRoundDir is the folder of the running round, where each attempt's diff is kept.
+var benchRoundDir string

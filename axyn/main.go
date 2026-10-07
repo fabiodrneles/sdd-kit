@@ -21,6 +21,7 @@ const usage = `axyn: o sdd-kit no opencode, com o modelo que você tiver
 
 Uso:
   axyn version        mostra a versão
+  axyn update         atualiza o axyn para a versão mais nova (rode na raiz do projeto, com o opencode fechado)
   axyn gate [--base REF] [--max-lines N] [--ci CMD] [--protect CAMINHO]
                       portões do diff: CI, teste afrouxado, caminhos protegidos e tamanho
   axyn model [ID] [--all] [--only] [--key-env VAR]
@@ -73,11 +74,14 @@ func main() {
 }
 
 func run(args []string, stdout, stderr io.Writer) int {
+	cleanOldBinary()
 	if len(args) == 0 {
 		_, _ = fmt.Fprint(stdout, usage)
 		return exitOK
 	}
 	switch args[0] {
+	case "update":
+		return runUpdateCmd(args[1:], stdout, stderr)
 	case "version", "--version":
 		_, _ = fmt.Fprintf(stdout, "axyn %s\n", version)
 		return exitOK

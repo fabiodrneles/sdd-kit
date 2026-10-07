@@ -18,6 +18,14 @@ cat <<'NOTES'
 
 ## Como atualizar o axyn
 
+Com a v1.21.0 ou mais nova instalada, basta um comando, no terminal, **na raiz de cada projeto**, com o opencode fechado:
+
+```text
+axyn update
+```
+
+Com uma versão anterior, use o instalador:
+
 No terminal (PowerShell, no Windows), **na raiz de cada projeto** em que você usa o axyn, com o opencode fechado:
 
 ```powershell

@@ -94,6 +94,11 @@ func TestBenchClassifiesAndRoutes(t *testing.T) {
 	if len(md) == 0 {
 		t.Error("o relatório deveria ficar gravado para auditoria")
 	}
+	if diffs, _ := filepath.Glob(filepath.Join(benchDir(), "bench-*", "bom-code-001-*.diff")); len(diffs) == 0 {
+		t.Error("o código de cada tentativa deveria ficar gravado para auditoria")
+	} else if b, _ := os.ReadFile(diffs[0]); !strings.Contains(string(b), "func Make") {
+		t.Errorf("o diff da tentativa: %s", b)
+	}
 	// Lifecycle: an old evaluation, or a new model, makes the profile stale.
 	if why := p.stale([]string{"bom", "novo"}); !strings.Contains(why, "novo") {
 		t.Errorf("modelo novo: %q", why)

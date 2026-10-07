@@ -39,6 +39,28 @@ func TestMCPProtocol(t *testing.T) {
 			t.Errorf("tools/list sem %s: %s", name, lines[1])
 		}
 	}
+	// 021 AC-5: null não é JSON Schema; o cliente MCP do opencode recusava a lista inteira.
+	var list struct {
+		Result struct {
+			Tools []struct {
+				Name        string                     `json:"name"`
+				InputSchema map[string]json.RawMessage `json:"inputSchema"`
+			} `json:"tools"`
+		} `json:"result"`
+	}
+	if err := json.Unmarshal([]byte(lines[1]), &list); err != nil {
+		t.Fatalf("tools/list não é JSON: %v", err)
+	}
+	for _, tool := range list.Result.Tools {
+		for k, v := range tool.InputSchema {
+			if string(v) == "null" {
+				t.Errorf("%s: inputSchema.%s é null", tool.Name, k)
+			}
+		}
+		if string(tool.InputSchema["type"]) != `"object"` || !bytes.HasPrefix(tool.InputSchema["properties"], []byte("{")) {
+			t.Errorf("%s: inputSchema precisa de type object e properties: %v", tool.Name, tool.InputSchema)
+		}
+	}
 	if !strings.Contains(lines[2], "-32601") {
 		t.Errorf("método desconhecido deveria dar -32601: %s", lines[2])
 	}

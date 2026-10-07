@@ -74,7 +74,13 @@ type mcpServer struct {
 }
 
 func obj(props map[string]any, required ...string) map[string]any {
-	return map[string]any{"type": "object", "properties": props, "required": required}
+	// required vazio sai omitido: null não é JSON Schema válido, e o cliente MCP do
+	// opencode recusa a lista inteira de ferramentas ("Failed to get tools").
+	s := map[string]any{"type": "object", "properties": props}
+	if len(required) > 0 {
+		s["required"] = required
+	}
+	return s
 }
 
 func str(desc string) map[string]any { return map[string]any{"type": "string", "description": desc} }

@@ -61,6 +61,15 @@ type plan struct {
 	Spec    string   `json:"spec"`
 	Tickets []ticket `json:"tickets"`
 	Base    string   `json:"base,omitempty"` // branch every ticket starts from (FR-9)
+
+	// Coverage measured before the first ticket (#334): the floor never goes down.
+	CoverageChecked  bool     `json:"coverage_checked,omitempty"`
+	CoverageMeasured bool     `json:"coverage_measured,omitempty"`
+	CoverageFloor    int      `json:"coverage_floor,omitempty"`
+	CoverageGoal     int      `json:"coverage_goal,omitempty"`
+	CoverageNow      float64  `json:"coverage_now,omitempty"`
+	CoverageGaps     []string `json:"coverage_gaps,omitempty"`   // where coverage is missing
+	CoverageChoice   string   `json:"coverage_choice,omitempty"` // auto (the axyn writes the tests) or manual
 }
 
 // mcpServer holds the gate settings. They come from how the engine started the

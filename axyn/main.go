@@ -26,6 +26,9 @@ Uso:
   axyn model [ID] [--all] [--only] [--key-env VAR]
                       escolhe o modelo do axyn: sem ID, mostra os modelos gratuitos do opencode
                       numa lista numerada; com ID, troca direto (grava o config.yaml)
+  axyn coverage [auto|manual] [--no-resume]
+                      sem argumento, mostra a cobertura medida, o mínimo, a meta e onde falta teste;
+                      auto: o axyn escreve os testes que faltam; manual: você escreve
   axyn decide RESPOSTA [--no-resume]
                       responde a pergunta de uma execução parada (A, B ou a instrução entre aspas):
                       grava a decisão na spec e retoma a execução em segundo plano
@@ -70,6 +73,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runGate(args[1:], stdout, stderr)
 	case "model":
 		return runModelCmd(args[1:], stdout, stderr)
+	case "coverage":
+		return runCoverageCmd(args[1:], stdout, stderr)
 	case "decide":
 		return runDecideCmd(args[1:], stdout, stderr)
 	case "history":

@@ -66,30 +66,13 @@ func TestCIErrorsAndMeaning(t *testing.T) {
 	}
 }
 
-// #330: a project with code and no tests starts the coverage minimum at 0, and a
-// coverage failure is explained as such.
-func TestCoverageForUntestedProject(t *testing.T) {
-	dir := t.TempDir()
-	write(t, dir, "main.go", "package main\n\nfunc main() {}\n")
-	if !codeWithoutTests(dir) {
-		t.Fatal("código sem testes")
-	}
-	if _, err := applyTemplate(dir, "go"); err != nil {
-		t.Fatal(err)
-	}
-	mk, _ := os.ReadFile(filepath.Join(dir, "Makefile"))
-	if !strings.Contains(string(mk), "COVERAGE_MIN ?= 0\n") || strings.Contains(string(mk), "COVERAGE_MIN ?= 80") {
-		t.Errorf("o mínimo deveria começar em 0:\n%s", mk)
-	}
-	write(t, dir, "main_test.go", "package main\n")
-	if codeWithoutTests(dir) {
-		t.Error("com um teste, o projeto não está sem testes")
-	}
+// #334: a coverage failure is explained in plain words.
+func TestCoverageMeaning(t *testing.T) {
 	got := ciErrors("cobertura: 0.0% (mínimo 80%)\ncobertura abaixo do mínimo; suba os testes ou ajuste COVERAGE_MIN no Makefile\nmake: *** [Makefile:26: test] Error 1\n", 6)
 	if len(got) != 2 {
 		t.Errorf("as linhas da cobertura: %q", got)
 	}
-	if what, _ := meaning(strings.Join(got, " | ")); !strings.Contains(what, "coberta por testes") {
+	if what, _ := meaning(strings.Join(got, " | ")); !strings.Contains(what, "cobertura de testes do projeto caiu") {
 		t.Errorf("a cobertura em palavras simples: %q", what)
 	}
 }

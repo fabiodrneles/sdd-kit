@@ -71,6 +71,7 @@ func gate(dir string, extra ...string) (string, int) {
 func TestGateGreen(t *testing.T) {
 	dir := repo(t)
 	write(t, dir, "x.go", "package x\n\nfunc F() {}\n")
+	write(t, dir, "x_new_test.go", "package x\n") // new code comes with a test (#334)
 	out, code := gate(dir)
 	if code != exitOK || !strings.Contains(out, "verde") {
 		t.Fatalf("code %d, out %q", code, out)

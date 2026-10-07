@@ -52,6 +52,7 @@ func TestParseModels(t *testing.T) {
 func TestLadderMovesToSecondModelAndRecords(t *testing.T) {
 	s := ladderServer(t, "false")
 	write(t, s.dir, "z.go", "package x\n")
+	write(t, s.dir, "z_new_test.go", "package x\n") // new code comes with a test (#334)
 
 	first, _ := s.call("axyn_gate", json.RawMessage("{}"))
 	if !strings.Contains(first, "modelo atual openrouter/free-model") || strings.Contains(first, "próximo modelo") {
@@ -86,6 +87,7 @@ func TestLadderMovesToSecondModelAndRecords(t *testing.T) {
 func TestLadderExhaustedKeepsWIP(t *testing.T) {
 	s := ladderServer(t, "false")
 	write(t, s.dir, "z.go", "package x\n")
+	write(t, s.dir, "z_new_test.go", "package x\n") // new code comes with a test (#334)
 	var text string
 	for i := 0; i < 2*maxFailsPerModel; i++ {
 		text, _ = s.call("axyn_gate", json.RawMessage("{}"))

@@ -37,7 +37,17 @@ Se o projeto não tem um `make ci`, o axyn detecta a stack (Go, Node, Python, Ja
 
 Antes do primeiro ticket, o axyn confere se as ferramentas do `make ci` estão instaladas (por exemplo, `golangci-lint` no Go e o `sh` do Git no Windows). Se faltar alguma, ele para **sem gastar tentativa** e mostra o comando completo de instalação.
 
-Cobertura de testes: o `Makefile` exige uma porcentagem mínima do código coberta por testes (`COVERAGE_MIN`). O padrão é 80. Num projeto que já tem código e nenhum teste, o mínimo começa em 0, porque um projeto com 0% de cobertura reprovaria todo ticket. Suba o número no `Makefile` conforme os testes chegarem.
+### Cobertura de testes, sem editar nada à mão
+
+O `Makefile` guarda a meta de cobertura (`COVERAGE_MIN`, 80% por padrão): a porcentagem do código que precisa rodar nos testes. O axyn cuida disso sozinho:
+
+1. **Antes do primeiro ticket, ele mede a cobertura com os testes que você já tem** (roda o `make ci` uma vez na branch base).
+2. **Se ela está abaixo da meta**, ele diz quanto falta e onde falta (em Go, os arquivos menos cobertos, com quantas instruções estão sem teste) e pergunta **uma vez** quem escreve os testes que faltam:
+   - `axyn coverage auto`: o axyn escreve, num ticket antes dos outros ("Testes para a cobertura chegar a 80%"), sem mudar o código de produção;
+   - `axyn coverage manual`: você escreve, quando quiser; o axyn segue já com o seu pedido.
+   Para não ser perguntado: `AXYN_COVERAGE=auto` (ou `manual`). Para ver o estado a qualquer momento: `axyn coverage`.
+3. **A cobertura nunca cai.** O valor medido vira o mínimo dos portões. Cada ticket entregue sobe esse mínimo até a cobertura que ele alcançou, até a meta, e grava o número novo no `COVERAGE_MIN` do `Makefile`, no próprio commit do ticket, para o CI do PR exigir o mesmo. Uma linha de comentário no `Makefile` guarda a meta.
+4. **Todo código novo precisa de teste.** Um ticket que muda código sem nenhum teste novo ou alterado é reprovado (`[tests]`). Em Go, pelo menos 80% das linhas que o ticket acrescenta precisam rodar nos testes (`[coverage]`); a reprovação cita o arquivo e as linhas sem teste.
 
 ### 2. Plano
 
@@ -64,6 +74,8 @@ Os portões são determinísticos: o mesmo código dá sempre o mesmo resultado.
 | `[protected]` | O diff mexe num caminho protegido: `.github/workflows`, `Makefile`, configuração do lint (`.golangci.yml`, `eslint`, `.markdownlint`), `lychee.toml`, `specs`, `.axyn`, `axyn.yaml`, `.sdd-release`, `plugin.json` | O modelo não pode mudar as regras do jogo. Mude esses arquivos você mesmo, na branch base, com commit |
 | `[tests]` | Um arquivo de teste foi apagado ou ficou com menos testes | Os testes só podem aumentar |
 | `[size]` | O diff passa de 400 linhas (adicionadas mais removidas) | Ticket grande demais: a escada divide o ticket |
+| `[tests]` | O ticket muda código sem nenhum teste novo ou alterado | Escreva um teste para cada critério de aceite |
+| `[coverage]` | Em Go, menos de 80% das linhas novas rodam nos testes | A reprovação cita arquivo e linhas sem teste |
 | `[ci]` | O `make ci` falhou | O motivo traz até 6 linhas de erro da saída do `make ci` |
 | `[plan]` | O agente alterou o plano do axyn | O plano é restaurado e a tentativa conta como reprovada |
 
@@ -124,6 +136,7 @@ Rode todos estes comandos na raiz do projeto:
 | O que o axyn decidiu fazer com cada ticket? | `.git/axyn/plan.json`: tickets, tentativas (modelo, degrau, motivo), branch WIP |
 | O que você decidiu? | A seção `## Decisões` da spec (`specs/NNN-nome/spec.md`) |
 | O código da tentativa reprovada | `git log feat/<n>-wip` e `git diff main...feat/<n>-wip` |
+| Qual a cobertura, o mínimo, a meta e onde falta teste? | `axyn coverage` |
 | O ambiente está certo? | `axyn doctor`: uma linha por item, com o comando de cada coisa que falta |
 | Os portões dão o mesmo resultado à mão? | `axyn gate --base main` |
 
@@ -143,6 +156,7 @@ Rode todos estes comandos na raiz do projeto:
 
 | Variável | Efeito |
 |---|---|
+| `AXYN_COVERAGE=auto` ou `manual` | Responde de antemão quem escreve os testes que faltam |
 | `AXYN_NO_UPDATE_CHECK=1` | Desliga o aviso de versão nova |
 | `AXYN_NO_MODIFY_PATH=1` | O instalador não mexe no PATH |
 | `AXYN_OPENCODE` | Caminho de outro executável no lugar do `opencode` (usado nos testes) |

@@ -12,7 +12,7 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 - print the full install command for missing tools (#310)
 - axyn doctor and axyn setup configure the repository (#311)
 - axyn history writes one file with everything a run did (#312)
-- axyn history writes one file with everything a run did (#314)
+- step-by-step guide for beginners in the README, from the terminal to a merged PR (#314)
 
 ### Corrigido
 

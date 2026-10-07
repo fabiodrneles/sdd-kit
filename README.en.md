@@ -256,7 +256,11 @@ Run `axyn doctor` in the repository: it checks each item below, one line per ite
 
 From a freshly opened terminal to your first PR merged with axyn. Each step has the command for **Linux/macOS** and for **Windows (PowerShell)**. Copy, paste and press Enter. Lines starting with `#` are explanations; you do not need to type them.
 
-> **Important:** steps 1 to 7 are typed **straight into the terminal** (PowerShell, on Windows), not asked of the AI inside opencode. Each command opencode runs is a separate process, and what it changes in the PATH does not last. opencode only comes in at step 8.
+> **This is the order, and it matters:**
+>
+> 1. **Close opencode**, if it is open (`Ctrl + C` or `/exit`).
+> 2. Do **steps 1 to 7 in the terminal** (PowerShell, on Windows), **with opencode closed**. Type the commands yourself, in the terminal; do not ask opencode's AI to run them: each command opencode runs is a separate process, and what it changes (like the PATH) does not last.
+> 3. **Only at step 8 open opencode**, already inside the project folder, and ask for the task with `/axyn`.
 
 **How to tell where you are:**
 
@@ -475,7 +479,7 @@ git status
 
 ### 6. Install axyn
 
-Always **inside the project folder** (the one from step 5). The installer downloads axyn, checks its signature, configures the project's opencode (`axyn install`) and runs `axyn doctor` at the end.
+**In the terminal, with opencode closed.** Always **inside the project folder** (the one from step 5). The installer downloads axyn, checks its signature, configures the project's opencode (`axyn install`) and runs `axyn doctor` at the end.
 
 Linux/macOS:
 
@@ -497,6 +501,8 @@ axyn version
 
 ### 7. Check and configure the repository
 
+**In the terminal, with opencode closed**, in the project folder:
+
 ```bash
 axyn doctor
 # One line per item: "ok" is ready; "falta" (missing) comes with the command that fixes it.
@@ -511,7 +517,7 @@ If a tool is still missing, `doctor` prints the full command to install it; copy
 
 ### 8. Ask for the first task
 
-Open opencode in the project folder:
+**Now, and only now, open opencode.** In the terminal, in the project folder (check with `pwd`):
 
 ```bash
 opencode

@@ -313,7 +313,11 @@ Rode `axyn doctor` no repositório: ele confere cada item abaixo, uma linha por 
 
 Do terminal recém-aberto até o seu primeiro PR mesclado com o axyn. Cada passo traz o comando para **Linux/macOS** e para **Windows (PowerShell)**. Copie, cole e aperte Enter. As linhas que começam com `#` são explicações e não precisam ser digitadas.
 
-> **Importante:** os passos 1 a 7 são digitados **direto no terminal** (PowerShell, no Windows), e não pedidos à IA dentro do opencode. Cada comando que o opencode roda é um processo separado, e o que ele muda no PATH não vale depois. O opencode só entra no passo 8.
+> **A ordem é esta, e importa:**
+>
+> 1. **Feche o opencode**, se ele estiver aberto (`Ctrl + C` ou `/exit`).
+> 2. Faça os **passos 1 a 7 no terminal** (PowerShell, no Windows), **com o opencode fechado**. Digite os comandos você mesmo, no terminal; não peça à IA do opencode para rodá-los: cada comando que o opencode roda é um processo separado, e o que ele muda (como o PATH) não fica.
+> 3. **Só no passo 8 abra o opencode**, já dentro da pasta do projeto, e peça a tarefa com `/axyn`.
 
 **Como saber onde você está:**
 
@@ -532,7 +536,7 @@ git status
 
 ### 6. Instalar o axyn
 
-Sempre **dentro da pasta do projeto** (a do passo 5). O instalador baixa o axyn, confere a assinatura, configura o opencode do projeto (`axyn install`) e no fim roda o `axyn doctor`.
+**No terminal, com o opencode fechado.** Sempre **dentro da pasta do projeto** (a do passo 5). O instalador baixa o axyn, confere a assinatura, configura o opencode do projeto (`axyn install`) e no fim roda o `axyn doctor`.
 
 Linux/macOS:
 
@@ -554,6 +558,8 @@ axyn version
 
 ### 7. Conferir e configurar o repositório
 
+**No terminal, com o opencode fechado**, na pasta do projeto:
+
 ```bash
 axyn doctor
 # Uma linha por item: "ok" está pronto; "falta" vem com o comando que resolve.
@@ -568,7 +574,7 @@ Se ainda faltar alguma ferramenta, o `doctor` mostra o comando completo para ins
 
 ### 8. Pedir a primeira tarefa
 
-Abra o opencode na pasta do projeto:
+**Agora, e só agora, abra o opencode.** No terminal, na pasta do projeto (confira com `pwd`):
 
 ```bash
 opencode

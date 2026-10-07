@@ -47,4 +47,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag || github.ref_name }}
-        run: gh release create "$TAG" dist/sdd-delivery.zip dist/sdd-delivery.zip.sha256 dist/axyn_* --verify-tag --generate-notes
+        # Notas: a seção do CHANGELOG (linguagem simples) e como atualizar; a lista de PRs vem depois.
+        run: |
+          sh scripts/release-notes.sh "$TAG" > dist/notes.md
+          gh release create "$TAG" dist/sdd-delivery.zip dist/sdd-delivery.zip.sha256 dist/axyn_* --verify-tag --notes-file dist/notes.md --generate-notes

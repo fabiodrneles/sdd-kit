@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"unicode/utf8"
 )
 
 // explainStop is what the user reads when a ticket stops (#330): what was asked, what the
@@ -24,6 +25,7 @@ var errLine = regexp.MustCompile(`(?i)(\.[a-z]{1,4}:\d+|error|erro|fail|panic|un
 
 // ciErrors are the lines of the CI output that name an error, at most max, else its tail.
 func ciErrors(out string, max int) []string {
+	out = fixMojibake(out)
 	var hits, all []string
 	for _, l := range strings.Split(out, "\n") {
 		l = strings.TrimSpace(l)
@@ -59,15 +61,15 @@ func decisions(spec string) string {
 func meaning(reason string) (what, hint string) {
 	r := strings.ToLower(reason)
 	switch {
+	case strings.Contains(r, "sem nenhum teste novo"):
+		return "o ticket mudou código sem escrever nenhum teste; todo código novo precisa de teste.",
+			"escreva um teste para cada critério de aceite do ticket, citando o AC no nome ou num comentário"
 	case strings.Contains(r, "[protected]") || strings.Contains(r, "[tests]") || strings.Contains(r, "[plan]"):
 		return "o modelo mexeu no que não podia (testes, specs, workflows ou o plano do axyn).",
 			"não mexa em testes existentes, specs nem workflows"
 	case strings.Contains(r, "[coverage]"):
 		return "o código novo do ticket não está coberto por testes: as linhas citadas acima não rodam em nenhum teste.",
 			"escreva testes que passem pelas linhas sem teste citadas acima"
-	case strings.Contains(r, "sem nenhum teste novo"):
-		return "o ticket mudou código sem escrever nenhum teste; todo código novo precisa de teste.",
-			"escreva um teste para cada critério de aceite do ticket, citando o AC no nome ou num comentário"
 	case strings.Contains(r, "cobertura abaixo do mínimo") || strings.Contains(r, "coverage"):
 		return "a cobertura de testes do projeto caiu abaixo do mínimo: o código novo entrou com poucos testes.",
 			"escreva testes para o código deste ticket e para as funções que ele toca"
@@ -149,4 +151,23 @@ func shorten(s string, n int) string {
 		return string(r[:n]) + "…"
 	}
 	return s
+}
+
+// fixMojibake undoes UTF-8 text that was read as Latin-1 on the way ("mÃ­nimo" for
+// "mínimo"), as the make output arrives on some Windows consoles.
+func fixMojibake(s string) string {
+	if !strings.ContainsAny(s, "ÃÂ") {
+		return s
+	}
+	b := make([]byte, 0, len(s))
+	for _, r := range s {
+		if r > 0xff {
+			return s
+		}
+		b = append(b, byte(r))
+	}
+	if !utf8.Valid(b) {
+		return s
+	}
+	return string(b)
 }

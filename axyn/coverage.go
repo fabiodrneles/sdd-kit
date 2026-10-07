@@ -199,36 +199,57 @@ func (r *runner) measureCoverage() string {
 	if err != nil || pl.CoverageChecked || strings.TrimSpace(r.s.ci) == "" {
 		return ""
 	}
-	pl.CoverageChecked = true
 	goal, ok := makefileGoal(r.s.dir)
 	if !ok {
+		pl.CoverageChecked = true // no coverage minimum in this project
 		_ = r.s.savePlan(pl, path)
 		return ""
 	}
-	cmd, err := shellCommand(r.s.ci)
-	if err != nil {
-		_ = r.s.savePlan(pl, path)
-		return ""
+	run := func(command string) (string, error) {
+		cmd, err := shellCommand(command)
+		if err != nil {
+			return "", err
+		}
+		cmd.Dir = r.s.dir
+		if cmd.Env == nil {
+			cmd.Env = os.Environ()
+		}
+		cmd.Env = append(cmd.Env, "COVERAGE_MIN=0")
+		out, err := cmd.CombinedOutput()
+		return string(out), err
 	}
-	cmd.Dir = r.s.dir
-	if cmd.Env == nil {
-		cmd.Env = os.Environ()
+	out, ciErr := run(r.s.ci)
+	c, found := parseCoverage(out)
+	var notes []string
+	if ciErr != nil {
+		// The project's CI already fails before any ticket (often lint): the first ticket
+		// has to fix it too, and the model is told so.
+		pl.BaseErrors = ciErrors(out, 6)
+		if len(pl.BaseErrors) > 0 {
+			notes = append(notes, "o make ci já falha na branch base, antes de qualquer ticket; o primeiro ticket precisa corrigir também:\n  "+strings.Join(pl.BaseErrors, "\n  "))
+		}
 	}
-	cmd.Env = append(cmd.Env, "COVERAGE_MIN=0")
-	out, _ := cmd.CombinedOutput()
-	c, found := parseCoverage(string(out))
+	if !found && r.s.ci == defaultCICmd && testTarget(r.s.dir) {
+		out, _ = run("make test") // the lint failed first: measure with the tests alone
+		c, found = parseCoverage(out)
+	}
 	if !found {
 		_ = r.s.savePlan(pl, path)
-		return "não consegui medir a cobertura atual do projeto (o make ci não chegou aos testes); o mínimo do Makefile vale como está"
+		return strings.Join(append(notes, "não consegui medir a cobertura atual do projeto (os testes não rodaram); vou tentar de novo na próxima execução"), "\n")
 	}
+	pl.CoverageChecked = true
 	pl.CoverageMeasured, pl.CoverageGoal, pl.CoverageNow = true, goal, c
 	pl.CoverageFloor = min(int(math.Floor(c)), goal)
 	pl.CoverageGaps = coverageGaps(r.s.dir, goal)
 	_ = r.s.savePlan(pl, path)
-	if pl.CoverageFloor >= goal {
-		return fmt.Sprintf("cobertura atual do projeto: %.1f%% (meta %d%%): já está na meta", c, goal)
+	prefix := strings.Join(notes, "\n")
+	if prefix != "" {
+		prefix += "\n"
 	}
-	return fmt.Sprintf("cobertura atual do projeto: %.1f%% (meta %d%%). O axyn não deixa cair abaixo disso, exige teste em todo código novo e sobe o mínimo sozinho a cada ticket entregue, até a meta", c, goal)
+	if pl.CoverageFloor >= goal {
+		return prefix + fmt.Sprintf("cobertura atual do projeto: %.1f%% (meta %d%%): já está na meta", c, goal)
+	}
+	return prefix + fmt.Sprintf("cobertura atual do projeto: %.1f%% (meta %d%%). O axyn não deixa cair abaixo disso, exige teste em todo código novo e sobe o mínimo sozinho a cada ticket entregue, até a meta", c, goal)
 }
 
 // raiseCoverage runs before a green ticket's commit: the floor goes up to the coverage the
@@ -367,6 +388,14 @@ func applyCoverageChoice(s *mcpServer, choice string) error {
 		return err
 	}
 	pl.CoverageChoice = choice
+	// Attempts made before the coverage was sorted out fought a goal no ticket could meet:
+	// they stay in the history (earlier) and the open tickets start the ladder again.
+	for i := range pl.Tickets {
+		if !pl.Tickets[i].Done {
+			pl.Tickets[i].Earlier = append(pl.Tickets[i].Earlier, pl.Tickets[i].Attempts...)
+			pl.Tickets[i].Attempts = nil
+		}
+	}
 	if choice == "auto" {
 		id := 0
 		for _, t := range pl.Tickets {
@@ -430,4 +459,11 @@ func runCoverageCmd(args []string, stdout, stderr io.Writer) int {
 	}
 	_, _ = fmt.Fprintf(stdout, "execução %s retomada em segundo plano; para acompanhar: axyn status --watch\n", id)
 	return exitOK
+}
+
+var testTargetRe = regexp.MustCompile(`(?m)^test\s*:`)
+
+func testTarget(dir string) bool {
+	b, err := os.ReadFile(filepath.Join(dir, "Makefile"))
+	return err == nil && testTargetRe.Match(b)
 }

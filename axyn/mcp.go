@@ -70,6 +70,7 @@ type plan struct {
 	CoverageNow      float64  `json:"coverage_now,omitempty"`
 	CoverageGaps     []string `json:"coverage_gaps,omitempty"`   // where coverage is missing
 	CoverageChoice   string   `json:"coverage_choice,omitempty"` // auto (the axyn writes the tests) or manual
+	BaseErrors       []string `json:"base_errors,omitempty"`     // CI errors the base had before any ticket
 }
 
 // mcpServer holds the gate settings. They come from how the engine started the
@@ -476,6 +477,9 @@ func (s *mcpServer) toolNext() (string, error) {
 					break
 				}
 			}
+		}
+		if len(pl.BaseErrors) > 0 {
+			b.WriteString("\nO make ci já falhava antes deste ticket; corrija também estes erros:\n  " + strings.Join(pl.BaseErrors, "\n  ") + "\n")
 		}
 		if d := decisions(string(spec)); d != "" {
 			b.WriteString("\nDecisões do usuário (siga à risca):\n" + d)

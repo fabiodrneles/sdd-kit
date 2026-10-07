@@ -289,6 +289,8 @@ O axyn escreve a spec, abre os tickets, implementa cada um numa branch própria,
 
 **Projeto sem CI? O axyn prepara.** Num repositório vazio ou sem `make ci`, antes do primeiro ticket o axyn aplica o template da stack (detectada pelos arquivos, ou pelo pedido num repositório vazio: uma landing page vira `web`) com o `Makefile`, o CI do GitHub e o lint, num commit próprio, sem alterar arquivo existente. Se não der para saber a stack, ele pergunta; se faltar uma ferramenta (`make`, `node`…), ele para logo no começo e diz o que instalar. Para preparar à mão: `axyn init` (ou `axyn init --stack python`).
 
+**Deu problema? Rode `axyn history`** (ou peça no opencode "salve o histórico do axyn"): ele grava num arquivo tudo o que a execução fez, com o pedido, o plano, cada tentativa e o motivo de cada reprovação, as perguntas e respostas, os commits, o ambiente e o log completo. Chaves e tokens são removidos. O arquivo vai para `.axyn/` (fora do git), ou para qualquer pasta com `axyn history --out ~/Downloads/axyn_history.md`. É só anexá-lo ao pedir ajuda.
+
 ### O que o repositório precisa
 
 Rode `axyn doctor` no repositório: ele confere cada item abaixo, uma linha por item, e mostra o comando de cada um que falta. O `axyn setup` configura sozinho, pelo `gh`, tudo o que dá (o instalador já roda o `doctor` no fim).

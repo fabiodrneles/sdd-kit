@@ -547,7 +547,13 @@ func runRunCmd(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintf(stderr, "axyn run: %v\n", err)
 		return exitFail
 	}
-	return runJob(*dir, st.ID, stdout)
+	// The log also goes to the run's file, as in the background, for axyn history (FR-7).
+	out := stdout
+	if logf, err := os.OpenFile(filepath.Join(runsDir(*dir), st.ID+".log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644); err == nil {
+		defer func() { _ = logf.Close() }()
+		out = io.MultiWriter(stdout, logf)
+	}
+	return runJob(*dir, st.ID, out)
 }
 
 func runStatusCmd(args []string, stdout, stderr io.Writer) int {

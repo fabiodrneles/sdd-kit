@@ -33,7 +33,7 @@ done
 # sem o Go no PATH: um PATH só com as ferramentas do script
 nogo="$tmp/nogo"
 mkdir "$nogo"
-for t in sh uname curl sha256sum shasum awk mkdir mktemp cp chmod mv rm git dirname cat sed grep head tr; do
+for t in sh uname curl sha256sum shasum awk mkdir mktemp cp chmod mv rm git dirname basename cat sed grep head tr; do
 	p="$(command -v "$t" 2>/dev/null || true)"
 	case "$p" in /*) ln -s "$p" "$nogo/$t" ;; esac
 done
@@ -51,12 +51,22 @@ out="$(cd "$repo" && PATH="$nogo" HOME="$home" AXYN_BIN="$home/bin" AXYN_RELEASE
 echo "$out" | grep -q "axyn instalado em $home/bin/axyn" || fail "saída sem o destino: $out"
 [ -f "$repo/opencode.json" ] || fail "axyn install não rodou no repositório git"
 
+# fora do PATH: a linha vai para o arquivo do shell do usuário, uma vez só
+for i in 1 2; do
+	(cd "$repo" && PATH="$nogo" HOME="$home" SHELL=/bin/bash AXYN_BIN="$home/bin" AXYN_RELEASE_URL="file://$dist" /bin/sh "$root/scripts/install-axyn.sh") > "$tmp/rc.out" ||
+		fail "instalação $i com SHELL=bash falhou: $(cat "$tmp/rc.out")"
+done
+[ "$(grep -c "export PATH=\"$home/bin:" "$home/.bashrc")" = 1 ] || fail "o .bashrc deveria ter a linha do PATH uma vez: $(cat "$home/.bashrc" 2>/dev/null)"
+grep -q "adicionado ao PATH em $home/.bashrc" "$tmp/rc.out" || fail "sem o aviso do PATH: $(cat "$tmp/rc.out")"
+(cd "$repo" && PATH="$nogo" HOME="$home" SHELL=/bin/zsh AXYN_NO_MODIFY_PATH=1 AXYN_BIN="$home/bin" AXYN_RELEASE_URL="file://$dist" /bin/sh "$root/scripts/install-axyn.sh") > "$tmp/rc.out"
+[ ! -e "$home/.zshrc" ] || fail "AXYN_NO_MODIFY_PATH=1 deveria não mexer no .zshrc"
+
 # fora de um repositório git, só orienta
 plain="$tmp/plain"
 mkdir "$plain"
 out="$(cd "$plain" && PATH="$nogo" HOME="$home" AXYN_BIN="$home/bin2" AXYN_RELEASE_URL="file://$dist" /bin/sh "$root/scripts/install-axyn.sh")"
 [ ! -e "$plain/opencode.json" ] || fail "criou opencode.json fora de um repositório git"
-echo "$out" | grep -q "axyn install" || fail "sem a orientação do axyn install"
+echo "$out" | grep -q "não é um repositório git.*axyn install" || fail "sem a orientação de entrar na pasta do projeto: $out"
 
 # checksum errado: para com o motivo e não instala nada
 bad="$tmp/bad"

@@ -13,6 +13,8 @@ function Fail([string]$Message) { throw "FALHOU: $Message" }
 function Invoke-Install([string]$Dir, [hashtable]$EnvVars) {
   Push-Location $Dir
   try {
+    # o runner é efêmero, mas o teste não mexe no PATH do usuário
+    $env:AXYN_NO_MODIFY_PATH = '1'
     foreach ($k in $EnvVars.Keys) { Set-Item "Env:$k" $EnvVars[$k] }
     $out = & pwsh -NoProfile -File $install 2>&1
     return @{ Code = $LASTEXITCODE; Out = ($out -join "`n") }
@@ -52,6 +54,14 @@ try {
   if ($r.Code -eq 0) { Fail 'checksum errado deveria falhar' }
   if ($r.Out -notmatch 'sha256') { Fail "sem o motivo do checksum: $($r.Out)" }
   if (Test-Path (Join-Path $bin2 'axyn.exe')) { Fail 'instalou com checksum errado' }
+
+  # fora de um repositório git: sem o erro vermelho do git, e com a orientação
+  $plain = Join-Path $tmp 'plain'
+  New-Item -ItemType Directory -Path $plain | Out-Null
+  $r = Invoke-Install $plain @{ AXYN_RELEASE_URL = ([Uri]$dist).AbsoluteUri; AXYN_BIN = (Join-Path $tmp 'bin3') }
+  if ($r.Code -ne 0) { Fail "fora de repositório saiu com $($r.Code): $($r.Out)" }
+  if ($r.Out -match 'fatal: not a git repository|NativeCommandError') { Fail "mostrou o erro do git: $($r.Out)" }
+  if ($r.Out -notmatch 'não é um repositório git') { Fail "sem a orientação de entrar na pasta do projeto: $($r.Out)" }
 
   Write-Output 'ok: install-axyn.ps1'
 } finally {

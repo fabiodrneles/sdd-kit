@@ -51,21 +51,35 @@ try {
 }
 
 Write-Output "axyn instalado em $dest"
+# O PATH do usuário passa a ter o axyn (vale nas janelas novas) e esta sessão também,
+# para o iniciante não precisar colar nada (AXYN_NO_MODIFY_PATH=1 pula).
 $onPath = ($env:PATH -split [IO.Path]::PathSeparator) -contains $bin
-if (-not $onPath) {
+if (-not $onPath -and -not $env:AXYN_NO_MODIFY_PATH) {
+  $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+  if ((($userPath -split ';') -notcontains $bin)) {
+    [Environment]::SetEnvironmentVariable('Path', ($(if ($userPath) { "$bin;$userPath" } else { $bin })), 'User')
+  }
+  $env:PATH = "$bin;$env:PATH"
+  Write-Output "axyn adicionado ao PATH do seu usuário (janelas do PowerShell já abertas antes: feche e abra de novo)"
+} elseif (-not $onPath) {
   Write-Output "adicione ao PATH: [Environment]::SetEnvironmentVariable('Path', `"$bin;`" + [Environment]::GetEnvironmentVariable('Path', 'User'), 'User')"
 }
 
+# No Windows PowerShell 5.1, a saída de erro de um programa com ErrorActionPreference
+# Stop vira um erro vermelho (e fatal): a checagem do repositório roda com Continue.
+$inRepo = $false
 if (Get-Command git -ErrorAction SilentlyContinue) {
-  & git rev-parse --git-dir *> $null
-  if ($LASTEXITCODE -eq 0) {
-    & $dest install
-    if ($LASTEXITCODE -ne 0) { Stop-Install "axyn install falhou (código $LASTEXITCODE)" }
-    # O que falta no repositório (GitHub, Actions, ferramentas), com o comando de cada item.
-    & $dest doctor
-    if ($LASTEXITCODE -ne 0) { Write-Output 'para configurar o que dá automaticamente: axyn setup' }
-    $global:LASTEXITCODE = 0
-    return
-  }
+  $eap = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try { & git rev-parse --git-dir 2>&1 | Out-Null; $inRepo = ($LASTEXITCODE -eq 0) } finally { $ErrorActionPreference = $eap }
 }
-Write-Output 'no repositório do projeto: axyn install'
+if ($inRepo) {
+  & $dest install
+  if ($LASTEXITCODE -ne 0) { Stop-Install "axyn install falhou (código $LASTEXITCODE)" }
+  # O que falta no repositório (GitHub, Actions, ferramentas), com o comando de cada item.
+  & $dest doctor
+  if ($LASTEXITCODE -ne 0) { Write-Output 'para configurar o que dá automaticamente: axyn setup' }
+  $global:LASTEXITCODE = 0
+  return
+}
+Write-Output 'Esta pasta não é um repositório git: entre na pasta do projeto (cd caminho\do\projeto) e rode lá: axyn install, depois axyn doctor'

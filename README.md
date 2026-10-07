@@ -313,6 +313,8 @@ Rode `axyn doctor` no repositório: ele confere cada item abaixo, uma linha por 
 
 Do terminal recém-aberto até o seu primeiro PR mesclado com o axyn. Cada passo traz o comando para **Linux/macOS** e para **Windows (PowerShell)**. Copie, cole e aperte Enter. As linhas que começam com `#` são explicações e não precisam ser digitadas.
 
+> **Importante:** os passos 1 a 7 são digitados **direto no terminal** (PowerShell, no Windows), e não pedidos à IA dentro do opencode. Cada comando que o opencode roda é um processo separado, e o que ele muda no PATH não vale depois. O opencode só entra no passo 8.
+
 ### 1. Abrir o terminal
 
 - **Windows:** tecla Windows, digite `PowerShell` e abra o **Windows PowerShell** (ou o **Terminal**).
@@ -509,6 +511,16 @@ git commit -m "chore: first commit"
 # O repositório no GitHub é criado no passo 7, pelo axyn setup.
 ```
 
+**Confira se você está na pasta certa** (todos os passos seguintes são dentro dela):
+
+```bash
+pwd
+# Mostra a pasta atual: deve terminar com o nome do projeto (ex.: .../meu-site).
+git status
+# Deve mostrar "On branch main". Se disser "not a git repository", você está fora da pasta:
+# volte com cd para a pasta do projeto (ex.: cd ~/meu-site; no Windows: cd $HOME\meu-site).
+```
+
 ### 6. Instalar o axyn
 
 Sempre **dentro da pasta do projeto** (a do passo 5). O instalador baixa o axyn, confere a assinatura, configura o opencode do projeto (`axyn install`) e no fim roda o `axyn doctor`.
@@ -525,7 +537,7 @@ Windows:
 irm https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.ps1 | iex
 ```
 
-Se ele disser "adicione ao PATH", rode a linha que ele mostrar (é ela que faz o terminal achar o comando `axyn`) e confira:
+O instalador coloca o `axyn` no PATH sozinho (é o que faz o terminal achar o comando `axyn`). Se ele avisar que adicionou ao PATH, **feche o terminal e abra um novo**, entre de novo na pasta do projeto (`cd ...`) e confira:
 
 ```bash
 axyn version

@@ -23,6 +23,9 @@ Uso:
   axyn version        mostra a versão
   axyn gate [--base REF] [--max-lines N] [--ci CMD] [--protect CAMINHO]
                       portões do diff: CI, teste afrouxado, caminhos protegidos e tamanho
+  axyn history [ID] [--out ARQ]
+                      grava num arquivo tudo o que uma execução fez (pedido, plano, tentativas,
+                      portões, perguntas, commits, ambiente e log), sem chaves nem tokens
   axyn doctor [--dir DIR]
                       confere o que o repositório precisa (GitHub, Actions, merge automático,
                       ferramentas), uma linha por item, com o comando de cada coisa que falta
@@ -57,6 +60,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return exitOK
 	case "gate":
 		return runGate(args[1:], stdout, stderr)
+	case "history":
+		return runHistoryCmd(args[1:], stdout, stderr)
 	case "doctor":
 		return runSetupCmd(args[1:], stdout, stderr, false)
 	case "setup":

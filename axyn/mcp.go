@@ -115,6 +115,11 @@ var mcpTools = []toolDef{
 		})},
 	{"axyn_status", "Mostra o andamento de uma execução do axyn_run: ticket atual, portões, modelo e tentativas.",
 		obj(map[string]any{"id": str("id devolvido pelo axyn_run; vazio é a última execução")})},
+	{"axyn_history", "Grava num arquivo tudo o que uma execução fez (pedido, plano, tentativas, portões, perguntas, commits, ambiente e log), sem chaves nem tokens; use quando o usuário pedir o histórico ou ajuda com um problema.",
+		obj(map[string]any{
+			"id":  str("id da execução; vazio é a última"),
+			"out": str("caminho do arquivo, em qualquer pasta; vazio grava em .axyn/axyn_history-ID.md"),
+		})},
 	{"axyn_ship", "Commit, push e PR do diff atual, só se o portão estiver verde; recusa se reprovar.",
 		obj(map[string]any{
 			"message": str("mensagem do commit (Conventional Commits)"),
@@ -233,6 +238,19 @@ func (s *mcpServer) call(name string, raw json.RawMessage) (string, error) {
 			return "", err
 		}
 		return s.toolStatus(a.ID)
+	case "axyn_history":
+		var a struct {
+			ID  string `json:"id"`
+			Out string `json:"out"`
+		}
+		if err := json.Unmarshal(raw, &a); err != nil {
+			return "", err
+		}
+		path, err := writeHistory(s.dir, a.ID, a.Out)
+		if err != nil {
+			return "", err
+		}
+		return "histórico gravado em " + path + "; diga ao usuário onde está e que pode anexá-lo ao pedir ajuda (chaves e tokens foram removidos)", nil
 	case "axyn_ship":
 		var a struct {
 			gateArgs

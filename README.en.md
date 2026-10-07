@@ -233,6 +233,8 @@ axyn writes the spec, opens the tickets, implements each on its own branch, runs
 
 **No CI in the project? axyn sets it up.** In an empty repository or one without `make ci`, before the first ticket axyn applies the stack's template (detected from the files, or from the request in an empty repository: a landing page means `web`) with the `Makefile`, the GitHub CI and the lint, in a commit of its own, without changing existing files. When it cannot tell the stack, it asks; when a tool is missing (`make`, `node`…), it stops right away and says what to install. To do it by hand: `axyn init` (or `axyn init --stack python`).
 
+**Something went wrong? Run `axyn history`** (or ask in opencode "save the axyn history"): it writes to one file everything the run did, with the request, the plan, each attempt and why it failed, the questions and answers, the commits, the environment and the full log. Keys and tokens are removed. The file goes to `.axyn/` (out of git), or to any folder with `axyn history --out ~/Downloads/axyn_history.md`. Just attach it when asking for help.
+
 ### What the repository needs
 
 Run `axyn doctor` in the repository: it checks each item below, one line per item, and prints the command for each one missing. `axyn setup` configures everything it can on its own, through `gh` (the installer already runs `doctor` at the end).

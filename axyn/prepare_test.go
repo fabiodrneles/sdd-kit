@@ -68,8 +68,20 @@ func TestRunPreparesEmptyRepoWithTheStackTemplate(t *testing.T) {
 			prep = i
 		}
 	}
-	if prep < 0 || !strings.HasPrefix(subs[len(subs)-1], "feat:") || prep > len(subs)-3 {
-		t.Fatalf("o commit de preparo deveria vir antes dos tickets: %q", subs)
+	if prep != len(subs)-1 {
+		t.Fatalf("a base deveria terminar no commit de preparo: %q", subs)
+	}
+	// 021 FR-9: each ticket's branch starts from the prepared base.
+	list, _ := (&mcpServer{dir: dir}).git("branch", "--list", "feat/*", "--format=%(refname:short)")
+	branches := strings.Fields(list)
+	if len(branches) != 2 {
+		t.Fatalf("quero 2 branches de ticket: %v", branches)
+	}
+	for _, b := range branches {
+		got := branchSubjects(t, dir, b)
+		if got[len(got)-2] != "chore: prepare project (axyn, stack web)" || !strings.HasPrefix(got[len(got)-1], "feat:") {
+			t.Errorf("%s deveria ser preparo + o próprio ticket: %q", b, got)
+		}
 	}
 	for _, f := range []string{"Makefile", ".github/workflows/ci.yml", ".htmlvalidate.json", "scripts/links.sh", "CONTRIBUTING.md"} {
 		if _, err := os.Stat(filepath.Join(dir, f)); err != nil {

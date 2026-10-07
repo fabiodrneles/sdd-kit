@@ -43,6 +43,12 @@ func runLoopIn(t *testing.T, dir string, extra ...string) (int, string) {
 	return code, out.String() + errb.String()
 }
 
+func branchSubjects(t *testing.T, dir, branch string) []string {
+	t.Helper()
+	out, _ := (&mcpServer{dir: dir}).git("log", "--reverse", "--format=%s", branch)
+	return strings.Split(strings.TrimSpace(out), "\n")
+}
+
 func subjects(t *testing.T, dir string) []string {
 	t.Helper()
 	out, _ := (&mcpServer{dir: dir}).git("log", "--reverse", "--format=%s")
@@ -54,15 +60,24 @@ func subjects(t *testing.T, dir string) []string {
 func TestRunTwoTicketsInOrder(t *testing.T) {
 	dir := repo(t)
 	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `printf 'ticket %s\n' "$n" > "f$n.txt"`))
+	base, _ := (&mcpServer{dir: dir}).git("rev-parse", "--abbrev-ref", "HEAD")
 
 	code, out := runLoopIn(t, dir)
 	if code != exitOK {
 		t.Fatalf("code %d\n%s", code, out)
 	}
-	got := subjects(t, dir)
-	want := []string{"init", "docs: spec demo", "feat: Um", "feat: Dois"}
-	if strings.Join(got, "|") != strings.Join(want, "|") {
-		t.Fatalf("commits %v, want %v", got, want)
+	// 021 FR-9: one branch per ticket, each from the base: ticket 2's branch does not carry ticket 1.
+	for branch, want := range map[string]string{
+		base:               "init|docs: spec demo",
+		"feat/demo-1-um":   "init|docs: spec demo|feat: Um",
+		"feat/demo-2-dois": "init|docs: spec demo|feat: Dois",
+	} {
+		if got := strings.Join(branchSubjects(t, dir, branch), "|"); got != want {
+			t.Errorf("%s: commits %s, want %s", branch, got, want)
+		}
+	}
+	if cur, _ := (&mcpServer{dir: dir}).git("rev-parse", "--abbrev-ref", "HEAD"); cur != base {
+		t.Errorf("a execução deveria terminar na base, terminou em %s", cur)
 	}
 	for _, s := range []string{"concluído", "entregue: ticket 1", "entregue: ticket 2"} {
 		if !strings.Contains(out, s) {

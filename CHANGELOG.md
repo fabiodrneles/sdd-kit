@@ -4,6 +4,16 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.19.0] - 2026-10-07
+
+### Adicionado
+
+- axyn release fecha uma versão do projeto com o go-release-manager (#341)
+
+### Corrigido
+
+- cobertura medida a cada execução, queda detectada, axyn retry (#343)
+
 ## [1.18.1] - 2026-10-07
 
 ### Corrigido

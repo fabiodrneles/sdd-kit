@@ -183,3 +183,19 @@ func TestFixMojibake(t *testing.T) {
 		t.Errorf("texto certo não muda: %q", got)
 	}
 }
+
+// #342: a plan marked as checked by v1.18.0, without a measure, is measured again.
+func TestCoverageRemeasuredAfterFailedCheck(t *testing.T) {
+	dir := repo(t)
+	write(t, dir, "Makefile", "COVERAGE_MIN ?= 80\n")
+	s := &mcpServer{dir: dir, ci: "echo 'cobertura: 0.0% (mínimo 0%)'"}
+	p, _ := s.statePath()
+	_ = s.savePlan(&plan{Spec: "specs/x.md", CoverageChecked: true, Tickets: []ticket{{ID: 1, Title: "pedido"}}}, p)
+	r := &runner{s: s, st: &runState{}}
+	if msg := r.measureCoverage(); !strings.Contains(msg, "cobertura atual do projeto: 0.0%") {
+		t.Errorf("deveria medir de novo: %q", msg)
+	}
+	if pl, _, _ := s.loadPlan(); !pl.CoverageMeasured {
+		t.Error("a medição deveria ficar no plano")
+	}
+}

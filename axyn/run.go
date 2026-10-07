@@ -428,6 +428,7 @@ func (r *runner) run() {
 				if out, _ := r.s.git("status", "--porcelain"); strings.TrimSpace(out) != "" {
 					_ = r.s.saveWIP(t, "parada")
 				}
+				r.recordWIP(t.ID)                      // the stop message and the next resume use this branch
 				_, _ = r.s.git("checkout", "-q", base) // the user ends where the run started
 			}
 			r.stop(status, msg)

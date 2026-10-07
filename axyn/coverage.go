@@ -196,7 +196,9 @@ func checkPatchCoverage(dir string, files []fileDiff, since time.Time) []finding
 // project's coverage with its own tests. It returns what to tell the user.
 func (r *runner) measureCoverage() string {
 	pl, path, err := r.s.loadPlan()
-	if err != nil || pl.CoverageChecked || strings.TrimSpace(r.s.ci) == "" {
+	// Only a real measure ends this: v1.18.0 marked the plan as checked before a failed
+	// measure, and v1.18.1 never measured again (#342).
+	if err != nil || pl.CoverageMeasured || strings.TrimSpace(r.s.ci) == "" {
 		return ""
 	}
 	goal, ok := makefileGoal(r.s.dir)

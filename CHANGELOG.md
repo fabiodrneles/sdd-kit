@@ -4,6 +4,17 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.16.0] - 2026-10-07
+
+### Adicionado
+
+- axyn model picks the model from a numbered list (#319)
+
+### Corrigido
+
+- installers put axyn on the PATH and stay quiet outside a repo (#317)
+- resume after interruptions, Git's sh on Windows, draft PR for stuck tickets, --watch (#325)
+
 ## [1.15.0] - 2026-10-07
 
 ### Adicionado

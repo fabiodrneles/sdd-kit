@@ -37,19 +37,86 @@ var stackTools = map[string][]string{
 	"go": {"make", "go"}, "java": {"make", "java"}, "dotnet": {"make", "dotnet"}, "rust": {"make", "cargo"},
 }
 
-var installHints = map[string]map[string]string{
-	"make": {"linux": "sudo apt install make (ou o gerenciador da sua distribuição)", "darwin": "xcode-select --install",
-		"windows": "winget install ezwinports.make (ou choco install make)"},
-	"node": {"linux": "https://nodejs.org (ou sudo apt install nodejs npm)", "darwin": "brew install node",
-		"windows": "winget install OpenJS.NodeJS.LTS"},
-	"python3": {"linux": "sudo apt install python3 python3-pip", "darwin": "brew install python",
-		"windows": "winget install Python.Python.3.12"},
-	"go":     {"linux": "https://go.dev/dl", "darwin": "brew install go", "windows": "winget install GoLang.Go"},
-	"java":   {"linux": "sudo apt install openjdk-21-jdk maven", "darwin": "brew install openjdk maven", "windows": "winget install Microsoft.OpenJDK.21"},
-	"dotnet": {"linux": "https://dot.net", "darwin": "brew install dotnet", "windows": "winget install Microsoft.DotNet.SDK.8"},
-	"cargo":  {"linux": "https://rustup.rs", "darwin": "https://rustup.rs", "windows": "winget install Rustlang.Rustup"},
+// pkgs is the package of each tool per package manager, for a copy-and-paste install
+// command (the user runs what axyn prints, like a framework's own hint).
+var pkgs = map[string]map[string]string{
+	"git":     {"apt": "git", "dnf": "git", "pacman": "git", "brew": "git", "winget": "Git.Git"},
+	"make":    {"apt": "make", "dnf": "make", "pacman": "make", "brew": "make", "winget": "ezwinports.make"},
+	"node":    {"apt": "nodejs npm", "dnf": "nodejs npm", "pacman": "nodejs npm", "brew": "node", "winget": "OpenJS.NodeJS.LTS"},
+	"npm":     {"apt": "nodejs npm", "dnf": "nodejs npm", "pacman": "nodejs npm", "brew": "node", "winget": "OpenJS.NodeJS.LTS"},
+	"python3": {"apt": "python3 python3-pip python3-venv", "dnf": "python3 python3-pip", "pacman": "python python-pip", "brew": "python", "winget": "Python.Python.3.12"},
+	"go":      {"apt": "golang-go", "dnf": "golang", "pacman": "go", "brew": "go", "winget": "GoLang.Go"},
+	"java":    {"apt": "openjdk-21-jdk maven", "dnf": "java-21-openjdk-devel maven", "pacman": "jdk21-openjdk maven", "brew": "openjdk@21 maven", "winget": "Microsoft.OpenJDK.21"},
+	"dotnet":  {"apt": "dotnet-sdk-8.0", "dnf": "dotnet-sdk-8.0", "pacman": "dotnet-sdk", "brew": "dotnet-sdk", "winget": "Microsoft.DotNet.SDK.8"},
 }
-var installAlias = map[string]string{"npm": "node"}
+
+const rustupCmd = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
+
+// packageManager is the one the install command uses on this system ("" when none known).
+func packageManager(goos string) string {
+	switch goos {
+	case "windows":
+		return "winget"
+	case "darwin":
+		return "brew"
+	}
+	for _, m := range []struct{ bin, name string }{{"apt-get", "apt"}, {"dnf", "dnf"}, {"pacman", "pacman"}, {"brew", "brew"}} {
+		if _, err := lookPath(m.bin); err == nil {
+			return m.name
+		}
+	}
+	return ""
+}
+
+// installCommands are the lines to paste to install the missing tools, deduplicated.
+func installCommands(missing []string, goos string) []string {
+	mgr := packageManager(goos)
+	var names, out []string
+	seen := map[string]bool{}
+	rust := false
+	for _, t := range missing {
+		if t == "cargo" {
+			rust = true
+			continue
+		}
+		for _, n := range strings.Fields(pkgs[t][mgr]) {
+			if !seen[n] {
+				seen[n] = true
+				names = append(names, n)
+			}
+		}
+	}
+	if len(names) > 0 {
+		switch mgr {
+		case "apt":
+			out = append(out, "sudo apt-get update && sudo apt-get install -y "+strings.Join(names, " "))
+		case "dnf":
+			out = append(out, "sudo dnf install -y "+strings.Join(names, " "))
+		case "pacman":
+			out = append(out, "sudo pacman -S --needed "+strings.Join(names, " "))
+		case "brew":
+			if _, err := lookPath("brew"); err != nil {
+				out = append(out, `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`)
+			}
+			out = append(out, "brew install "+strings.Join(names, " "))
+		case "winget":
+			for _, n := range names {
+				out = append(out, "winget install -e --id "+n)
+			}
+		}
+	}
+	if rust {
+		if goos == "windows" {
+			out = append(out, "winget install -e --id Rustlang.Rustup")
+		} else {
+			out = append(out, rustupCmd)
+		}
+	}
+	if len(out) == 0 && len(missing) > 0 {
+		out = append(out, "instale pelo gerenciador de pacotes do sistema: "+strings.Join(missing, ", "))
+	}
+	return out
+}
 
 var ciTargetRe = regexp.MustCompile(`(?m)^ci\s*:`)
 
@@ -154,24 +221,21 @@ func decidedStack(specText string) string {
 	return ""
 }
 
-// missingTools returns the install line of each tool the stack needs and the PATH lacks.
+// missingTools returns the tools the stack's `make ci` needs and the PATH lacks.
 func missingTools(stack string) []string {
 	var out []string
 	for _, t := range append([]string{"git"}, stackTools[stack]...) {
-		if _, err := lookPath(t); err == nil {
-			continue
+		if _, err := lookPath(t); err != nil {
+			out = append(out, t)
 		}
-		hint := "instale pelo gerenciador de pacotes do sistema"
-		key := t
-		if a, ok := installAlias[t]; ok {
-			key = a
-		}
-		if h, ok := installHints[key][runtime.GOOS]; ok {
-			hint = h
-		}
-		out = append(out, fmt.Sprintf("  - %s: %s", t, hint))
 	}
 	return out
+}
+
+// missingMessage says what is missing and the exact commands to install it.
+func missingMessage(stack string, miss []string) string {
+	return fmt.Sprintf("o projeto %s precisa de %s para o `make ci` rodar. Para instalar, rode:\n\n  %s\n\ne depois rode axyn_run de novo com resume (nenhuma tentativa foi gasta).",
+		stack, strings.Join(miss, ", "), strings.Join(installCommands(miss, runtime.GOOS), "\n  "))
 }
 
 // applyTemplate writes template/common, template/<stack> and template/seed into dir,
@@ -265,8 +329,7 @@ func (r *runner) prepare() string {
 			" Responda com uma destas: " + strings.Join(stacks, ", ") + "."
 	}
 	if miss := missingTools(stack); len(miss) > 0 {
-		return fmt.Sprintf("o projeto %s precisa destas ferramentas para o `make ci` rodar; instale e rode axyn_run de novo com resume (nenhuma tentativa foi gasta):\n%s",
-			stack, strings.Join(miss, "\n"))
+		return missingMessage(stack, miss)
 	}
 	r.set("preparando o projeto")
 	created, err := applyTemplate(dir, stack)
@@ -318,7 +381,7 @@ func runInitCmd(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintln(stdout, "aviso: o Makefile já existia sem o alvo ci; adicione um alvo ci para os portões do axyn")
 	}
 	if miss := missingTools(s); len(miss) > 0 {
-		_, _ = fmt.Fprintf(stdout, "falta instalar para o make ci:\n%s\n", strings.Join(miss, "\n"))
+		_, _ = fmt.Fprintf(stdout, "falta %s para o make ci. Para instalar, rode:\n\n  %s\n", strings.Join(miss, ", "), strings.Join(installCommands(miss, runtime.GOOS), "\n  "))
 	}
 	return exitOK
 }

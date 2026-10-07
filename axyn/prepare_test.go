@@ -145,7 +145,7 @@ func TestRunStopsOnMissingToolBeforeAnyAttempt(t *testing.T) {
 	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `printf 'x\n' > "f$n.html"`))
 
 	code, out := runRequest(t, dir, "crie uma landing page")
-	if code == exitOK || !strings.Contains(out, "  - node:") || !strings.Contains(out, "nenhuma tentativa foi gasta") {
+	if code == exitOK || !strings.Contains(out, "precisa de node") || !strings.Contains(out, "Para instalar, rode:") || !strings.Contains(out, "nenhuma tentativa foi gasta") {
 		t.Fatalf("deveria parar pedindo o node, code %d\n%s", code, out)
 	}
 	if calls, _ := os.ReadFile(os.Getenv("FAKE_LOG")); strings.Contains(string(calls), "axyn-code") {
@@ -283,6 +283,37 @@ func TestPreparedWebCIRejectsInvalidHTML(t *testing.T) {
 	write(t, dir, "index.html", string(valid))
 	if err := ci(); err != nil {
 		t.Errorf("make ci reprovou um HTML válido: %v", err)
+	}
+}
+
+// The hint is a command to paste, per system, with every missing tool in it.
+func TestInstallCommands(t *testing.T) {
+	old := lookPath
+	t.Cleanup(func() { lookPath = old })
+	lookPath = func(name string) (string, error) {
+		if name == "apt-get" || name == "brew" {
+			return "/usr/bin/" + name, nil
+		}
+		return "", errors.New("not found")
+	}
+	for _, c := range []struct {
+		goos    string
+		missing []string
+		want    []string
+	}{
+		{"linux", []string{"make", "node"}, []string{"sudo apt-get update && sudo apt-get install -y make nodejs npm"}},
+		{"linux", []string{"node", "npm"}, []string{"sudo apt-get update && sudo apt-get install -y nodejs npm"}},
+		{"darwin", []string{"python3"}, []string{"brew install python"}},
+		{"windows", []string{"make", "node"}, []string{"winget install -e --id ezwinports.make", "winget install -e --id OpenJS.NodeJS.LTS"}},
+		{"linux", []string{"cargo"}, []string{rustupCmd}},
+	} {
+		if got := installCommands(c.missing, c.goos); strings.Join(got, "|") != strings.Join(c.want, "|") {
+			t.Errorf("%s %v: %q, quero %q", c.goos, c.missing, got, c.want)
+		}
+	}
+	lookPath = func(string) (string, error) { return "", errors.New("not found") }
+	if got := installCommands([]string{"node"}, "darwin"); len(got) != 2 || !strings.Contains(got[0], "Homebrew/install") {
+		t.Errorf("sem brew no macOS, o primeiro comando instala o Homebrew: %q", got)
 	}
 }
 

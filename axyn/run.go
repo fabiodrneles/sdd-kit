@@ -617,7 +617,7 @@ func runRunCmd(args []string, stdout, stderr io.Writer) int {
 			_, _ = fmt.Fprintf(stderr, "axyn run: %v\n", err)
 			return exitFail
 		}
-		_, _ = fmt.Fprintf(stdout, "execução %s iniciada em segundo plano; veja com: axyn status %s\n", id, id)
+		_, _ = fmt.Fprintf(stdout, "execução %s iniciada em segundo plano; para acompanhar, com aviso quando terminar ou precisar de você: axyn status --watch\n", id)
 		return exitOK
 	}
 	st := &runState{ID: time.Now().Format("20060102-150405"), Request: request, Status: runRunning, Phase: "iniciando",
@@ -640,8 +640,13 @@ func runStatusCmd(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("axyn status", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	dir := fs.String("dir", ".", "raiz do repositório")
+	watch := fs.Bool("watch", false, "fica acompanhando: uma linha a cada mudança, e aviso (bipe e notificação) quando termina, para ou pergunta algo")
+	interval := fs.Duration("interval", 10*time.Second, "(--watch) de quanto em quanto tempo conferir")
 	if err := fs.Parse(args); err != nil {
 		return exitUsage
+	}
+	if *watch {
+		return watchRun(*dir, fs.Arg(0), *interval, stdout)
 	}
 	st, err := loadRun(*dir, fs.Arg(0))
 	if err != nil {

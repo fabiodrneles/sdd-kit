@@ -289,6 +289,21 @@ O axyn escreve a spec, abre os tickets, implementa cada um numa branch própria,
 
 **Projeto sem CI? O axyn prepara.** Num repositório vazio ou sem `make ci`, antes do primeiro ticket o axyn aplica o template da stack (detectada pelos arquivos, ou pelo pedido num repositório vazio: uma landing page vira `web`) com o `Makefile`, o CI do GitHub e o lint, num commit próprio, sem alterar arquivo existente. Se não der para saber a stack, ele pergunta; se faltar uma ferramenta (`make`, `node`…), ele para logo no começo e diz o que instalar. Para preparar à mão: `axyn init` (ou `axyn init --stack python`).
 
+### O que o repositório precisa
+
+Rode `axyn doctor` no repositório: ele confere cada item abaixo, uma linha por item, e mostra o comando de cada um que falta. O `axyn setup` configura sozinho, pelo `gh`, tudo o que dá (o instalador já roda o `doctor` no fim).
+
+| Item | Por quê | O `axyn setup` | À mão |
+|---|---|---|---|
+| `gh` instalado e com login | o axyn abre os PRs e configura o GitHub por ele | mostra o comando de instalação do seu sistema | `gh auth login` (só você: abre o navegador) |
+| Identidade do git | os commits dos tickets | usa o nome e o e-mail `noreply` da sua conta do GitHub, só neste repositório | `git config --global user.name "Seu Nome"` e `user.email` |
+| Repositório no GitHub (`origin`) | push e um PR por ticket | `gh repo create` privado, com o push da branch atual | criar no GitHub e `git remote add origin ...` |
+| GitHub Actions com escrita | o CI roda em cada PR, e o motor do sdd-kit comenta e abre PRs | habilita e dá escrita e permissão de abrir PRs ao `GITHUB_TOKEN` | *Settings → Actions → General → Workflow permissions* |
+| Merge automático e branch apagada depois do merge | o merge sem esperar e o repositório limpo | liga os dois | *Settings → General → Pull Requests* |
+| Proteção da branch principal (opcional) | só entra no `main` o que passou no `make ci` | com `axyn setup --protect-main` (o plano gratuito não tem em repositório privado: ele avisa e segue) | *Settings → Branches* |
+| Ferramentas do `make ci` da stack (`make`, `node`…) | os portões rodam o `make ci` na sua máquina | mostra o comando completo para colar (`apt`, `dnf`, `pacman`, `brew` ou `winget`) | instalar pelo gerenciador do sistema |
+| `opencode` e um modelo | é onde o `/axyn` roda | mostra o comando de instalação | a chave do modelo só em variável de ambiente |
+
 ## Instalar a skill
 
 No Claude Code:

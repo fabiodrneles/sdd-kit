@@ -72,6 +72,8 @@ esac
 
 if command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1; then
 	"$bin/axyn" install
+	# O que falta no repositório (GitHub, Actions, ferramentas), com o comando de cada item.
+	"$bin/axyn" doctor || echo "para configurar o que dá automaticamente: axyn setup"
 else
 	echo "no repositório do projeto: axyn install"
 fi

@@ -23,6 +23,12 @@ Uso:
   axyn version        mostra a versão
   axyn gate [--base REF] [--max-lines N] [--ci CMD] [--protect CAMINHO]
                       portões do diff: CI, teste afrouxado, caminhos protegidos e tamanho
+  axyn doctor [--dir DIR]
+                      confere o que o repositório precisa (GitHub, Actions, merge automático,
+                      ferramentas), uma linha por item, com o comando de cada coisa que falta
+  axyn setup [--protect-main] [--dir DIR]
+                      configura pelo gh o que dá: identidade do git, repositório no GitHub,
+                      Actions com escrita, merge automático e, opcional, a proteção da main
   axyn init [--stack S] [--dir DIR]
                       prepara o projeto com o template da stack (Makefile com o make ci, CI do
                       GitHub e lint), sem alterar arquivo existente; o axyn run faz isso sozinho
@@ -51,6 +57,10 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return exitOK
 	case "gate":
 		return runGate(args[1:], stdout, stderr)
+	case "doctor":
+		return runSetupCmd(args[1:], stdout, stderr, false)
+	case "setup":
+		return runSetupCmd(args[1:], stdout, stderr, true)
 	case "init":
 		return runInitCmd(args[1:], stdout, stderr)
 	case "install":

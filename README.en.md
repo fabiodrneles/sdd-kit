@@ -577,6 +577,10 @@ axyn history --out ~/Downloads/axyn_history.md
 
 Attach that file when asking for help: with it, whoever helps sees exactly what happened. The most common cases, with the fix, are in [Common problems and how to fix them](#common-problems-and-how-to-fix-them).
 
+### How axyn works inside
+
+To audit a run yourself, read the [axyn technical documentation](docs/axyn.md) (in Portuguese): the full cycle, what each rejection code means and how to fix it, where the state, log and plan live, and the command for each question.
+
 ### Updating axyn (when a new version is out)
 
 axyn tells you on its own: `axyn doctor`, `axyn status` and the `/axyn` answers show when a new version is out, with what is new and the command to update (at most one check a day; `AXYN_NO_UPDATE_CHECK=1` turns the notice off).

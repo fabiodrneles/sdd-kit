@@ -118,6 +118,16 @@ O código da última tentativa nunca se perde. Ele fica num commit WIP, na branc
 
 Com os portões verdes, a ferramenta `axyn_ship` faz o commit (`feat: <título do ticket>`) na branch do ticket e, se houver um remoto `origin`, o push. Com o `gh` instalado, ela abre o PR contra a base. O merge é seu, a não ser que o repositório tenha o merge automático ligado (`axyn setup`). Cada ticket tem a sua própria branch e o seu próprio PR.
 
+## Fechar uma versão (release)
+
+O projeto que o axyn prepara recebe o `scripts/sdd-release.sh` e o workflow de release do sdd-kit. O `axyn release` usa os dois. Rode-o no terminal, na raiz do projeto, ou peça no `/axyn` ("feche a versão"):
+
+1. **Prévia, sem mudar nada:** o axyn mostra a próxima versão e o que entra nela. A versão é calculada pelo [go-release-manager](https://github.com/fabiodrneles/go-release-manager) a partir dos commits na `main`: `feat` sobe a versão do meio, `fix` a do fim e `!` a primeira. O que entra é o rascunho do CHANGELOG, montado pelos PRs mesclados.
+2. **Com o seu sim** (`s` no terminal, ou "sim" no `/axyn`): abre o PR de fechamento (`chore/release-vX.Y.Z`) com o CHANGELOG e as versões dos arquivos.
+3. **Depois do merge desse PR:** o workflow do projeto cria a tag e publica a página da release, com as novidades e o "Como atualizar". Sem o workflow, rode `axyn release --tag X.Y.Z`.
+
+`axyn release --yes` pula a pergunta. A release precisa do `gh` e do Go (o go-release-manager roda com `go run`). Se faltar algum, o axyn mostra o comando de instalação. Se o projeto não tiver o script, `axyn init` copia o que falta do template sem mexer no que já existe.
+
 ## Interrupções e retomada
 
 - Cada execução grava o seu estado em `.axyn/runs/<ID>.json`, com o PID do processo, e o log completo em `.axyn/runs/<ID>.log`.
@@ -138,6 +148,7 @@ Rode todos estes comandos na raiz do projeto:
 | O que você decidiu? | A seção `## Decisões` da spec (`specs/NNN-nome/spec.md`) |
 | O código da tentativa reprovada | `git log feat/<n>-wip` e `git diff main...feat/<n>-wip` |
 | Qual a cobertura, o mínimo, a meta e onde falta teste? | `axyn coverage` |
+| Qual seria a próxima versão e o que entra nela? | `axyn release`, respondendo `N` na pergunta |
 | O ambiente está certo? | `axyn doctor`: uma linha por item, com o comando de cada coisa que falta |
 | Os portões dão o mesmo resultado à mão? | `axyn gate --base main` |
 

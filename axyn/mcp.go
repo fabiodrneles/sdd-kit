@@ -135,6 +135,8 @@ var mcpTools = []toolDef{
 			"id":  str("id da execução; vazio é a última"),
 			"out": str("caminho do arquivo, em qualquer pasta; vazio grava em .axyn/axyn_history-ID.md"),
 		})},
+	{"axyn_release", "Fecha uma versão do projeto: sem confirm, mostra a versão calculada pelo go-release-manager e o que entra nela; com confirm (só depois do sim do usuário), abre o PR de fechamento com o CHANGELOG.",
+		obj(map[string]any{"confirm": map[string]any{"type": "boolean", "description": "true só depois que o usuário confirmar"}})},
 	{"axyn_ship", "Commit, push e PR do diff atual, só se o portão estiver verde; recusa se reprovar.",
 		obj(map[string]any{
 			"message": str("mensagem do commit (Conventional Commits)"),
@@ -253,6 +255,8 @@ func (s *mcpServer) call(name string, raw json.RawMessage) (string, error) {
 			return "", err
 		}
 		return s.toolStatus(a.ID)
+	case "axyn_release":
+		return s.toolRelease(raw)
 	case "axyn_history":
 		var a struct {
 			ID  string `json:"id"`

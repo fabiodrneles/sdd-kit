@@ -28,6 +28,7 @@ O kit nasceu do [cv-craft](https://github.com/fabiodrneles/cv-craft), que saiu d
 - [axyn](#axyn)
 - [Passo a passo para iniciantes](#passo-a-passo-para-iniciantes)
 - [Problemas comuns e como resolver](#problemas-comuns-e-como-resolver)
+- [Como o axyn funciona por dentro](#como-o-axyn-funciona-por-dentro)
 - [Atualizar o axyn](#atualizar-o-axyn-quando-sair-uma-versão-nova)
 - [Instalar a skill](#instalar-a-skill)
 - [Script de adoção](#script-de-adoção)
@@ -635,6 +636,10 @@ axyn history --out ~/Downloads/axyn_history.md
 ```
 
 Anexe esse arquivo ao pedir ajuda: com ele, quem for ajudar vê exatamente o que aconteceu. Os casos mais comuns, com a solução, estão em [Problemas comuns e como resolver](#problemas-comuns-e-como-resolver).
+
+### Como o axyn funciona por dentro
+
+Para auditar uma execução você mesmo, sem depender de outra IA, leia a [documentação técnica do axyn](docs/axyn.md). Ela cobre o ciclo completo (preparação, plano, tickets, portões, escada de recuperação, entrega), o que cada código de reprovação (`[ci]`, `[tests]`, `[size]`, `[protected]`) quer dizer e como corrigir, onde ficam o estado, o log e o plano, e o comando para responder cada pergunta.
 
 ### Atualizar o axyn (quando sair uma versão nova)
 

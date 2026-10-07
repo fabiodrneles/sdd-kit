@@ -233,6 +233,21 @@ axyn writes the spec, opens the tickets, implements each on its own branch, runs
 
 **No CI in the project? axyn sets it up.** In an empty repository or one without `make ci`, before the first ticket axyn applies the stack's template (detected from the files, or from the request in an empty repository: a landing page means `web`) with the `Makefile`, the GitHub CI and the lint, in a commit of its own, without changing existing files. When it cannot tell the stack, it asks; when a tool is missing (`make`, `node`…), it stops right away and says what to install. To do it by hand: `axyn init` (or `axyn init --stack python`).
 
+### What the repository needs
+
+Run `axyn doctor` in the repository: it checks each item below, one line per item, and prints the command for each one missing. `axyn setup` configures everything it can on its own, through `gh` (the installer already runs `doctor` at the end).
+
+| Item | Why | `axyn setup` | By hand |
+|---|---|---|---|
+| `gh` installed and logged in | axyn opens the PRs and configures GitHub through it | prints your system's install command | `gh auth login` (only you: it opens the browser) |
+| git identity | the tickets' commits | uses your GitHub account's name and `noreply` e-mail, in this repository only | `git config --global user.name "Your Name"` and `user.email` |
+| Repository on GitHub (`origin`) | push and one PR per ticket | private `gh repo create`, pushing the current branch | create it on GitHub and `git remote add origin ...` |
+| GitHub Actions with write access | CI runs on every PR, and the sdd-kit engine comments and opens PRs | enables it and gives the `GITHUB_TOKEN` write access and permission to open PRs | *Settings → Actions → General → Workflow permissions* |
+| Auto-merge and branch deleted after merge | merging without waiting, and a clean repository | turns both on | *Settings → General → Pull Requests* |
+| Protection of the main branch (optional) | only what passed `make ci` reaches `main` | with `axyn setup --protect-main` (the free plan has none on private repositories: it warns and goes on) | *Settings → Branches* |
+| The stack's `make ci` tools (`make`, `node`…) | the gates run `make ci` on your machine | prints the full command to paste (`apt`, `dnf`, `pacman`, `brew` or `winget`) | install with the system's package manager |
+| `opencode` and a model | where `/axyn` runs | prints the install command | the model key only in an environment variable |
+
 ## Installing the skill
 
 In Claude Code:

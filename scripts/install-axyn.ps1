@@ -61,6 +61,10 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
   if ($LASTEXITCODE -eq 0) {
     & $dest install
     if ($LASTEXITCODE -ne 0) { Stop-Install "axyn install falhou (código $LASTEXITCODE)" }
+    # O que falta no repositório (GitHub, Actions, ferramentas), com o comando de cada item.
+    & $dest doctor
+    if ($LASTEXITCODE -ne 0) { Write-Output 'para configurar o que dá automaticamente: axyn setup' }
+    $global:LASTEXITCODE = 0
     return
   }
 }

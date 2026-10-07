@@ -41,6 +41,7 @@ var stackTools = map[string][]string{
 // command (the user runs what axyn prints, like a framework's own hint).
 var pkgs = map[string]map[string]string{
 	"git":     {"apt": "git", "dnf": "git", "pacman": "git", "brew": "git", "winget": "Git.Git"},
+	"gh":      {"apt": "gh", "dnf": "gh", "pacman": "github-cli", "brew": "gh", "winget": "GitHub.cli"},
 	"make":    {"apt": "make", "dnf": "make", "pacman": "make", "brew": "make", "winget": "ezwinports.make"},
 	"node":    {"apt": "nodejs npm", "dnf": "nodejs npm", "pacman": "nodejs npm", "brew": "node", "winget": "OpenJS.NodeJS.LTS"},
 	"npm":     {"apt": "nodejs npm", "dnf": "nodejs npm", "pacman": "nodejs npm", "brew": "node", "winget": "OpenJS.NodeJS.LTS"},

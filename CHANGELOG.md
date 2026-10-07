@@ -4,6 +4,16 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-10-07
+
+### Adicionado
+
+- avisar quando sair uma versão nova, com as novidades e como atualizar (#329)
+
+### Corrigido
+
+- explicar o ticket parado, cobertura a partir de 0 em projeto sem testes, terminal visível no Windows (#331)
+
 ## [1.16.0] - 2026-10-07
 
 ### Adicionado

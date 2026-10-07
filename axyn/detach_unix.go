@@ -18,3 +18,6 @@ func processAlive(pid int) bool {
 
 // hideWindow is a Windows concern: helpers here have no window to hide.
 func hideWindow(*exec.Cmd) {}
+
+// enableVT is a Windows concern: terminals here already understand the color codes.
+func enableVT() {}

@@ -170,7 +170,7 @@ O que sair da guia é reprovado com o código `[guia]`, e os portões de sempre 
 | Fixar à mão o modelo de uma etapa | `axyn bench --set plano=MODELO` (desfazer: `--set plano=`) |
 | Desligar e voltar à escada do `axyn model` | `axyn bench --off` (religar: `--apply`) |
 
-Arquivos: `~/.config/axyn/bench/profile.json` (o resultado em uso), `bench-DATA.md` (o relatório de cada rodada, com a nota e o motivo de cada tentativa) e `bench-DATA.log` (a saída completa dos modelos). As tarefas são em Go e precisam do Go instalado.
+Arquivos: `~/.config/axyn/bench/profile.json` (o resultado em uso), `bench-DATA.md` (o relatório de cada rodada, com a nota e o motivo de cada tentativa) e `bench-DATA.log` (a saída completa dos modelos) e a pasta `bench-DATA/`, com o código que o modelo escreveu em cada tentativa (um `.diff` por tentativa). Com os três, dá para conferir se cada nota foi justa e ajustar o processo de avaliação. As tarefas são em Go e precisam do Go instalado.
 
 ## Fechar uma versão (release)
 
@@ -195,7 +195,7 @@ Rode todos estes comandos na raiz do projeto:
 
 | Pergunta | Comando ou arquivo |
 |---|---|
-| O que está acontecendo agora? | `axyn status`, ou `axyn status --watch` para ver uma linha a cada mudança |
+| O que está acontecendo agora? | `axyn status`, ou `axyn status --watch`: uma linha a cada mudança e, num terminal, um indicador animado (amarelo e branco) com o tempo da fase e, na avaliação dos modelos, a barra de progresso, a contagem e quanto falta |
 | O que aconteceu, do começo ao fim? | `axyn history`, que grava `.axyn/axyn_history-<ID>.md` com o pedido, o plano, cada tentativa, os portões, as perguntas, os commits, o ambiente e o log, sem chaves nem tokens |
 | Qual foi a saída exata do `make ci`? | `.axyn/runs/<ID>.log` |
 | O que o axyn decidiu fazer com cada ticket? | `.git/axyn/plan.json`: tickets, tentativas (modelo, degrau, motivo), branch WIP |

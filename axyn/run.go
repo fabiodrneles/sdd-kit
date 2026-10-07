@@ -63,6 +63,13 @@ type runState struct {
 	Started   time.Time `json:"started"`
 	Updated   time.Time `json:"updated"`
 	Opts      runOpts   `json:"opts"`
+
+	// Live progress for the watch (#348): when the phase began and, for long phases such
+	// as the model bench, how far it is.
+	PhaseSince time.Time `json:"phase_since,omitempty"`
+	Done       int       `json:"done,omitempty"`
+	Of         int       `json:"of,omitempty"`
+	Detail     string    `json:"detail,omitempty"`
 }
 
 func runsDir(dir string) string { return filepath.Join(dir, ".axyn", "runs") }
@@ -267,6 +274,10 @@ type runner struct {
 }
 
 func (r *runner) set(phase string) {
+	if phase != r.st.Phase {
+		r.st.PhaseSince = time.Now()
+		r.st.Done, r.st.Of, r.st.Detail = 0, 0, ""
+	}
 	r.st.Phase = phase
 	_ = saveRun(r.s.dir, r.st)
 }
@@ -717,7 +728,7 @@ func runStatusCmd(args []string, stdout, stderr io.Writer) int {
 	fs.SetOutput(stderr)
 	dir := fs.String("dir", ".", "raiz do repositório")
 	watch := fs.Bool("watch", false, "fica acompanhando: uma linha a cada mudança, e aviso (bipe e notificação) quando termina, para ou pergunta algo")
-	interval := fs.Duration("interval", 10*time.Second, "(--watch) de quanto em quanto tempo conferir")
+	interval := fs.Duration("interval", 2*time.Second, "(--watch) de quanto em quanto tempo conferir")
 	if err := fs.Parse(args); err != nil {
 		return exitUsage
 	}

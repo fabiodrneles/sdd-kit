@@ -68,3 +68,22 @@ func TestWatchStoppedWithQuestion(t *testing.T) {
 		t.Errorf("notificação da pergunta: %v", got)
 	}
 }
+
+// #348: the live line has the spinner, the elapsed time, the bar, the count, the estimate
+// and the detail, in the axyn colors.
+func TestLiveLine(t *testing.T) {
+	now := time.Now()
+	st := &runState{Phase: "avaliando modelos", PhaseSince: now.Add(-10 * time.Minute), Done: 4, Of: 16, Detail: "modelo-x, testes"}
+	got := liveLine(st, 0, now)
+	for _, want := range []string{"⠋", "avaliando modelos", "10m00s", "█████", "░", "4/16", "faltam ~30m00s", "modelo-x, testes", cYellow, cWhite} {
+		if !strings.Contains(got, want) {
+			t.Errorf("a linha não traz %q: %q", want, got)
+		}
+	}
+	if got := liveLine(&runState{Phase: "código", Started: now.Add(-time.Minute), Ticket: 1, Total: 3, Attempts: 2}, 3, now); !strings.Contains(got, "ticket 1 de 3, tentativa 3") || strings.Contains(got, "faltam") {
+		t.Errorf("sem progresso conhecido, só o tempo e o ticket: %q", got)
+	}
+	if clock(65*time.Minute+5*time.Second) != "1h05m05s" {
+		t.Error("relógio com horas")
+	}
+}

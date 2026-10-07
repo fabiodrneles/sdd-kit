@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -38,7 +39,7 @@ func quote(s string) string {
 func TestUpdateNoticeNewer(t *testing.T) {
 	n := fakeRelease(t, "v1.17.0", "1.16.0")
 	msg := updateNotice()
-	for _, want := range []string{"Saiu o axyn v1.17.0 (você tem a v1.16.0)", "`axyn x`: faz x", "`axyn y`", "- z", "na raiz do projeto", "install-axyn", "https://example.com/r"} {
+	for _, want := range []string{"Saiu o axyn v1.17.0 (você tem a v1.16.0)", "`axyn x`: faz x", "`axyn y`", "- z", "na raiz do projeto", "axyn update", "https://example.com/r"} {
 		if !strings.Contains(msg, want) {
 			t.Errorf("o aviso não traz %q:\n%s", want, msg)
 		}
@@ -115,5 +116,24 @@ func TestUpdateNoticeInDoctorAndStatus(t *testing.T) {
 	}
 	if text, _ := callTool(t, dir, "axyn_status", map[string]any{}); !strings.Contains(text, "Saiu o axyn v1.17.0") {
 		t.Errorf("o /axyn (status) deveria avisar:\n%s", text)
+	}
+}
+
+// #348: axyn update runs the installer in the project; a failure keeps the current axyn.
+func TestAxynUpdate(t *testing.T) {
+	old := runInstaller
+	t.Cleanup(func() { runInstaller = old })
+	ran := ""
+	runInstaller = func(dir string) error { ran = dir; return nil }
+	var o, e strings.Builder
+	if code := runUpdateCmd([]string{"--dir", "x"}, &o, &e); code != exitOK || ran != "x" || !strings.Contains(o.String(), "axyn version") {
+		t.Errorf("update: %d %q %s", code, ran, o.String())
+	}
+	runInstaller = func(string) error { return errors.New("sem rede") }
+	if code := runUpdateCmd(nil, &o, &e); code != exitFail || !strings.Contains(e.String(), "a versão atual continua instalada") {
+		t.Errorf("falha: %d %s", code, e.String())
+	}
+	if updateCommand("windows") != "axyn update" {
+		t.Error("o aviso de versão nova mostra o comando curto")
 	}
 }

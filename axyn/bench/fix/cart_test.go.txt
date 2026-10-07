@@ -1,0 +1,19 @@
+package cart
+
+import "testing"
+
+func TestTotal(t *testing.T) {
+	items := []Item{{"pão", 150, 2}, {"leite", 499, 1}, {"café", 1890, 1}}
+	if got := Total(items); got != 2689 {
+		t.Errorf("Total = %d, quer 2689", got)
+	}
+	if got := Total(nil); got != 0 {
+		t.Errorf("Total(nil) = %d, quer 0", got)
+	}
+}
+
+func TestDescribe(t *testing.T) {
+	if got := Describe([]Item{{"pão", 150, 2}}); got != "1 itens, total 300 centavos" {
+		t.Errorf("Describe = %q", got)
+	}
+}

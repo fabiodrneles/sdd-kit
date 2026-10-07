@@ -260,9 +260,10 @@ func (s *mcpServer) toolStatus(id string) (string, error) {
 }
 
 type runner struct {
-	s   *mcpServer
-	st  *runState
-	log io.Writer
+	lastOut string // the tail of the last agent's output (model down detection)
+	s       *mcpServer
+	st      *runState
+	log     io.Writer
 }
 
 func (r *runner) set(phase string) {
@@ -287,10 +288,32 @@ func (r *runner) ladder() []model {
 	return []model{{ID: placeholder}}
 }
 
+// ladderFor is the ladder of one ticket (see mcpServer.ticketLadder).
+func (r *runner) ladderFor(t *ticket) []model {
+	if ms := r.s.ticketLadder(t); len(ms) > 0 {
+		return ms
+	}
+	if len(r.s.down) > 0 {
+		return nil // every model is down
+	}
+	return r.ladder()
+}
+
 type fatalErr struct{ error }
 
 // agent calls `opencode run --agent NAME [--model M] PROMPT` without interaction.
 func (r *runner) agent(name, modelID, prompt string) error {
+	timeout := time.Duration(r.st.Opts.TimeoutSec) * time.Second
+	if timeout <= 0 {
+		timeout = defaultTimeout
+	}
+	tail, err := callAgent(r.s.dir, name, modelID, prompt, timeout, r.log)
+	r.lastOut = tail
+	return err
+}
+
+// callAgent runs one opencode agent in dir; the engine and the model bench share it.
+func callAgent(dir, name, modelID, prompt string, timeout time.Duration, log io.Writer) (string, error) {
 	argv := strings.Fields(os.Getenv("AXYN_OPENCODE"))
 	if len(argv) == 0 {
 		argv = []string{"opencode"}
@@ -300,22 +323,20 @@ func (r *runner) agent(name, modelID, prompt string) error {
 		args = append(args, "--model", modelID)
 	}
 	args = append(args, prompt)
-	timeout := time.Duration(r.st.Opts.TimeoutSec) * time.Second
-	if timeout <= 0 {
-		timeout = defaultTimeout
-	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, argv[0], args...)
-	cmd.Dir = r.s.dir
-	cmd.Stdout, cmd.Stderr = r.log, r.log
-	_, _ = fmt.Fprintf(r.log, "== %s %s\n", argv[0], name)
+	cmd.Dir = dir
+	tail := &tailWriter{max: 16 << 10}
+	w := io.MultiWriter(log, tail)
+	cmd.Stdout, cmd.Stderr = w, w
+	_, _ = fmt.Fprintf(log, "== %s %s\n", argv[0], name)
 	err := cmd.Run()
 	var ee *exec.ExitError
 	if err != nil && !errors.As(err, &ee) && ctx.Err() == nil {
-		return fatalErr{fmt.Errorf("não consegui chamar o agente %s: %w", name, err)} // the command did not even start
+		return tail.String(), fatalErr{fmt.Errorf("não consegui chamar o agente %s: %w", name, err)} // the command did not even start
 	}
-	return nil // a failing or timed-out agent is just a bad attempt: the gates judge the diff
+	return tail.String(), nil // a failing or timed-out agent is just a bad attempt: the gates judge the diff
 }
 
 func (r *runner) plan() error {
@@ -326,11 +347,21 @@ func (r *runner) plan() error {
 	prompt := "Pedido do usuário: " + r.st.Request
 	for try := 1; try <= planTries; try++ {
 		r.set("planejando")
-		if err := r.agent("axyn-plan", r.planModel(), prompt); err != nil {
+		m := r.planModel()
+		if err := r.agent("axyn-plan", m, prompt); err != nil {
 			return err
 		}
 		if pl, _, err := r.s.loadPlan(); err == nil && pl.Spec != oldSpec && len(pl.Tickets) > 0 {
 			return nil
+		}
+		if why := downReason(r.lastOut, false); why != "" && m != "" {
+			r.s.markDown(m, why)
+			if r.planModel() == "" {
+				return fmt.Errorf("%s", allDownMessage(r.s.down))
+			}
+			_, _ = fmt.Fprintf(r.log, "modelo %s %s: o plano passa para %s\n", m, why, r.planModel())
+			try-- // a model that is down is not a planning attempt
+			continue
 		}
 		prompt += "\n\nO plano não foi gravado: chame a ferramenta axyn_plan com a spec (com FR-N e AC-N) e os tickets, cada um citando um AC."
 	}
@@ -344,8 +375,18 @@ func (r *runner) planModel() string {
 	if r.st.Opts.Model != "" {
 		return r.st.Opts.Model
 	}
-	if ms := r.ladder(); len(ms) > 0 && ms[0].ID != placeholder {
-		return ms[0].ID
+	// The best planner of the applied bench first (#344), then the ladder; a model that
+	// went down in this run is skipped.
+	cands := routed(roleplan)
+	for _, m := range r.ladder() {
+		if m.ID != placeholder {
+			cands = append(cands, m.ID)
+		}
+	}
+	for _, m := range cands {
+		if _, down := r.s.down[m]; !down {
+			return m
+		}
 	}
 	return ""
 }
@@ -369,6 +410,7 @@ func (r *runner) run() {
 		r.recordWIP(t.ID)
 		_, _ = fmt.Fprintln(r.log, note)
 	}
+	r.autoBench()
 	if !r.st.Opts.Resume {
 		if err := r.plan(); err != nil {
 			r.stop(runStopped, err.Error())
@@ -455,13 +497,13 @@ func (r *runner) ticket() (string, string) {
 			feedback = report
 		}
 	}
-	bound := maxFailsPerModel*len(r.ladder()) + 2
+	bound := maxFailsPerModel*(len(r.ladder())+8) + 2
 	for i := 0; i < bound; i++ {
 		_, t := r.s.openTicket()
 		if t == nil {
 			return runStopped, "o ticket sumiu do plano"
 		}
-		models := r.ladder()
+		models := r.ladderFor(t)
 		idx := ladderState(models, t.Attempts)
 		if idx >= len(models) {
 			return runStopped, r.explainStop(t.ID, "")
@@ -476,6 +518,11 @@ func (r *runner) ticket() (string, string) {
 		}
 		r.st.Model, r.st.Attempts = cur, len(t.Attempts)
 		prompt, _ := r.s.toolNext()
+		r.s.contained = isContained(t, cur)
+		if r.s.contained {
+			prompt = containedGuide + prompt
+			_, _ = fmt.Fprintf(r.log, "modelo %s no modo guiado (contido pela avaliação)\n", cur)
+		}
 		if feedback != "" {
 			prompt += "\n\nA tentativa anterior foi reprovada pelo motor:\n" + feedback
 		}
@@ -483,6 +530,17 @@ func (r *runner) ticket() (string, string) {
 		planPath, planBefore := r.planSnapshot()
 		if err := r.agent("axyn-code", modelArg, prompt); err != nil {
 			return runStopped, err.Error()
+		}
+		dirty, _ := r.s.git("status", "--porcelain")
+		if why := downReason(r.lastOut, strings.TrimSpace(dirty) != ""); why != "" && cur != placeholder {
+			r.s.markDown(cur, why)
+			if len(r.ladderFor(t)) == 0 {
+				return runStopped, allDownMessage(r.s.down)
+			}
+			next := r.ladderFor(t)[min(ladderState(r.ladderFor(t), t.Attempts), len(r.ladderFor(t))-1)].ID
+			_, _ = fmt.Fprintf(r.log, "modelo %s %s: a tentativa não conta, e o trabalho passa para %s\n", cur, why, next)
+			r.st.Gate = "modelo " + cur + " " + why + "; trocando para " + next
+			continue
 		}
 		r.set("portões")
 		var green bool
@@ -519,7 +577,13 @@ func (r *runner) ship(t *ticket) (string, string) {
 	if msg := r.raiseCoverage(); msg != "" {
 		_, _ = fmt.Fprintln(r.log, msg)
 	}
-	out, err := r.s.deliver("feat: "+strings.TrimSpace(t.Title), true)
+	msg := "feat: " + strings.TrimSpace(t.Title)
+	if r.st.Model != "" && r.st.Model != placeholder {
+		// The author model in the commit: without it, which model's code survives or is
+		// reverted later cannot be measured (the QA material, "registrar a autoria").
+		msg += "\n\nAxyn-Model: " + r.st.Model
+	}
+	out, err := r.s.deliver(msg, true)
 	if err != nil {
 		return runStopped, err.Error()
 	}

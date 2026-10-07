@@ -81,12 +81,14 @@ type plan struct {
 // diff is being judged, and it must not be able to pick an empty CI, a huge limit or
 // a base that empties the diff (021 FR-5, NFR-2).
 type mcpServer struct {
-	dir      string
-	ci       string
-	base     string
-	maxLines int
-	config   string // model ladder file (FR-6); empty or missing means no ladder
-	fallback bool   // the run loop (FR-9) counts attempts even with no ladder configured
+	dir       string
+	ci        string
+	base      string
+	maxLines  int
+	config    string            // model ladder file (FR-6); empty or missing means no ladder
+	fallback  bool              // the run loop (FR-9) counts attempts even with no ladder configured
+	contained bool              // the current attempt runs inside the guide (#344)
+	down      map[string]string // models out of use in this run: limit reached or offline (#344)
 }
 
 func obj(props map[string]any, required ...string) map[string]any {
@@ -290,6 +292,9 @@ func (s *mcpServer) gate(a gateArgs) (bool, string, error) {
 	if a.MaxLines > 0 && a.MaxLines < maxLines {
 		maxLines = a.MaxLines
 	}
+	if s.contained && containedMaxLines < maxLines {
+		maxLines = containedMaxLines
+	}
 	var ciLog bytes.Buffer
 	n, findings, err := evalGate(s.dir, s.base, maxLines, s.ci, nil, &ciLog)
 	if err != nil {
@@ -298,6 +303,11 @@ func (s *mcpServer) gate(a gateArgs) (bool, string, error) {
 	if len(a.Plan) > 0 {
 		if _, t := s.openTicket(); t != nil {
 			findings = append(findings, checkPlan(t, a.Plan)...)
+		}
+	}
+	if s.contained {
+		if _, t := s.openTicket(); t != nil {
+			findings = append(findings, s.containFindings(t)...)
 		}
 	}
 	advice, recovered := s.recordAttempt(len(findings) == 0, findings, a.Plan, ciLog.String())
@@ -615,7 +625,7 @@ func (s *mcpServer) deliver(msg string, newBranch bool) (string, error) {
 		}
 		notes = append(notes, "push feito")
 		if _, err := exec.LookPath("gh"); err == nil {
-			args := []string{"pr", "create", "--title", msg, "--body", "Entregue pelo axyn com o portão verde.", "--head", branch}
+			args := []string{"pr", "create", "--title", firstLine(msg), "--body", "Entregue pelo axyn com o portão verde.", "--head", branch}
 			if base != "" && base != "HEAD" {
 				args = append(args, "--base", base)
 			}

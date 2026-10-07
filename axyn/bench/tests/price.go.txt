@@ -1,0 +1,45 @@
+// Package price computes ticket prices.
+package price
+
+import "errors"
+
+// ErrAge is returned for a negative age.
+var ErrAge = errors.New("idade inválida")
+
+// Category is the price category of an age.
+func Category(age int) (string, error) {
+	switch {
+	case age < 0:
+		return "", ErrAge
+	case age < 12:
+		return "criança", nil
+	case age < 18:
+		return "jovem", nil
+	case age < 60:
+		return "adulto", nil
+	default:
+		return "idoso", nil
+	}
+}
+
+// Price is the ticket price, in cents, for a base price and an age: children pay half,
+// young people 80%, seniors 60%, and a student card takes 10% more off the result.
+func Price(base, age int, student bool) (int, error) {
+	c, err := Category(age)
+	if err != nil {
+		return 0, err
+	}
+	p := base
+	switch c {
+	case "criança":
+		p = base / 2
+	case "jovem":
+		p = base * 80 / 100
+	case "idoso":
+		p = base * 60 / 100
+	}
+	if student {
+		p = p * 90 / 100
+	}
+	return p, nil
+}

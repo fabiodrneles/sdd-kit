@@ -78,6 +78,7 @@ Os portões são determinísticos: o mesmo código dá sempre o mesmo resultado.
 | `[tests]` | O ticket muda código sem nenhum teste novo ou alterado | Escreva um teste para cada critério de aceite |
 | `[coverage]` | Em Go, menos de 80% das linhas novas rodam nos testes | A reprovação cita arquivo e linhas sem teste |
 | `[ci]` | O `make ci` falhou | O motivo traz até 6 linhas de erro da saída do `make ci` |
+| `[guia]` | Um modelo no modo guiado mexeu fora dos arquivos do ticket ou alterou um teste que já existia | Faça só o que o ticket pede, nos arquivos citados; acrescente testes novos em vez de alterar os antigos |
 | `[plan]` | O agente alterou o plano do axyn | O plano é restaurado e a tentativa conta como reprovada |
 
 Para rodar os mesmos portões à mão, na raiz do projeto: `axyn gate --base main`.
@@ -119,6 +120,58 @@ O código da última tentativa nunca se perde. Ele fica num commit WIP, na branc
 
 Com os portões verdes, a ferramenta `axyn_ship` faz o commit (`feat: <título do ticket>`) na branch do ticket e, se houver um remoto `origin`, o push. Com o `gh` instalado, ela abre o PR contra a base. O merge é seu, a não ser que o repositório tenha o merge automático ligado (`axyn setup`). Cada ticket tem a sua própria branch e o seu próprio PR.
 
+## Avaliação dos modelos (axyn bench)
+
+O axyn escolhe sozinho o melhor modelo para cada etapa. Ele não usa uma tabela genérica da internet: testa os modelos que **você** tem no opencode, nas tarefas do **seu** processo.
+
+**Automático por padrão.** Na primeira execução, ou quando a avaliação vence (mais de 30 dias, outra versão do opencode ou do axyn, ou um modelo novo), o `axyn run` avalia todos os modelos gratuitos da máquina antes de planejar e aplica o resultado. O status mostra a fase "avaliando modelos". Para pular: `AXYN_BENCH=off`.
+
+**O conjunto fixo de tarefas.** Cada tarefa tem um identificador estável e é sempre a mesma, para dar para comparar entre rodadas:
+
+| Tarefa | Etapa | O que o modelo faz | Como a nota é dada (0 a 100) |
+|---|---|---|---|
+| `plan-001` | plano | escreve a spec e os tickets de um comando novo, pela ferramenta `axyn_plan` | plano gravado (30), pelo menos 3 ACs (15), pelo menos 2 ACs de erro (20), AC de borda (10), sem AC repetido (10), tickets citando ACs que existem, até 6 (15) |
+| `code-001` | código | implementa uma função com acentos e casos de borda para um teste pronto passar | CI verde (70), rapidez (até 20), diff pequeno (10) |
+| `tests-001` | testes | escreve os testes de um pacote de preços | testes passam 3 vezes seguidas (sem instabilidade) (20), cobertura (até 30), **bugs injetados que os testes pegam** (até 40, 8 bugs), sem `sleep`, sem `skip` e com comparação de valor (10) |
+| `fix-001` | conserto | conserta o código para o `go vet` e os testes passarem | CI verde (70), rapidez (até 20), diff pequeno (10) |
+
+**Regras que vêm dos materiais de QA:**
+
+- Nota só de verificações automáticas: nenhum modelo julga outro.
+- **Veto:** alterar ou enfraquecer um teste, ou mexer no código numa tarefa de testes, zera o modelo naquela etapa ("build verde não é qualidade"), e a média não salva.
+- Para receber uma etapa, o modelo precisa de nota mínima (`--min-score`, 50 por padrão): só passar não basta.
+- Testes escritos pelo modelo precisam pegar bugs injetados ("testar o testador").
+- Cada rodada fica gravada, e a seção "Pioraram desde a última rodada" mostra quedas de 15 pontos ou mais.
+- O commit de cada ticket registra o modelo autor (`Axyn-Model:`), para medir depois qual código sobrevive.
+
+**Nenhum modelo é descartado.** Um modelo abaixo da nota mínima numa etapa, ou pego enfraquecendo um teste, continua na fila dessa etapa, depois dos outros, rodando no **modo guiado**. A guia é aplicada pelo próprio axyn, faça o modelo o que fizer:
+
+- **escopo travado:** quando o ticket cita arquivos, só eles e os testes podem mudar;
+- **testes existentes travados:** o modelo só pode acrescentar testes novos;
+- **diff menor:** no máximo 150 linhas;
+- **instruções estritas:** o prompt começa com as regras do modo guiado.
+
+O que sair da guia é reprovado com o código `[guia]`, e os portões de sempre continuam valendo. Assim, mesmo uma máquina só com modelos fracos consegue usar o axyn.
+
+**Modelo fora do ar ou sem limite.** Modelos gratuitos atingem limite de tokens ou de pedidos, e provedores saem do ar. Quando a saída do opencode traz um erro de provedor (429, cota, 503, conexão recusada, modelo sobrecarregado) **e** o modelo não mudou nenhum arquivo, o axyn tira o modelo da fila naquela execução. A tentativa não conta, e o mesmo trabalho passa para o próximo modelo capaz daquela etapa; o status mostra a troca. Se todos caírem, o axyn para explicando e você retoma depois com `axyn run --resume`. Na avaliação, um modelo fora do ar fica como "indisponível", sem nota ruim, e é avaliado de novo na próxima rodada.
+
+**Como o resultado é usado.** O planejador usa o melhor modelo de plano. Um ticket de código usa os melhores de código e de conserto, e um ticket de testes, os melhores de testes. A escada do `axyn model` continua depois deles. Um forçado (`--model`) vence tudo.
+
+**Personalizar** (todos na raiz do projeto ou em qualquer pasta):
+
+| Quero | Comando |
+|---|---|
+| Ver a última avaliação | `axyn bench --show` |
+| Avaliar de novo agora | `axyn bench` |
+| Só alguns modelos, ou também os pagos | `axyn bench --models A,B` ou `axyn bench --all` |
+| Mais confiança (cada tarefa várias vezes) | `axyn bench --runs 3` |
+| Mais rápido (mais modelos ao mesmo tempo) | `axyn bench --parallel 4` |
+| Ser perguntado antes de aplicar | `axyn bench --ask` |
+| Fixar à mão o modelo de uma etapa | `axyn bench --set plano=MODELO` (desfazer: `--set plano=`) |
+| Desligar e voltar à escada do `axyn model` | `axyn bench --off` (religar: `--apply`) |
+
+Arquivos: `~/.config/axyn/bench/profile.json` (o resultado em uso), `bench-DATA.md` (o relatório de cada rodada, com a nota e o motivo de cada tentativa) e `bench-DATA.log` (a saída completa dos modelos). As tarefas são em Go e precisam do Go instalado.
+
 ## Fechar uma versão (release)
 
 O projeto que o axyn prepara recebe o `scripts/sdd-release.sh` e o workflow de release do sdd-kit. O `axyn release` usa os dois. Rode-o no terminal, na raiz do projeto, ou peça no `/axyn` ("feche a versão"):
@@ -149,6 +202,7 @@ Rode todos estes comandos na raiz do projeto:
 | O que você decidiu? | A seção `## Decisões` da spec (`specs/NNN-nome/spec.md`) |
 | O código da tentativa reprovada | `git log feat/<n>-wip` e `git diff main...feat/<n>-wip` |
 | Qual a cobertura, o mínimo, a meta e onde falta teste? | `axyn coverage` |
+| Que modelo o axyn usa em cada etapa, e por quê? | `axyn bench --show` e o relatório `~/.config/axyn/bench/bench-DATA.md` |
 | Qual seria a próxima versão e o que entra nela? | `axyn release`, respondendo `N` na pergunta |
 | O ambiente está certo? | `axyn doctor`: uma linha por item, com o comando de cada coisa que falta |
 | Os portões dão o mesmo resultado à mão? | `axyn gate --base main` |

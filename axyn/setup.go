@@ -316,6 +316,7 @@ func runSetupCmd(args []string, stdout, stderr io.Writer, fix bool) int {
 
 // checkModel shows the model the background agents get (spec 021 FR-6).
 func (r *setupRun) checkModel() {
+	defer r.checkBench()
 	ms, err := loadModels(defaultConfigPath())
 	switch {
 	case err != nil:
@@ -331,4 +332,28 @@ func (r *setupRun) checkModel() {
 		}
 		r.add("ok", "modelo do axyn", ms[0].ID+extra+"; para trocar: axyn model")
 	}
+}
+
+// checkBench says whether the model evaluation is in use and still valid (#344).
+func (r *setupRun) checkBench() {
+	p, err := loadProfile()
+	if err != nil {
+		r.add("aviso", "avaliação dos modelos", "nenhuma; para saber qual modelo faz melhor cada etapa: axyn bench")
+		return
+	}
+	var ladder []string
+	if ms, err := loadModels(defaultConfigPath()); err == nil {
+		for _, m := range ms {
+			ladder = append(ladder, m.ID)
+		}
+	}
+	use := "não aplicada (axyn bench --apply)"
+	if p.Applied {
+		use = "em uso"
+	}
+	if why := p.stale(ladder); why != "" {
+		r.add("aviso", "avaliação dos modelos", use+", mas "+why+"; avalie de novo: axyn bench")
+		return
+	}
+	r.add("ok", "avaliação dos modelos", fmt.Sprintf("%s, de %s; para ver: axyn bench --show", use, p.Date.Format("2006-01-02")))
 }

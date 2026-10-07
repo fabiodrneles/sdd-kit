@@ -1,0 +1,3 @@
+module benchfix
+
+go 1.22

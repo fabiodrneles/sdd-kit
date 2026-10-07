@@ -140,7 +140,7 @@ func (r *runner) explainStop(ticketID int, help string) string {
 	w("  1. Tentar de novo com o mesmo modelo: mais %d tentativas, e o modelo recebe o que já falhou para fazer diferente:\n       axyn retry\n", maxFailsPerModel)
 	w("  2. Dar ao modelo uma instrução mais clara, com as suas palavras; o axyn grava como decisão na spec e tenta de novo, com novas tentativas:\n")
 	w("       axyn decide \"%s\"\n", hint)
-	w("  3. Trocar de modelo (o novo modelo ganha outras %d tentativas):\n       axyn model\n       axyn run --resume\n", maxFailsPerModel)
+	w("  3. Trocar de modelo (o novo modelo ganha outras %d tentativas; para saber qual modelo resolve melhor cada etapa, avalie os seus com axyn bench):\n       axyn model\n       axyn run --resume\n", maxFailsPerModel)
 	if t.WIP != "" {
 		w("  4. Corrigir o código você mesmo, ou com outra IA, na branch %s:\n       git checkout %s\n       (corrija e faça commit)\n       git checkout %s\n       axyn run --resume\n", t.WIP, t.WIP, pl.Base)
 	}

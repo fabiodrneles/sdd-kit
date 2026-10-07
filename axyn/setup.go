@@ -263,6 +263,7 @@ func (r *setupRun) checkTools() {
 	} else {
 		r.add("ok", "opencode", "instalado")
 	}
+	r.checkModel()
 	stack := detectStack(r.dir, "")
 	if stack == "" {
 		return
@@ -308,4 +309,23 @@ func runSetupCmd(args []string, stdout, stderr io.Writer, fix bool) int {
 	}
 	_, _ = fmt.Fprintln(stdout, "\ntudo certo: o axyn pode abrir um PR por ticket neste repositório.")
 	return exitOK
+}
+
+// checkModel shows the model the background agents get (spec 021 FR-6).
+func (r *setupRun) checkModel() {
+	ms, err := loadModels(defaultConfigPath())
+	switch {
+	case err != nil:
+		r.add("falta", "modelo do axyn", err.Error()+"; para regravar: axyn model")
+	case len(ms) == 0:
+		r.add("aviso", "modelo do axyn", "nenhum escolhido: os agentes usam o modelo padrão do opencode; para escolher: axyn model")
+	case ms[0].KeyEnv != "" && os.Getenv(ms[0].KeyEnv) == "":
+		r.add("falta", "modelo do axyn", ms[0].ID+": a variável "+ms[0].KeyEnv+" não está definida; "+setEnvHint(ms[0].KeyEnv))
+	default:
+		extra := ""
+		if len(ms) > 1 {
+			extra = fmt.Sprintf(" (e mais %d na escada)", len(ms)-1)
+		}
+		r.add("ok", "modelo do axyn", ms[0].ID+extra+"; para trocar: axyn model")
+	}
 }

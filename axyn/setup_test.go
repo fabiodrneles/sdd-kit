@@ -49,6 +49,7 @@ func fakeGH(t *testing.T, configured bool) string {
 	}
 	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("GHS", state)
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir()) // the doctor reads the axyn config: keep it out of the real home
 	if configured {
 		write(t, state, "repo.json", `{"allow_auto_merge":true,"delete_branch_on_merge":true}`)
 		write(t, state, "actions.json", `{"enabled":true}`)

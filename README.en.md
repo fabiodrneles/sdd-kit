@@ -216,7 +216,7 @@ irm https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-
 
 **2. Set up a free model in opencode.** The key lives only in an environment variable, never in a repository file. With [OpenRouter](https://openrouter.ai), export `OPENROUTER_API_KEY`, open opencode and pick a model ending in `:free` in `/models`. To run locally, use [Ollama](https://ollama.com) and opencode's Ollama provider.
 
-**3. Model ladder (optional).** In `~/.config/axyn/config.yaml`, an ordered list: if a model does not pass the gates, axyn tries the next one. `key_env` is the variable's name, never the key (a literal key in the file is refused):
+**3. Pick the model.** Run `axyn model` and pick by number from the list of free ones (or `axyn model ID`). The ladder, optional: in `~/.config/axyn/config.yaml`, an ordered list: if a model does not pass the gates, axyn tries the next one. `key_env` is the variable's name, never the key (a literal key in the file is refused):
 
 ```yaml
 models:
@@ -400,51 +400,13 @@ echo $OPENROUTER_API_KEY
 echo $env:OPENROUTER_API_KEY
 ```
 
-#### 4.5. Pick the free model
+#### 4.5. The model
 
-1. Open <https://openrouter.ai/models?q=free>: the list shows only the free models (the name ends in `:free`).
-2. For code, prefer one with **coder** in the name. Click it: the full name shows under the title, for example `qwen/qwen3-coder:free`. Click the copy icon next to it.
-3. In axyn, that name gets `openrouter/` in front: `openrouter/qwen/qwen3-coder:free`.
+The model is picked at **step 7**, after installing axyn, with a single command (`axyn model`), which shows the list of free ones for you to pick by number. Nothing to note down now. To see OpenRouter's list on the site: <https://openrouter.ai/models?q=free> (the name ends in `:free`). opencode also brings its own free models, from **OpenCode Zen** (the name starts with `opencode/` and ends in `-free`), which work with no account or key.
 
-#### 4.6. Tell axyn which model to use
+#### 4.6. Offline (optional)
 
-axyn runs agents **in the background**, one for the plan and one per ticket, and each one needs to know which model to use. That is what axyn's `config.yaml` file says; it lives in the `.config/axyn` folder inside your user folder. The commands below create the folder and the file. If you picked another model in 4.5, replace `qwen/qwen3-coder:free` in both lines.
-
-Linux/macOS:
-
-```bash
-mkdir -p ~/.config/axyn
-printf 'models:\n  - id: openrouter/qwen/qwen3-coder:free\n    key_env: OPENROUTER_API_KEY\n' > ~/.config/axyn/config.yaml
-```
-
-Windows:
-
-```powershell
-New-Item -ItemType Directory -Force "$HOME\.config\axyn" | Out-Null
-Set-Content "$HOME\.config\axyn\config.yaml" "models:`n  - id: openrouter/qwen/qwen3-coder:free`n    key_env: OPENROUTER_API_KEY"
-```
-
-Check the file (it should show the 3 lines below):
-
-```bash
-cat ~/.config/axyn/config.yaml
-```
-
-```powershell
-Get-Content "$HOME\.config\axyn\config.yaml"
-```
-
-```yaml
-models:
-  - id: openrouter/qwen/qwen3-coder:free
-    key_env: OPENROUTER_API_KEY
-```
-
-The `key_env` line holds the **name** of the variable from 4.4, never the key: axyn refuses a file with the key written in it.
-
-#### 4.7. Offline (optional)
-
-To run the AI on your own computer, with no account or key: install [Ollama](https://ollama.com) (**Download** button), run `ollama pull qwen2.5-coder` in the terminal and, in the `config.yaml` from 4.6, use `- id: ollama/qwen2.5-coder` (without the `key_env` line). It needs a computer with plenty of memory (16 GB or more).
+To run the AI on your own computer, with no account or key: install [Ollama](https://ollama.com) (**Download** button), run `ollama pull qwen2.5-coder` in the terminal and, at step 7, pick `ollama/qwen2.5-coder` in `axyn model` (or run `axyn model ollama/qwen2.5-coder`). It needs a computer with plenty of memory (16 GB or more).
 
 ### 5. Have the project repository
 
@@ -503,6 +465,17 @@ axyn version
 
 **In the terminal, with opencode closed**, in the project folder:
 
+First, pick the model axyn will use (it passes that model to every agent it runs in the background):
+
+```bash
+axyn model
+# Shows the current model and a numbered list of your opencode's free models.
+# Type the model's number and press Enter. For an OpenRouter model, it asks the name
+# of the key variable: press Enter to accept OPENROUTER_API_KEY (the one from step 4.4).
+```
+
+To switch models another day, it is the same command: `axyn model`. Then check and configure the repository:
+
 ```bash
 axyn doctor
 # One line per item: "ok" is ready; "falta" (missing) comes with the command that fixes it.
@@ -526,7 +499,7 @@ opencode
 The opencode screen opens in the terminal itself, with a text box at the bottom. Pick the model opencode uses in this conversation:
 
 1. Type `/models` and press Enter: a list of models opens.
-2. Type part of the name you picked in 4.5 (for example `qwen3-coder`) to filter the list.
+2. Type part of the name you picked with `axyn model` at step 7 (for example `qwen3-coder`) to filter the list.
 3. With the arrow keys, go to the one with **OpenRouter** and `:free` in its name, and press Enter. The model name shows at the bottom, in opencode's bar.
 
 If OpenRouter is not in the list, opencode did not find the key: leave with `Ctrl + C`, open a new terminal, check the variable (step 4.4) and run `opencode` again.
@@ -597,6 +570,7 @@ Attach that file when asking for help: with it, whoever helps sees exactly what 
 
 | Command | What it does |
 |---|---|
+| `axyn model` | picks or switches axyn's model, from a numbered list of the free ones (`axyn model ID` switches straight away) |
 | `axyn doctor` | checks what the repository and the machine need, with the command for each missing thing |
 | `axyn setup` | configures through GitHub what it can (repository, Actions, auto-merge) |
 | `axyn setup --protect-main` | also requires a green `make ci` before merging into `main` |

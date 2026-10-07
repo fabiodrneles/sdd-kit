@@ -357,7 +357,7 @@ make --version
 
 ### 3. Entrar no GitHub
 
-Se você ainda não tem conta, crie uma em <https://github.com/signup>. Depois:
+Se você ainda não tem conta, crie uma em <https://github.com> (botão **Sign up**, no canto superior direito). Depois:
 
 ```bash
 gh auth login

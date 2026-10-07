@@ -300,7 +300,7 @@ make --version
 
 ### 3. Log in to GitHub
 
-If you have no account yet, create one at <https://github.com/signup>. Then:
+If you have no account yet, create one at <https://github.com> (**Sign up** button, top right). Then:
 
 ```bash
 gh auth login

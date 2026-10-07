@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.20.0] - 2026-10-07
+
+### Adicionado
+
+- motor de avaliação dos modelos (axyn bench), modo guiado e troca automática de modelo (#346)
+
 ## [1.19.0] - 2026-10-07
 
 ### Adicionado

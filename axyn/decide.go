@@ -91,3 +91,65 @@ func runDecideCmd(args []string, stdout, stderr io.Writer) int {
 	_, _ = fmt.Fprintf(stdout, "execução %s retomada em segundo plano; para acompanhar: axyn status --watch\n", id)
 	return exitOK
 }
+
+// earlierSummary lists the distinct reasons the earlier attempts failed, so new attempts
+// (axyn retry, axyn decide) start knowing what not to repeat.
+func earlierSummary(t ticket) string {
+	seen := map[string]bool{}
+	var b strings.Builder
+	for _, a := range t.Earlier {
+		for _, r := range a.Reason {
+			r = shorten(r, 300)
+			if !seen[r] && !strings.Contains(r, `"sh": executable file not found`) {
+				seen[r] = true
+				b.WriteString("  - " + r + "\n")
+			}
+		}
+	}
+	return b.String()
+}
+
+// axyn retry gives the open ticket a fresh ladder on the same model: the earlier attempts
+// stay in the history and their failures go to the model, so the new ones differ.
+func runRetryCmd(args []string, stdout, stderr io.Writer) int {
+	fs := flag.NewFlagSet("axyn retry", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	dir := fs.String("dir", ".", "raiz do repositório")
+	noResume := fs.Bool("no-resume", false, "só renova as tentativas, sem retomar a execução")
+	if err := fs.Parse(args); err != nil {
+		return exitUsage
+	}
+	s := &mcpServer{dir: *dir}
+	pl, path, err := s.loadPlan()
+	if err != nil {
+		_, _ = fmt.Fprintf(stderr, "axyn retry: %v\n", err)
+		return exitFail
+	}
+	_, open := s.openTicket()
+	if open == nil {
+		_, _ = fmt.Fprintln(stdout, "nenhum ticket aberto: não há o que tentar de novo")
+		return exitOK
+	}
+	for i := range pl.Tickets {
+		if pl.Tickets[i].ID == open.ID {
+			pl.Tickets[i].Earlier = append(pl.Tickets[i].Earlier, pl.Tickets[i].Attempts...)
+			pl.Tickets[i].Attempts = nil
+		}
+	}
+	if err := s.savePlan(pl, path); err != nil {
+		_, _ = fmt.Fprintf(stderr, "axyn retry: %v\n", err)
+		return exitFail
+	}
+	_, _ = fmt.Fprintf(stdout, "o ticket «%s» ganhou outras %d tentativas com o mesmo modelo; o modelo recebe o que já falhou, para não repetir\n", open.Title, maxFailsPerModel)
+	if *noResume {
+		_, _ = fmt.Fprintln(stdout, "para continuar: axyn run --resume")
+		return exitOK
+	}
+	id, err := s.startRun("", true)
+	if err != nil {
+		_, _ = fmt.Fprintf(stderr, "axyn retry: não consegui retomar: %v; rode: axyn run --resume\n", err)
+		return exitFail
+	}
+	_, _ = fmt.Fprintf(stdout, "execução %s retomada em segundo plano; para acompanhar: axyn status --watch\n", id)
+	return exitOK
+}

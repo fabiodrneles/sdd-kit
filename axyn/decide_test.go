@@ -76,3 +76,28 @@ func TestCoverageMeaning(t *testing.T) {
 		t.Errorf("a cobertura em palavras simples: %q", what)
 	}
 }
+
+// axyn retry: fresh attempts on the same model, and the model learns what already failed.
+func TestRetryGivesNewAttemptsWithHistory(t *testing.T) {
+	dir := repo(t)
+	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `rm -f x_test.go`))
+	if code, _ := runLoopIn(t, dir); code == exitOK {
+		t.Fatal("deveria parar")
+	}
+	st, _ := loadRun(dir, "")
+	if !strings.Contains(st.Message, "axyn retry") {
+		t.Errorf("a parada deveria oferecer o axyn retry:\n%s", st.Message)
+	}
+	var o, e strings.Builder
+	if code := runRetryCmd([]string{"--dir", dir, "--no-resume"}, &o, &e); code != exitOK {
+		t.Fatalf("retry: %d %s", code, e.String())
+	}
+	s := &mcpServer{dir: dir}
+	pl, _, _ := s.loadPlan()
+	if tk := pl.Tickets[0]; len(tk.Attempts) != 0 || len(tk.Earlier) == 0 {
+		t.Errorf("tentativas novas, antigas no histórico: %d %d", len(tk.Attempts), len(tk.Earlier))
+	}
+	if prompt, _ := s.toolNext(); !strings.Contains(prompt, "já falharam por estes motivos") || !strings.Contains(prompt, "x_test.go") {
+		t.Errorf("o modelo deveria receber o que já falhou:\n%s", prompt)
+	}
+}

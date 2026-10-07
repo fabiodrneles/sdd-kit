@@ -71,6 +71,9 @@ type plan struct {
 	CoverageGaps     []string `json:"coverage_gaps,omitempty"`   // where coverage is missing
 	CoverageChoice   string   `json:"coverage_choice,omitempty"` // auto (the axyn writes the tests) or manual
 	BaseErrors       []string `json:"base_errors,omitempty"`     // CI errors the base had before any ticket
+	CoverageCommit   string   `json:"coverage_commit,omitempty"` // HEAD of the last measure
+	CoverageDrop     bool     `json:"coverage_drop,omitempty"`   // the last measure was under the floor
+	CoverageDropFrom string   `json:"coverage_drop_from,omitempty"`
 }
 
 // mcpServer holds the gate settings. They come from how the engine started the
@@ -481,6 +484,9 @@ func (s *mcpServer) toolNext() (string, error) {
 					break
 				}
 			}
+		}
+		if sum := earlierSummary(t); sum != "" {
+			b.WriteString("\nTentativas anteriores deste ticket já falharam por estes motivos; faça diferente, corrigindo cada um:\n" + sum)
 		}
 		if len(pl.BaseErrors) > 0 {
 			b.WriteString("\nO make ci já falhava antes deste ticket; corrija também estes erros:\n  " + strings.Join(pl.BaseErrors, "\n  ") + "\n")

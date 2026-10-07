@@ -158,5 +158,21 @@ func (r *runner) gateWIP(t *ticket) (green bool, report string, ok bool) {
 	if err != nil {
 		return false, err.Error(), true
 	}
+	if !green {
+		// Checking the saved code calls no model: it is history, not an attempt of the
+		// ladder (it once showed up as attempt 11, "primeira tentativa").
+		if pl, path, err := r.s.loadPlan(); err == nil {
+			for i := range pl.Tickets {
+				tk := &pl.Tickets[i]
+				if tk.ID == t.ID && len(tk.Attempts) > 0 {
+					a := tk.Attempts[len(tk.Attempts)-1]
+					a.Step = stepRecheck
+					tk.Earlier = append(tk.Earlier, a)
+					tk.Attempts = tk.Attempts[:len(tk.Attempts)-1]
+				}
+			}
+			_ = r.s.savePlan(pl, path)
+		}
+	}
 	return green, report, true
 }

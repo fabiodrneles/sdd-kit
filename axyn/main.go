@@ -32,6 +32,9 @@ Uso:
   axyn coverage [auto|manual] [--no-resume]
                       sem argumento, mostra a cobertura medida, o mínimo, a meta e onde falta teste;
                       auto: o axyn escreve os testes que faltam; manual: você escreve
+  axyn retry [--no-resume]
+                      mais 10 tentativas no ticket parado, com o mesmo modelo, que agora recebe o que
+                      já falhou para não repetir
   axyn decide RESPOSTA [--no-resume]
                       responde a pergunta de uma execução parada (A, B ou a instrução entre aspas):
                       grava a decisão na spec e retoma a execução em segundo plano
@@ -78,6 +81,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runModelCmd(args[1:], stdout, stderr)
 	case "release":
 		return runReleaseCmd(args[1:], stdout, stderr)
+	case "retry":
+		return runRetryCmd(args[1:], stdout, stderr)
 	case "coverage":
 		return runCoverageCmd(args[1:], stdout, stderr)
 	case "decide":

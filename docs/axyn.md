@@ -41,13 +41,14 @@ Antes do primeiro ticket, o axyn confere se as ferramentas do `make ci` estão i
 
 O `Makefile` guarda a meta de cobertura (`COVERAGE_MIN`, 80% por padrão): a porcentagem do código que precisa rodar nos testes. O axyn cuida disso sozinho:
 
-1. **Antes do primeiro ticket, ele mede a cobertura com os testes que você já tem** (roda o `make ci` uma vez na branch base).
+1. **No início de toda execução, ele mede a cobertura com os testes que você já tem** (roda o `make ci` na branch base; se o lint falhar antes dos testes, mede com `make test` e avisa os erros que a base já tinha). A medição nunca fica marcada como "feita": só o mínimo alcançado é guardado.
 2. **Se ela está abaixo da meta**, ele diz quanto falta e onde falta (em Go, os arquivos menos cobertos, com quantas instruções estão sem teste) e pergunta **uma vez** quem escreve os testes que faltam:
    - `axyn coverage auto`: o axyn escreve, num ticket antes dos outros ("Testes para a cobertura chegar a 80%"), sem mudar o código de produção;
    - `axyn coverage manual`: você escreve, quando quiser; o axyn segue já com o seu pedido.
    Para não ser perguntado: `AXYN_COVERAGE=auto` (ou `manual`). Para ver o estado a qualquer momento: `axyn coverage`.
 3. **A cobertura nunca cai.** O valor medido vira o mínimo dos portões. Cada ticket entregue sobe esse mínimo até a cobertura que ele alcançou, até a meta, e grava o número novo no `COVERAGE_MIN` do `Makefile`, no próprio commit do ticket, para o CI do PR exigir o mesmo. Uma linha de comentário no `Makefile` guarda a meta.
-4. **Todo código novo precisa de teste.** Um ticket que muda código sem nenhum teste novo ou alterado é reprovado (`[tests]`). Em Go, pelo menos 80% das linhas que o ticket acrescenta precisam rodar nos testes (`[coverage]`); a reprovação cita o arquivo e as linhas sem teste.
+4. **Se a cobertura cair abaixo do mínimo já alcançado** (um teste apagado ou desligado entre uma execução e outra), o axyn para antes de qualquer ticket. Ele mostra quanto caiu, os commits que mexeram em testes desde a última medição e três saídas: restaurar os testes e rodar `axyn run --resume`; `axyn coverage auto`, para o axyn escrever testes até voltar ao mínimo; ou `axyn coverage accept`, para aceitar o mínimo novo, o que fica registrado como decisão na spec.
+5. **Todo código novo precisa de teste.** Um ticket que muda código sem nenhum teste novo ou alterado é reprovado (`[tests]`). Em Go, pelo menos 80% das linhas que o ticket acrescenta precisam rodar nos testes (`[coverage]`); a reprovação cita o arquivo e as linhas sem teste.
 
 ### 2. Plano
 
@@ -106,6 +107,7 @@ A mensagem de parada é a mesma no `axyn status`, no `/axyn` e no histórico. El
 3. o erro da última tentativa, com as linhas reais do `make ci`;
 4. o que esse erro quer dizer, em palavras simples;
 5. as saídas, com o comando de cada uma:
+   - `axyn retry`: mais 10 tentativas com o mesmo modelo, que agora recebe o resumo do que já falhou para fazer diferente;
    - `axyn decide "instrução"`: a sua instrução vira uma decisão na spec, o modelo passa a recebê-la e o ticket ganha novas tentativas;
    - `axyn model` e depois `axyn run --resume`: outro modelo, com outras 10 tentativas;
    - corrigir na branch WIP você mesmo, ou com outra IA, e rodar `axyn run --resume`: os portões rodam primeiro no seu código;

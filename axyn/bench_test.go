@@ -174,3 +174,19 @@ func TestBenchOneTaskKeepsTheRest(t *testing.T) {
 		}
 	}
 }
+
+// On Windows a locked test binary fails Go's cleanup although the tests passed: that is
+// the machine, not the model.
+func TestOnlyCleanupFailed(t *testing.T) {
+	win := "ok  \tbenchtests\t3.294s\tcoverage: 100.0% of statements\ngo: unlinkat C:\\Users\\G\\AppData\\Local\\Temp\\go-build1\\b001\\benchtests.test.exe: O arquivo já está sendo usado por outro processo."
+	if !onlyCleanupFailed(win) {
+		t.Error("só a limpeza falhou: os testes passaram")
+	}
+	real := "--- FAIL: TestMake (0.00s)\nFAIL\nFAIL\tbenchcode\t1.2s\ngo: unlinkat x.exe: O arquivo já está sendo usado por outro processo."
+	if onlyCleanupFailed(real) {
+		t.Error("um teste que falhou continua reprovado")
+	}
+	if onlyCleanupFailed("ok  \tx\t1s") {
+		t.Error("sem erro de limpeza, nada a relevar")
+	}
+}

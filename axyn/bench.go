@@ -236,8 +236,32 @@ func runIn(dir, command string) (string, error) {
 		return "", err
 	}
 	cmd.Dir = dir
+	// Each sandbox gets its own Go temp folder: parallel attempts no longer share it.
+	tmp := filepath.Join(dir, ".gotmp")
+	_ = os.MkdirAll(tmp, 0o755)
+	if cmd.Env == nil {
+		cmd.Env = os.Environ()
+	}
+	cmd.Env = append(cmd.Env, "GOTMPDIR="+tmp, "GOFLAGS=-buildvcs=false")
 	b, err := cmd.CombinedOutput()
-	return string(b), err
+	out := string(b)
+	if err != nil && onlyCleanupFailed(out) {
+		err = nil
+	}
+	return out, err
+}
+
+var (
+	cleanupErr = regexp.MustCompile(`(?i)(unlinkat|remove|removeall).*(being used by another process|sendo usado por outro processo|access is denied|acesso negado)`)
+	realFail   = regexp.MustCompile(`(?m)(^FAIL|^--- FAIL|^panic:|^# |\.go:\d+:\d+: |build failed|cannot |undefined)`)
+)
+
+// onlyCleanupFailed: on Windows the test binary may still be locked (the antivirus scans
+// a fresh .exe) when Go deletes it, and go test exits with an error although every test
+// passed. That is the machine, not the model: the run counts as passed when the only
+// error is that cleanup and the tests themselves said ok.
+func onlyCleanupFailed(out string) bool {
+	return cleanupErr.MatchString(out) && strings.Contains(out, "ok ") && !realFail.MatchString(out)
 }
 
 const benchCI = "go vet ./... && go test -count=1 ./..."
@@ -548,6 +572,10 @@ func findResult(results []benchResult, model, task string) *benchResult {
 
 // report renders the classification table, the routing and the drift against prev.
 func report(p, prev *benchProfile) string {
+	return strings.ReplaceAll(reportText(p, prev), "\r", "")
+}
+
+func reportText(p, prev *benchProfile) string {
 	var b strings.Builder
 	w := func(f string, a ...any) { fmt.Fprintf(&b, f, a...) }
 	w("# Avaliação dos modelos (axyn bench)\n\n")
@@ -905,7 +933,7 @@ func benchModels(only string, all bool) ([]string, error) {
 	var out []string
 	seen := map[string]bool{}
 	add := func(m string) {
-		m = strings.TrimSpace(m)
+		m = strings.TrimSpace(strings.ReplaceAll(m, "\r", ""))
 		if m != "" && m != placeholder && !seen[m] {
 			seen[m] = true
 			out = append(out, m)

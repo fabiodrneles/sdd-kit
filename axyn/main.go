@@ -26,6 +26,9 @@ Uso:
   axyn model [ID] [--all] [--only] [--key-env VAR]
                       escolhe o modelo do axyn: sem ID, mostra os modelos gratuitos do opencode
                       numa lista numerada; com ID, troca direto (grava o config.yaml)
+  axyn release [--yes] [--tag X.Y.Z]
+                      fecha uma versão do projeto: mostra a versão (go-release-manager) e o que entra,
+                      e com o seu sim abre o PR de fechamento com o CHANGELOG
   axyn coverage [auto|manual] [--no-resume]
                       sem argumento, mostra a cobertura medida, o mínimo, a meta e onde falta teste;
                       auto: o axyn escreve os testes que faltam; manual: você escreve
@@ -73,6 +76,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runGate(args[1:], stdout, stderr)
 	case "model":
 		return runModelCmd(args[1:], stdout, stderr)
+	case "release":
+		return runReleaseCmd(args[1:], stdout, stderr)
 	case "coverage":
 		return runCoverageCmd(args[1:], stdout, stderr)
 	case "decide":

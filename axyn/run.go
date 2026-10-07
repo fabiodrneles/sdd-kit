@@ -413,7 +413,11 @@ func (r *runner) run() {
 			if base != "" {
 				_, _ = r.s.git("checkout", base) // the user ends where the run started
 			}
-			r.stop(runDone, fmt.Sprintf("os %d ticket(s) do plano estão entregues", len(pl.Tickets)))
+			done := fmt.Sprintf("os %d ticket(s) do plano estão entregues", len(pl.Tickets))
+			if _, err := os.Stat(filepath.Join(r.s.dir, filepath.FromSlash(releaseScript))); err == nil {
+				done += "; depois do merge dos PRs, para fechar uma versão com eles: axyn release"
+			}
+			r.stop(runDone, done)
 			return
 		}
 		if cur, _ := r.s.git("rev-parse", "--abbrev-ref", "HEAD"); base != "" && cur != base {

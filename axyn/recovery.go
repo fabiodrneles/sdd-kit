@@ -249,7 +249,7 @@ func (s *mcpServer) recoveryAdvice(t *ticket, fails int, ciLog string) string {
 			"  A) só os arquivos que o ticket cita, sem mexer em mais nada",
 			"  B) dividir o ticket em dois, um por AC",
 			"  C) outra instrução (escreva)",
-			"responda e o axyn segue; a resposta vira uma decisão na spec.")
+			"para responder, no terminal, na raiz do projeto: axyn decide A (ou B, ou a sua instrução entre aspas); a resposta vira uma decisão na spec e o axyn continua sozinho.")
 	}
 	return head + "\n" + capText(body)
 }

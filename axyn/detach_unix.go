@@ -15,3 +15,6 @@ func processAlive(pid int) bool {
 	err := syscall.Kill(pid, 0)
 	return err == nil || err == syscall.EPERM
 }
+
+// hideWindow is a Windows concern: helpers here have no window to hide.
+func hideWindow(*exec.Cmd) {}

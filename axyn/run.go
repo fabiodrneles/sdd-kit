@@ -172,6 +172,11 @@ func (s *mcpServer) startRun(request string, resume bool) (string, error) {
 	if resume && strings.TrimSpace(request) == "" && lastErr == nil {
 		request = last.Request // the status keeps showing what was asked
 	}
+	if resume && strings.TrimSpace(request) == "" {
+		if pl, _, err := s.loadPlan(); err == nil {
+			request = "retomada do plano " + pl.Spec // an older run kept no request
+		}
+	}
 	st := &runState{
 		ID: time.Now().Format("20060102-150405"), Request: request, Status: runRunning, Phase: "iniciando",
 		Started: time.Now(),
@@ -441,7 +446,7 @@ func (r *runner) ticket() (string, string) {
 		models := r.ladder()
 		idx := ladderState(models, t.Attempts)
 		if idx >= len(models) {
-			return runStopped, exhaustedMark + " no ticket " + t.Title
+			return runStopped, r.explainStop(t.ID, "")
 		}
 		cur := models[idx].ID
 		modelArg := cur
@@ -478,12 +483,12 @@ func (r *runner) ticket() (string, string) {
 		_, _ = fmt.Fprintf(r.log, "%s\n", report)
 		switch {
 		case strings.Contains(report, askMarker):
-			note := r.s.saveWIP(t, "à espera da resposta do usuário")
+			_ = r.s.saveWIP(t, "à espera da resposta do usuário")
 			help := r.publishHelp(t.ID)
-			return runStopped, "O axyn precisa de uma resposta sua para seguir:\n" + extractAsk(report) + "\n" + note + "\n" + help
+			return runStopped, r.explainStop(t.ID, help)
 		case strings.Contains(report, exhaustedMark):
 			help := r.publishHelp(t.ID)
-			return runStopped, report + "\n" + help + "\npara dar mais chances com outro modelo: axyn model, e depois axyn run --resume"
+			return runStopped, r.explainStop(t.ID, help)
 		}
 		feedback = report
 	}
@@ -538,20 +543,6 @@ func (r *runner) gate() (bool, string, error) {
 func firstLine(s string) string {
 	l, _, _ := strings.Cut(strings.TrimSpace(s), "\n")
 	return l
-}
-
-func extractAsk(report string) string {
-	var out []string
-	on := false
-	for _, l := range strings.Split(report, "\n") {
-		if strings.Contains(l, askMarker) {
-			on = true
-		}
-		if on {
-			out = append(out, l)
-		}
-	}
-	return strings.Join(out, "\n")
 }
 
 // runJob is the worker: it runs the loop of a recorded run in this process.

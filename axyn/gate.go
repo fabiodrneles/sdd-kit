@@ -217,9 +217,15 @@ func evalGate(dir, base string, maxLines int, ci string, extraProtect []string, 
 			return 0, nil, err // a missing tool is not a failed attempt: the run stops with how to fix it
 		}
 		cmd.Dir = dir
-		cmd.Stdout, cmd.Stderr = ciOut, ciOut
+		var out strings.Builder
+		w := io.MultiWriter(ciOut, &out)
+		cmd.Stdout, cmd.Stderr = w, w
 		if err := cmd.Run(); err != nil {
-			findings = append(findings, finding{"ci", fmt.Sprintf("`%s` falhou: %v", ci, err)})
+			msg := fmt.Sprintf("`%s` falhou: %v", ci, err)
+			if lines := ciErrors(out.String(), 6); len(lines) > 0 {
+				msg += "; erros: " + strings.Join(lines, " | ")
+			}
+			findings = append(findings, finding{"ci", msg})
 		}
 	}
 	return len(files), findings, nil

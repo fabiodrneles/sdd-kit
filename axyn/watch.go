@@ -21,7 +21,10 @@ var notify = func(title, msg string) {
 		script := "Add-Type -AssemblyName System.Windows.Forms; Add-Type -AssemblyName System.Drawing; " +
 			"$n = New-Object System.Windows.Forms.NotifyIcon; $n.Icon = [System.Drawing.SystemIcons]::Information; " +
 			"$n.Visible = $true; $n.ShowBalloonTip(15000, '" + title + "', '" + msg + "', 'Info'); Start-Sleep 15; $n.Dispose()"
-		cmd = exec.Command("powershell", "-NoProfile", "-WindowStyle", "Hidden", "-Command", script)
+		// No -WindowStyle Hidden: the child shares the user's console, and hiding it hid the
+		// user's terminal. hideWindow gives the child no console at all.
+		cmd = exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command", script)
+		hideWindow(cmd)
 	case "darwin":
 		cmd = exec.Command("osascript", "-e", fmt.Sprintf("display notification %q with title %q", msg, title))
 	default:
@@ -72,7 +75,7 @@ func watchRun(dir, id string, interval time.Duration, out io.Writer) int {
 			case st.Status == runDone:
 				notify("axyn: pronto", "Os tickets foram entregues: "+fmt.Sprint(len(st.Delivered))+" PR(s) para revisar.")
 				return exitOK
-			case strings.Contains(st.Message, "precisa de uma resposta sua"):
+			case strings.Contains(st.Message, "precisa de uma resposta sua") || strings.Contains(st.Message, "e precisa de você"):
 				notify("axyn: precisa de você", "O axyn tem uma pergunta: abra o opencode ou rode axyn status.")
 			default:
 				notify("axyn: parou", firstLine(renderStatus(st)))

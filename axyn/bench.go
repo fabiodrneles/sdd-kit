@@ -13,6 +13,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -654,7 +655,7 @@ func runBenchCmd(args []string, stdout, stderr io.Writer) int {
 	runs := fs.Int("runs", 1, "quantas vezes cada tarefa roda por modelo (modelos variam: a taxa de sucesso pesa mais que uma vez)")
 	timeout := fs.Duration("timeout", 10*time.Minute, "tempo máximo de cada tentativa")
 	ask := fs.Bool("ask", false, "pergunta antes de aplicar o resultado (o padrão é aplicar sozinho)")
-	parallel := fs.Int("parallel", 2, "quantos modelos avaliar ao mesmo tempo")
+	parallel := fs.Int("parallel", 0, "quantos modelos avaliar ao mesmo tempo (padrão: o que a máquina aguenta, 1 com menos de 8 GB de RAM ou até 4 núcleos)")
 	minScore := fs.Int("min-score", 50, "nota mínima (0 a 100) para um modelo receber uma etapa; trapaça é veto em qualquer nota")
 	show := fs.Bool("show", false, "só mostra a última avaliação")
 	applyFlag := fs.Bool("apply", false, "aplica a última avaliação")
@@ -751,12 +752,13 @@ func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout 
 		runs = 1
 	}
 	if parallel < 1 {
-		parallel = 1
+		parallel = autoParallel()
 	}
 	total := len(models) * len(chosen) * runs
 	benchRoundDir = filepath.Join(benchDir(), "bench-"+p.Date.Format("20060102-150405"))
 	defer func() { benchRoundDir = "" }()
-	_, _ = fmt.Fprintf(out, "avaliando %d modelo(s) em %d tarefa(s), %d vez(es) cada: %d tentativas, %d modelo(s) por vez (cada tentativa pode levar alguns minutos; o que já rodou fica salvo)\n", len(models), len(chosen), runs, total, parallel)
+	est := time.Duration(total) * 3 * time.Minute / time.Duration(parallel) // about 3 minutes per attempt
+	_, _ = fmt.Fprintf(out, "avaliando %d modelo(s) em %d tarefa(s), %d vez(es) cada: %d tentativas, %d modelo(s) por vez, por volta de %s (depende da máquina e da velocidade dos modelos; o que já rodou fica salvo)\n", len(models), len(chosen), runs, total, parallel, clock(est))
 	_ = os.MkdirAll(benchDir(), 0o755)
 	var log io.Writer = io.Discard
 	if logf, err := os.Create(filepath.Join(benchDir(), "bench-"+p.Date.Format("20060102-150405")+".log")); err == nil {
@@ -960,7 +962,7 @@ func (r *runner) autoBench() {
 	}
 	r.set("avaliando modelos")
 	_, _ = fmt.Fprintf(r.log, "avaliando os modelos gratuitos da máquina antes de começar (%s); o axyn escolhe sozinho o melhor modelo para cada etapa\n", why)
-	p := benchCore(models, benchTasks, 1, 2, 10*time.Minute, 50, r.log, func(done, total int, detail string) {
+	p := benchCore(models, benchTasks, 1, 0, 10*time.Minute, 50, r.log, func(done, total int, detail string) {
 		r.st.Done, r.st.Of, r.st.Detail = done, total, detail
 		_ = saveRun(r.s.dir, r.st)
 	})
@@ -1007,3 +1009,18 @@ func benchSet(arg string, stdout, stderr io.Writer) int {
 
 // benchRoundDir is the folder of the running round, where each attempt's diff is kept.
 var benchRoundDir string
+
+// autoParallel is how many models to evaluate at once on this machine: every attempt runs
+// opencode and compiles Go, so a small machine (the owner's i3 with 4 GB) does one at a
+// time, which is faster there than two fighting for memory.
+func autoParallel() int {
+	mem := totalMemory()
+	cpus := runtime.NumCPU()
+	switch {
+	case mem > 0 && mem < 8<<30, cpus <= 4:
+		return 1
+	case mem >= 16<<30 && cpus >= 8:
+		return 3
+	}
+	return 2
+}

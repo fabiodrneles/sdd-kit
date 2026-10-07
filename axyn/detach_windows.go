@@ -47,3 +47,20 @@ func enableVT() {
 	}
 	_, _, _ = set.Call(uintptr(h), uintptr(mode|0x0004))
 }
+
+// totalMemory is the machine's RAM in bytes (GlobalMemoryStatusEx), or 0 when unknown.
+func totalMemory() uint64 {
+	type memoryStatusEx struct {
+		Length, MemoryLoad                     uint32
+		TotalPhys, AvailPhys, TotalPageFile    uint64
+		AvailPageFile, TotalVirtual, AvailVirt uint64
+		AvailExtendedVirtual                   uint64
+	}
+	m := memoryStatusEx{}
+	m.Length = uint32(unsafe.Sizeof(m))
+	r, _, _ := syscall.NewLazyDLL("kernel32.dll").NewProc("GlobalMemoryStatusEx").Call(uintptr(unsafe.Pointer(&m)))
+	if r == 0 {
+		return 0
+	}
+	return m.TotalPhys
+}

@@ -165,7 +165,7 @@ O que sair da guia é reprovado com o código `[guia]`, e os portões de sempre 
 | Avaliar de novo agora | `axyn bench` |
 | Só alguns modelos, ou também os pagos | `axyn bench --models A,B` ou `axyn bench --all` |
 | Mais confiança (cada tarefa várias vezes) | `axyn bench --runs 3` |
-| Mais rápido (mais modelos ao mesmo tempo) | `axyn bench --parallel 4` |
+| Escolher quantos modelos avaliar ao mesmo tempo (o padrão se ajusta à máquina: 1 com menos de 8 GB de RAM ou até 4 núcleos, 3 com 16 GB e 8 núcleos, senão 2) | `axyn bench --parallel 2` |
 | Ser perguntado antes de aplicar | `axyn bench --ask` |
 | Fixar à mão o modelo de uma etapa | `axyn bench --set plano=MODELO` (desfazer: `--set plano=`) |
 | Desligar e voltar à escada do `axyn model` | `axyn bench --off` (religar: `--apply`) |

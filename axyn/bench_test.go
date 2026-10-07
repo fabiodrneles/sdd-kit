@@ -143,3 +143,12 @@ func TestContainmentGuide(t *testing.T) {
 		t.Errorf("a guia: %s", got)
 	}
 }
+
+func TestAutoParallel(t *testing.T) {
+	if n := autoParallel(); n < 1 || n > 3 {
+		t.Errorf("paralelismo: %d", n)
+	}
+	if totalMemory() == 0 {
+		t.Log("memória desconhecida nesta máquina")
+	}
+}

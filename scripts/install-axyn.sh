@@ -65,9 +65,24 @@ else
 fi
 
 echo "axyn instalado em $bin/axyn"
+# Fora do PATH: a linha vai para o arquivo que o shell do usuário lê ao abrir, para o
+# iniciante não precisar colar nada (AXYN_NO_MODIFY_PATH=1 pula).
 case ":$PATH:" in
 *":$bin:"*) ;;
-*) echo "adicione ao PATH: export PATH=\"$bin:\$PATH\"" ;;
+*)
+	line="export PATH=\"$bin:\$PATH\""
+	case "$(basename "${SHELL:-sh}")" in
+	zsh) rc="$HOME/.zshrc" ;;
+	bash) if [ "$(uname -s)" = Darwin ]; then rc="$HOME/.bash_profile"; else rc="$HOME/.bashrc"; fi ;;
+	*) rc="$HOME/.profile" ;;
+	esac
+	if [ -n "${AXYN_NO_MODIFY_PATH:-}" ]; then
+		echo "adicione ao PATH: $line"
+	else
+		grep -qsF "$line" "$rc" || printf '\n# axyn\n%s\n' "$line" >> "$rc"
+		echo "axyn adicionado ao PATH em $rc; neste terminal, rode: $line (ou abra um terminal novo)"
+	fi
+	;;
 esac
 
 if command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1; then
@@ -75,5 +90,5 @@ if command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1; th
 	# O que falta no repositório (GitHub, Actions, ferramentas), com o comando de cada item.
 	"$bin/axyn" doctor || echo "para configurar o que dá automaticamente: axyn setup"
 else
-	echo "no repositório do projeto: axyn install"
+	echo "esta pasta não é um repositório git: entre na pasta do projeto (cd caminho/do/projeto) e rode lá: axyn install, depois axyn doctor"
 fi

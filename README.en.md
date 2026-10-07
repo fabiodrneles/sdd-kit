@@ -256,6 +256,21 @@ Run `axyn doctor` in the repository: it checks each item below, one line per ite
 
 From a freshly opened terminal to your first PR merged with axyn. Each step has the command for **Linux/macOS** and for **Windows (PowerShell)**. Copy, paste and press Enter. Lines starting with `#` are explanations; you do not need to type them.
 
+> **This is the order, and it matters:**
+>
+> 1. **Close opencode**, if it is open (`Ctrl + C` or `/exit`).
+> 2. Do **steps 1 to 7 in the terminal** (PowerShell, on Windows), **with opencode closed**. Type the commands yourself, in the terminal; do not ask opencode's AI to run them: each command opencode runs is a separate process, and what it changes (like the PATH) does not last.
+> 3. **Only at step 8 open opencode**, already inside the project folder, and ask for the task with `/axyn`.
+
+**How to tell where you are:**
+
+| You are in… | What you see | What to type there |
+|---|---|---|
+| **The terminal** (PowerShell, on Windows) | a line like `PS E:\projects\my-site>` (Windows) or `you@pc:~/my-site$` (Linux/macOS), with the cursor blinking at the end | the commands of steps 1 to 7, and `axyn status` |
+| **opencode** | a full screen with the conversation and, at the bottom, the bar with the model (e.g. `Build · Nemotron 3 Ultra Free`) | only `/models` and `/axyn ...` (step 8). Pasting a terminal command there makes the AI talk about it, but it does not run it properly |
+
+To leave opencode and go back to the terminal: `Ctrl + C` (twice, if needed) or `/exit`.
+
 ### 1. Open the terminal
 
 - **Windows:** Windows key, type `PowerShell` and open **Windows PowerShell** (or **Terminal**).
@@ -452,9 +467,19 @@ git commit -m "chore: first commit"
 # The GitHub repository is created in step 7, by axyn setup.
 ```
 
+**Check that you are in the right folder** (every next step happens inside it):
+
+```bash
+pwd
+# Shows the current folder: it should end with the project name (e.g. .../my-site).
+git status
+# It should show "On branch main". If it says "not a git repository", you are outside the folder:
+# go back with cd to the project folder (e.g. cd ~/my-site; on Windows: cd $HOME\my-site).
+```
+
 ### 6. Install axyn
 
-Always **inside the project folder** (the one from step 5). The installer downloads axyn, checks its signature, configures the project's opencode (`axyn install`) and runs `axyn doctor` at the end.
+**In the terminal, with opencode closed.** Always **inside the project folder** (the one from step 5). The installer downloads axyn, checks its signature, configures the project's opencode (`axyn install`) and runs `axyn doctor` at the end.
 
 Linux/macOS:
 
@@ -468,13 +493,15 @@ Windows:
 irm https://raw.githubusercontent.com/fabiodrneles/sdd-kit/main/scripts/install-axyn.ps1 | iex
 ```
 
-If it says "add to PATH", run the line it shows (that is what makes the terminal find the `axyn` command) and check:
+The installer puts `axyn` on the PATH by itself (that is what makes the terminal find the `axyn` command). If it says it added it to the PATH, **close the terminal and open a new one**, go back into the project folder (`cd ...`) and check:
 
 ```bash
 axyn version
 ```
 
 ### 7. Check and configure the repository
+
+**In the terminal, with opencode closed**, in the project folder:
 
 ```bash
 axyn doctor
@@ -490,7 +517,7 @@ If a tool is still missing, `doctor` prints the full command to install it; copy
 
 ### 8. Ask for the first task
 
-Open opencode in the project folder:
+**Now, and only now, open opencode.** In the terminal, in the project folder (check with `pwd`):
 
 ```bash
 opencode

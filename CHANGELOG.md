@@ -8,12 +8,18 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ### Adicionado
 
-- axyn model picks the model from a numbered list (#319)
+- `axyn model`: escolhe o modelo numa lista numerada dos gratuitos do opencode, sem editar o `config.yaml`; o `axyn doctor` mostra o modelo em uso (#319)
+- `axyn status --watch`: acompanha a execução e avisa (bipe e notificação) quando ela termina, para ou faz uma pergunta (#325)
+- Ticket que não passa nos portões vira PR em rascunho, com o código, os erros e um texto pronto para pedir ajuda a outra IA; uma correção feita na branch WIP passa pelos portões no `axyn run --resume` (#325)
+- README: "Problemas comuns e como resolver", e o guia diz onde rodar cada comando e a ordem (opencode fechado até o passo 8) (#317, #325)
 
 ### Corrigido
 
-- installers put axyn on the PATH and stay quiet outside a repo (#317)
-- resume after interruptions, Git's sh on Windows, draft PR for stuck tickets, --watch (#325)
+- Os instaladores põem o axyn no PATH sozinhos e, no Windows, não mostram mais o erro do git fora de um repositório (#317)
+- O agente do plano usa o modelo escolhido, e as ferramentas de um `make ci` que já existe (como o `golangci-lint`) são conferidas antes do primeiro ticket, com o comando de instalação (#319)
+- No Windows, o `make ci` usa o `sh` do Git sozinho (#325)
+- Execução interrompida (travamento, terminal fechado) é reconhecida na hora e retomada com o código salvo num WIP; o portão não deixa mais o índice do git quebrando o `git stash` (#325)
+- O `/axyn` roda num agente só com as ferramentas de conversa, mostra "axyn, por favor: <pedido>" e não sai mais do roteiro; uma execução em andamento mostra o andamento em vez de erro (#325)
 
 ## [1.15.0] - 2026-10-07
 

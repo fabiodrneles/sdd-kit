@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.21.0] - 2026-10-07
+
+### Adicionado
+
+- indicador de progresso nas cores do axyn, axyn update e o diff de cada tentativa da avaliação (#349)
+
 ## [1.20.0] - 2026-10-07
 
 ### Adicionado

@@ -34,7 +34,7 @@ var lookPath = exec.LookPath
 // stackTools are the tools the stack's `make ci` runs, beyond git.
 var stackTools = map[string][]string{
 	"web": {"make", "node"}, "node": {"make", "node", "npm"}, "python": {"make", "python3"},
-	"go": {"make", "go"}, "java": {"make", "java"}, "dotnet": {"make", "dotnet"}, "rust": {"make", "cargo"},
+	"go": {"make", "go", "golangci-lint"}, "java": {"make", "java"}, "dotnet": {"make", "dotnet"}, "rust": {"make", "cargo"},
 }
 
 // pkgs is the package of each tool per package manager, for a copy-and-paste install
@@ -75,9 +75,14 @@ func installCommands(missing []string, goos string) []string {
 	var names, out []string
 	seen := map[string]bool{}
 	rust := false
+	lint := false
 	for _, t := range missing {
 		if t == "cargo" {
 			rust = true
+			continue
+		}
+		if t == "golangci-lint" {
+			lint = true
 			continue
 		}
 		for _, n := range strings.Fields(pkgs[t][mgr]) {
@@ -112,6 +117,9 @@ func installCommands(missing []string, goos string) []string {
 		} else {
 			out = append(out, rustupCmd)
 		}
+	}
+	if lint {
+		out = append(out, "go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@"+golangciVersion())
 	}
 	if len(out) == 0 && len(missing) > 0 {
 		out = append(out, "instale pelo gerenciador de pacotes do sistema: "+strings.Join(missing, ", "))
@@ -223,14 +231,65 @@ func decidedStack(specText string) string {
 }
 
 // missingTools returns the tools the stack's `make ci` needs and the PATH lacks.
-func missingTools(stack string) []string {
+func missingTools(stack string) []string { return missingToolsFor(stack, "") }
+
+// missingToolsFor is missingTools, but with the project's own Makefile it only counts the
+// tools that Makefile mentions (a project's ci may not use the template's linter).
+func missingToolsFor(stack, makefile string) []string {
 	var out []string
 	for _, t := range append([]string{"git"}, stackTools[stack]...) {
-		if _, err := lookPath(t); err != nil {
+		if makefile != "" && t != "git" && t != "make" && !strings.Contains(makefile, t) {
+			continue
+		}
+		if !toolPresent(t) {
 			out = append(out, t)
 		}
 	}
 	return out
+}
+
+// toolPresent finds a tool on the PATH; golangci-lint also in GOPATH/bin, where
+// `go install` puts it and where the go template's Makefile looks first.
+func toolPresent(t string) bool {
+	if _, err := lookPath(t); err == nil {
+		return true
+	}
+	if t != "golangci-lint" {
+		return false
+	}
+	name := "golangci-lint"
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	dir := goBinDir()
+	if dir == "" {
+		return false
+	}
+	_, err := os.Stat(filepath.Join(dir, name))
+	return err == nil
+}
+
+// goBinDir is GOPATH/bin ("" without go); replaced in tests.
+var goBinDir = func() string {
+	if _, err := lookPath("go"); err != nil {
+		return ""
+	}
+	b, err := exec.Command("go", "env", "GOPATH").Output()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(strings.TrimSpace(string(b)), "bin")
+}
+
+// golangciVersion is the version the go template pins, for the install command.
+func golangciVersion() string {
+	b, _ := templates.ReadFile("templates/go/Makefile")
+	for _, l := range strings.Split(string(b), "\n") {
+		if k, v, ok := strings.Cut(l, ":="); ok && strings.TrimSpace(k) == "GOLANGCI_LINT_VERSION" {
+			return strings.TrimSpace(v)
+		}
+	}
+	return "latest"
 }
 
 // missingMessage says what is missing and the exact commands to install it.
@@ -309,7 +368,18 @@ func templateValues(dir string) (project, owner, repo string) {
 // stop (a question for the user, a missing tool, a Makefile without the ci target).
 func (r *runner) prepare() string {
 	dir := r.s.dir
-	if r.s.ci != defaultCICmd || hasCI(dir) {
+	if r.s.ci != defaultCICmd {
+		return ""
+	}
+	if hasCI(dir) {
+		// The project has its make ci: still check the tools it uses before the first
+		// ticket, or every attempt fails on a missing tool (seen with golangci-lint).
+		b, _ := os.ReadFile(filepath.Join(dir, "Makefile"))
+		if stack := detectStack(dir, r.st.Request); stack != "" {
+			if miss := missingToolsFor(stack, string(b)); len(miss) > 0 {
+				return missingMessage(stack, miss)
+			}
+		}
 		return ""
 	}
 	if _, err := os.Stat(filepath.Join(dir, "Makefile")); err == nil {

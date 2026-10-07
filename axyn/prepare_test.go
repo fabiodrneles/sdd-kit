@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -336,4 +337,48 @@ func contains(list []string, s string) bool {
 		}
 	}
 	return false
+}
+
+// A project with its own make ci that uses golangci-lint, without it installed: the run
+// stops before the first ticket with the install command, and no attempt is spent.
+func TestRunStopsOnMissingLinterOfExistingCI(t *testing.T) {
+	dir := emptyRepo(t)
+	write(t, dir, "go.mod", "module x\n\ngo 1.22\n")
+	write(t, dir, "Makefile", "ci:\n\tgo vet ./...\n\tgolangci-lint run\n")
+	git(t, dir, "add", "-A")
+	git(t, dir, "commit", "-qm", "go")
+	old, oldBin := lookPath, goBinDir
+	lookPath = func(name string) (string, error) {
+		if name == "golangci-lint" {
+			return "", errors.New("not found")
+		}
+		return "/usr/bin/true", nil
+	}
+	goBinDir = func() string { return t.TempDir() }
+	t.Cleanup(func() { lookPath, goBinDir = old, oldBin })
+	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `printf 'x\n' > "f$n.go"`))
+
+	code, out := runRequest(t, dir, "adicione uma opção")
+	if code == exitOK || !strings.Contains(out, "go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v") || !strings.Contains(out, "nenhuma tentativa foi gasta") {
+		t.Fatalf("deveria parar com o go install do golangci-lint, code %d\n%s", code, out)
+	}
+	if calls, _ := os.ReadFile(os.Getenv("FAKE_LOG")); strings.Contains(string(calls), "axyn-code") {
+		t.Errorf("gastou tentativa sem o linter")
+	}
+
+	// In GOPATH/bin (where go install puts it) counts as installed.
+	bin := t.TempDir()
+	name := "golangci-lint"
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	write(t, bin, name, "")
+	goBinDir = func() string { return bin }
+	if !toolPresent("golangci-lint") {
+		t.Errorf("o golangci-lint em GOPATH/bin deveria contar")
+	}
+	// A Makefile that does not use the linter does not require it.
+	if miss := missingToolsFor("go", "ci:\n\tgo test ./...\n"); len(miss) != 0 {
+		t.Errorf("sem golangci-lint no Makefile, nada falta: %v", miss)
+	}
 }

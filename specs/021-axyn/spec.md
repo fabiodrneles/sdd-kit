@@ -1,7 +1,7 @@
 # 021 — axyn: o sdd-kit no terminal, com o modelo que o usuário tiver
 
 - **Prioridade:** P1
-- **Status:** Done — entregue na `v1.14.0`
+- **Status:** Approved — aprovada pelo dono em 2026-10-06
 - **Código afetado:** `axyn/` (novo, Go, neste repositório até funcionar; depois `fabiodrneles/axyn`), `template/web/` (novo), `template/common/scripts/` (o motor atual, como referência de comportamento)
 - **Resolve:** quem não pode pagar o Claude Code não consegue usar o sdd-kit; os modelos gratuitos são úteis para escrever código, mas erram mais e não seguem processo
 

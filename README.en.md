@@ -279,7 +279,7 @@ To leave opencode and go back to the terminal: `Ctrl + C` (twice, if needed) or 
 
 ### 2. Install the tools
 
-There are four: **git** (versions the code), **gh** (talks to GitHub), **node** (runs opencode and checks the HTML) and **make** (runs `make ci`, which the gates use).
+There are four: **git** (versions the code), **gh** (talks to GitHub), **node** (runs opencode and checks the HTML) and **make** (runs `make ci`, which the gates use). Your project's language (Go, Python, Java…) and its linter are only needed if the project is in it; do not install anything else now: `axyn doctor` at step 7 says exactly what **your** project is missing, with the command to paste.
 
 Ubuntu/Debian:
 

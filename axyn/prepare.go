@@ -119,7 +119,22 @@ func installCommands(missing []string, goos string) []string {
 		}
 	}
 	if lint {
-		out = append(out, "go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@"+golangciVersion())
+		goMissing := false
+		for _, t := range missing {
+			goMissing = goMissing || t == "go"
+		}
+		ver := golangciVersion()
+		switch {
+		case !goMissing:
+			out = append(out, "go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@"+ver)
+		case mgr == "winget":
+			// go install only works after Go is installed and the terminal reopened.
+			out = append(out, "winget install -e --id GolangCI.golangci-lint")
+		case mgr == "brew":
+			out = append(out, "brew install golangci-lint")
+		default:
+			out = append(out, "curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $HOME/.local/bin "+ver)
+		}
 	}
 	if len(out) == 0 && len(missing) > 0 {
 		out = append(out, "instale pelo gerenciador de pacotes do sistema: "+strings.Join(missing, ", "))

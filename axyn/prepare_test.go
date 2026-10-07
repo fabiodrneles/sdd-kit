@@ -319,6 +319,9 @@ func TestInstallCommands(t *testing.T) {
 		{"darwin", []string{"python3"}, []string{"brew install python"}},
 		{"windows", []string{"make", "node"}, []string{"winget install -e --id ezwinports.make", "winget install -e --id OpenJS.NodeJS.LTS"}},
 		{"linux", []string{"cargo"}, []string{rustupCmd}},
+		{"linux", []string{"golangci-lint"}, []string{"go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@" + golangciVersion()}},
+		{"windows", []string{"go", "golangci-lint"}, []string{"winget install -e --id GoLang.Go", "winget install -e --id GolangCI.golangci-lint"}},
+		{"darwin", []string{"go", "golangci-lint"}, []string{"brew install go", "brew install golangci-lint"}},
 	} {
 		if got := installCommands(c.missing, c.goos); strings.Join(got, "|") != strings.Join(c.want, "|") {
 			t.Errorf("%s %v: %q, quero %q", c.goos, c.missing, got, c.want)

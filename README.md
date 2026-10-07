@@ -336,7 +336,7 @@ Para sair do opencode e voltar ao terminal: `Ctrl + C` (duas vezes, se precisar)
 
 ### 2. Instalar as ferramentas
 
-São quatro: o **git** (versiona o código), o **gh** (fala com o GitHub), o **node** (roda o opencode e confere o HTML) e o **make** (roda o `make ci`, que os portões usam).
+São quatro: o **git** (versiona o código), o **gh** (fala com o GitHub), o **node** (roda o opencode e confere o HTML) e o **make** (roda o `make ci`, que os portões usam). A linguagem do seu projeto (Go, Python, Java…) e o linter dela só são necessários se o projeto for nela; não instale nada além disso agora: o `axyn doctor` do passo 7 diz exatamente o que falta para o **seu** projeto, com o comando para colar.
 
 Ubuntu/Debian:
 

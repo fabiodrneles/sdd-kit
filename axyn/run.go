@@ -224,7 +224,7 @@ func startDetached(dir, id string) error {
 	if err != nil {
 		return err
 	}
-	logf, err := os.OpenFile(filepath.Join(runsDir(dir), id+".log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
+	logf, err := openLog(filepath.Join(runsDir(dir), id+".log"))
 	if err != nil {
 		return err
 	}
@@ -727,7 +727,7 @@ func runRunCmd(args []string, stdout, stderr io.Writer) int {
 	}
 	// The log also goes to the run's file, as in the background, for axyn history (FR-7).
 	out := stdout
-	if logf, err := os.OpenFile(filepath.Join(runsDir(*dir), st.ID+".log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644); err == nil {
+	if logf, err := openLog(filepath.Join(runsDir(*dir), st.ID+".log")); err == nil {
 		defer func() { _ = logf.Close() }()
 		out = io.MultiWriter(stdout, logf)
 	}

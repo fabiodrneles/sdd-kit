@@ -154,7 +154,7 @@ func buildHistory(dir string, st *runState) string {
 
 	w("\n## Log completo\n\n")
 	if logb, err := os.ReadFile(filepath.Join(runsDir(dir), st.ID+".log")); err == nil {
-		w("```text\n%s\n```\n", strings.TrimRight(string(logb), "\n"))
+		w("```text\n%s\n```\n", strings.TrimRight(strings.TrimPrefix(string(logb), utf8BOM), "\n"))
 	} else {
 		w("Sem log (%v).\n", err)
 	}
@@ -175,7 +175,7 @@ func writeHistory(dir, id, out string) (string, error) {
 	if abs, err := filepath.Abs(out); err == nil {
 		out = abs
 	}
-	if err := os.WriteFile(out, []byte(buildHistory(dir, st)), 0o644); err != nil {
+	if err := writeText(out, buildHistory(dir, st)); err != nil {
 		return "", err
 	}
 	return out, nil

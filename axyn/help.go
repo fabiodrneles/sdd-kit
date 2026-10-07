@@ -128,7 +128,7 @@ func (r *runner) publish(pl *plan, t *ticket, wip string) string {
 	}
 	if !strings.HasPrefix(note, "o código da última tentativa está num PR") {
 		file := filepath.Join(s.dir, ".axyn", fmt.Sprintf("ajuda-ticket-%d.md", t.ID))
-		if err := os.WriteFile(file, []byte(text), 0o644); err == nil {
+		if err := writeText(file, text); err == nil {
 			note = strings.TrimSpace(note + "; o código, os erros e um texto pronto para pedir ajuda a outra IA estão em " + file)
 			note = strings.TrimPrefix(note, "; ")
 		}

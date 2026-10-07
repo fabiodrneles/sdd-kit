@@ -173,7 +173,13 @@ O que sair da guia é reprovado com o código `[guia]`, e os portões de sempre 
 | Fixar à mão o modelo de uma etapa | `axyn bench --set plano=MODELO` (desfazer: `--set plano=`) |
 | Desligar e voltar à escada do `axyn model` | `axyn bench --off` (religar: `--apply`) |
 
-Arquivos: `~/.config/axyn/bench/profile.json` (o resultado em uso), `bench-DATA.md` (o relatório de cada rodada, com a nota e o motivo de cada tentativa) e `bench-DATA.log` (a saída completa dos modelos) e a pasta `bench-DATA/`, com o código que o modelo escreveu em cada tentativa (um `.diff` por tentativa). Com os três, dá para conferir se cada nota foi justa e ajustar o processo de avaliação. As tarefas são em Go e precisam do Go instalado.
+Arquivos: `~/.config/axyn/bench/profile.json` (o resultado em uso), `bench-DATA.md` (o relatório de cada rodada, com a nota e o motivo de cada tentativa) e `bench-DATA.log` (a saída completa dos modelos) e a pasta `bench-DATA/`, com o código que o modelo escreveu em cada tentativa (um `.diff` por tentativa). Com os três, dá para conferir se cada nota foi justa e ajustar o processo de avaliação. Para acompanhar o log ao vivo no Windows, noutra janela do PowerShell:
+
+```powershell
+Get-Content (Get-ChildItem "$HOME\.config\axyn\bench\bench-*.log" | Sort-Object LastWriteTime | Select-Object -Last 1) -Wait -Tail 10 -Encoding UTF8
+```
+
+Os logs, relatórios e históricos do axyn são gravados em UTF-8 com a marca (BOM) no início, para o PowerShell 5.1 e os editores mostrarem os acentos certos. As tarefas são em Go e precisam do Go instalado.
 
 ## Fechar uma versão (release)
 

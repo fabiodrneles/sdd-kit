@@ -748,7 +748,7 @@ func runBenchCmd(args []string, stdout, stderr io.Writer) int {
 	prev := p.prevForReport
 	text := report(p, prev)
 	mdPath := filepath.Join(benchDir(), "bench-"+p.Date.Format("20060102-150405")+".md")
-	_ = os.WriteFile(mdPath, []byte(text), 0o644)
+	_ = writeText(mdPath, text)
 	_, _ = fmt.Fprintf(stdout, "\n%s\nrelatório completo: %s\n", text, mdPath)
 	apply := true
 	if *ask {
@@ -814,7 +814,7 @@ func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout 
 	_, _ = fmt.Fprintf(out, "avaliando %d modelo(s) em %d tarefa(s), %d vez(es) cada: %d tentativas, %d modelo(s) por vez, por volta de %s (depende da máquina e da velocidade dos modelos; o que já rodou fica salvo)\n", len(models), len(chosen), runs, total, parallel, clock(est))
 	_ = os.MkdirAll(benchDir(), 0o755)
 	var log io.Writer = io.Discard
-	if logf, err := os.Create(filepath.Join(benchDir(), "bench-"+p.Date.Format("20060102-150405")+".log")); err == nil {
+	if logf, err := openLog(filepath.Join(benchDir(), "bench-"+p.Date.Format("20060102-150405")+".log")); err == nil {
 		defer func() { _ = logf.Close() }()
 		log = &syncWriter{w: logf}
 	}
@@ -1037,7 +1037,7 @@ func (r *runner) autoBench() {
 	p.Applied = true
 	_ = saveProfile(p)
 	text := report(p, p.prevForReport)
-	_ = os.WriteFile(filepath.Join(benchDir(), "bench-"+p.Date.Format("20060102-150405")+".md"), []byte(text), 0o644)
+	_ = writeText(filepath.Join(benchDir(), "bench-"+p.Date.Format("20060102-150405")+".md"), text)
 	_, _ = fmt.Fprintln(r.log, text)
 }
 

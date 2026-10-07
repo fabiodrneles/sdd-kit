@@ -30,6 +30,7 @@ var recSteps = []recStep{
 const (
 	stepAsk       = "pergunta ao usuário"
 	stepPlan      = "plano antes do código"
+	stepRecheck   = "código salvo conferido de novo"
 	maxStepLines  = 30
 	maxStepChars  = 3000
 	maxSnippets   = 4

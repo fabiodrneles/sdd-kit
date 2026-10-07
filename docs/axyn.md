@@ -107,6 +107,7 @@ A mensagem de parada é a mesma no `axyn status`, no `/axyn` e no histórico. El
 3. o erro da última tentativa, com as linhas reais do `make ci`;
 4. o que esse erro quer dizer, em palavras simples;
 5. as saídas, com o comando de cada uma:
+   - `axyn retry`: mais 10 tentativas com o mesmo modelo, que agora recebe o resumo do que já falhou para fazer diferente;
    - `axyn decide "instrução"`: a sua instrução vira uma decisão na spec, o modelo passa a recebê-la e o ticket ganha novas tentativas;
    - `axyn model` e depois `axyn run --resume`: outro modelo, com outras 10 tentativas;
    - corrigir na branch WIP você mesmo, ou com outra IA, e rodar `axyn run --resume`: os portões rodam primeiro no seu código;

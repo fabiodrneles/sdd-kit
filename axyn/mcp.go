@@ -485,6 +485,9 @@ func (s *mcpServer) toolNext() (string, error) {
 				}
 			}
 		}
+		if sum := earlierSummary(t); sum != "" {
+			b.WriteString("\nTentativas anteriores deste ticket já falharam por estes motivos; faça diferente, corrigindo cada um:\n" + sum)
+		}
 		if len(pl.BaseErrors) > 0 {
 			b.WriteString("\nO make ci já falhava antes deste ticket; corrija também estes erros:\n  " + strings.Join(pl.BaseErrors, "\n  ") + "\n")
 		}

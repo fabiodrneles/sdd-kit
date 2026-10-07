@@ -96,6 +96,9 @@ func buildHistory(dir string, st *runState) string {
 			if strings.TrimSpace(t.Body) != "" {
 				w("- O que fazer: %s\n", oneLine(t.Body))
 			}
+			for _, a := range t.Earlier {
+				w("- Antes (não conta mais; %s): %s\n", a.Step, strings.Join(a.Reason, "; "))
+			}
 			for i, a := range t.Attempts {
 				verdict := "reprovado"
 				if a.Green {

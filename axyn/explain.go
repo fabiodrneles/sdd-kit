@@ -19,6 +19,7 @@ var stepPlain = map[string]string{
 	"ticket dividido":   "o axyn dividiu o ticket em passos menores (primeiro o teste, depois o código)",
 	stepPlan:            "o axyn pediu ao modelo um plano dos arquivos antes do código",
 	stepAsk:             "o axyn parou para perguntar a você",
+	stepRecheck:         "o axyn conferiu de novo o código salvo, sem chamar o modelo",
 }
 
 var errLine = regexp.MustCompile(`(?i)(\.[a-z]{1,4}:\d+|error|erro|fail|panic|undefined|not found|cannot|denied|abaixo do mínimo|cobertura:)`)
@@ -114,6 +115,9 @@ func (r *runner) explainStop(ticketID int, help string) string {
 	w("O axyn parou no ticket %d de %d, «%s», e precisa de você.\n\n", t.ID, len(pl.Tickets), t.Title)
 	w("O que aconteceu: o modelo escreveu o código %d vez(es) e nenhuma passou nas verificações do axyn (o make ci do projeto, com lint e testes, mais as regras do axyn). O axyn não entrega código que não passa, então parou para você decidir.\n\n", len(t.Attempts))
 	w("O que foi tentado:\n")
+	if n := len(t.Earlier); n > 0 {
+		w("  (antes destas, %d tentativa(s) ou conferência(s) que não contam mais, de antes de uma decisão sua ou da escolha da cobertura; estão no axyn history)\n", n)
+	}
 	last := ""
 	for i, a := range t.Attempts {
 		why := strings.Join(a.Reason, "; ")
@@ -133,11 +137,12 @@ func (r *runner) explainStop(ticketID int, help string) string {
 	w("\nO erro da última tentativa:\n  %s\n", strings.ReplaceAll(last, " | ", "\n  "))
 	w("O que isso quer dizer: %s\n\n", what)
 	w("Como resolver (escolha um; todos no terminal, na raiz do projeto, com o opencode fechado):\n")
-	w("  1. Dar ao modelo uma instrução mais clara, com as suas palavras; o axyn grava como decisão na spec e tenta de novo, com novas tentativas:\n")
+	w("  1. Tentar de novo com o mesmo modelo: mais %d tentativas, e o modelo recebe o que já falhou para fazer diferente:\n       axyn retry\n", maxFailsPerModel)
+	w("  2. Dar ao modelo uma instrução mais clara, com as suas palavras; o axyn grava como decisão na spec e tenta de novo, com novas tentativas:\n")
 	w("       axyn decide \"%s\"\n", hint)
-	w("  2. Trocar de modelo (o novo modelo ganha outras %d tentativas):\n       axyn model\n       axyn run --resume\n", maxFailsPerModel)
+	w("  3. Trocar de modelo (o novo modelo ganha outras %d tentativas):\n       axyn model\n       axyn run --resume\n", maxFailsPerModel)
 	if t.WIP != "" {
-		w("  3. Corrigir o código você mesmo, ou com outra IA, na branch %s:\n       git checkout %s\n       (corrija e faça commit)\n       git checkout %s\n       axyn run --resume\n", t.WIP, t.WIP, pl.Base)
+		w("  4. Corrigir o código você mesmo, ou com outra IA, na branch %s:\n       git checkout %s\n       (corrija e faça commit)\n       git checkout %s\n       axyn run --resume\n", t.WIP, t.WIP, pl.Base)
 	}
 	if strings.TrimSpace(help) != "" {
 		w("\n%s\n", strings.TrimSpace(help))

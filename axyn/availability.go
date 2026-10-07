@@ -73,3 +73,21 @@ func allDownMessage(down map[string]string) string {
 	b.WriteString("Ou acrescente outro modelo à escada agora (axyn model) e rode axyn run --resume.")
 	return b.String()
 }
+
+const planOpenAgent = "axyn-plan-open"
+
+var freeTierRe = regexp.MustCompile(`(?i)free tier can only be used from within opencode|FreeTierError`)
+
+// freeTierRefused says whether OpenCode's free tier refused the request (opencode #50081).
+func freeTierRefused(out string) bool { return freeTierRe.MatchString(out) }
+
+// undoPlannerEdits throws away any file the planner changed: the spec is already in its
+// own commit (axyn_plan), and nothing else is the planner's to write.
+func (r *runner) undoPlannerEdits() {
+	if out, _ := r.s.git("status", "--porcelain"); strings.TrimSpace(out) == "" {
+		return
+	}
+	_, _ = r.s.git("checkout", "--", ".")
+	_, _ = r.s.git("clean", "-fdq", "--exclude=.axyn")
+	_, _ = fmt.Fprintln(r.log, "o planejador mexeu em arquivos; as mudanças foram desfeitas (só a spec fica)")
+}

@@ -57,6 +57,8 @@ O agente `axyn-plan` recebe o pedido e grava, pela ferramenta `axyn_plan`:
 - a spec em `specs/NNN-nome/spec.md`, com requisitos (FR-n) e critérios de aceite (AC-n);
 - a lista de tickets, cada um citando os ACs que cumpre.
 
+**Plano gratuito do opencode.** O plano gratuito (OpenCode Zen) recusa pedidos de agentes que não têm as ferramentas de edição e de terminal ("free tier can only be used from within OpenCode"; issues [#50081](https://github.com/anomalyco/opencode/issues/50081) e [#49592](https://github.com/anomalyco/opencode/issues/49592) do opencode). Quando isso acontece, o axyn refaz o plano com o `axyn-plan-open`, o mesmo planejador com essas ferramentas ligadas, e desfaz qualquer arquivo que ele tenha mexido. Só a spec, gravada pelo `axyn_plan` num commit próprio, fica. A recusa não conta como tentativa.
+
 O plano fica em `.git/axyn/plan.json`: dentro do `.git`, para nunca sujar a árvore do projeto. O axyn tenta gravar o plano até 2 vezes. Se o agente não gravar, a execução para com essa mensagem.
 
 ### 3. Cada ticket
@@ -162,10 +164,11 @@ O que sair da guia é reprovado com o código `[guia]`, e os portões de sempre 
 | Quero | Comando |
 |---|---|
 | Ver a última avaliação | `axyn bench --show` |
+| Refazer só uma etapa, sem perder as outras | `axyn bench --tasks plan` (ou `code`, `tests`, `fix`; dá para juntar com `--models A,B`) |
 | Avaliar de novo agora | `axyn bench` |
 | Só alguns modelos, ou também os pagos | `axyn bench --models A,B` ou `axyn bench --all` |
 | Mais confiança (cada tarefa várias vezes) | `axyn bench --runs 3` |
-| Mais rápido (mais modelos ao mesmo tempo) | `axyn bench --parallel 4` |
+| Escolher quantos modelos avaliar ao mesmo tempo (o padrão se ajusta à máquina: 1 com menos de 8 GB de RAM ou até 4 núcleos, 3 com 16 GB e 8 núcleos, senão 2) | `axyn bench --parallel 2` |
 | Ser perguntado antes de aplicar | `axyn bench --ask` |
 | Fixar à mão o modelo de uma etapa | `axyn bench --set plano=MODELO` (desfazer: `--set plano=`) |
 | Desligar e voltar à escada do `axyn model` | `axyn bench --off` (religar: `--apply`) |

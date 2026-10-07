@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -50,4 +51,33 @@ func TestDownModelIsReplaced(t *testing.T) {
 		}
 	}
 	_ = os.Remove(cfg)
+}
+
+// OpenCode's free tier refuses the restricted planner: the engine plans again with the
+// open one and undoes what it touched, keeping only the spec.
+func TestPlannerFallsBackOnFreeTier(t *testing.T) {
+	dir := repo(t)
+	bin := filepath.Join(t.TempDir(), "axyn")
+	if out, err := exec.Command("go", "build", "-o", bin, ".").CombinedOutput(); err != nil {
+		t.Fatalf("go build: %v\n%s", err, out)
+	}
+	fd := t.TempDir()
+	write(t, fd, "plan.json", planRequest+"\n")
+	write(t, fd, "fake.sh", `case "$3" in
+axyn-plan) echo "Error: OpenCode's free tier can only be used from within OpenCode" ;;
+axyn-plan-open) echo lixo > lixo.txt; '`+bin+`' mcp < '`+filepath.Join(fd, "plan.json")+`' > /dev/null ;;
+axyn-code) n=$(printf '%s' "$*" | sed -n 's/.*Ticket \([0-9]*\):.*/\1/p' | head -n 1); printf 'ok %s\n' "$n" > "f$n.txt"; printf 'package x\n' > "f${n}_test.go" ;;
+esac
+`)
+	t.Setenv("AXYN_OPENCODE", "sh "+filepath.Join(fd, "fake.sh"))
+	code, out := runLoopIn(t, dir)
+	if code != exitOK {
+		t.Fatalf("deveria planejar com o agente aberto e entregar: %d\n%s", code, out)
+	}
+	if !strings.Contains(out, "refazendo com o axyn-plan-open") || !strings.Contains(out, "as mudanças foram desfeitas") {
+		t.Errorf("o log deveria dizer a troca e a limpeza:\n%s", out)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "lixo.txt")); err == nil {
+		t.Error("o arquivo do planejador deveria ter sido desfeito")
+	}
 }

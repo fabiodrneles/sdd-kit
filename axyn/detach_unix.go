@@ -3,7 +3,10 @@
 package main
 
 import (
+	"fmt"
+	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 )
 
@@ -21,3 +24,22 @@ func hideWindow(*exec.Cmd) {}
 
 // enableVT is a Windows concern: terminals here already understand the color codes.
 func enableVT() {}
+
+// totalMemory is the machine's RAM in bytes, or 0 when unknown.
+func totalMemory() uint64 {
+	if b, err := os.ReadFile("/proc/meminfo"); err == nil {
+		var kb uint64
+		for _, l := range strings.Split(string(b), "\n") {
+			if strings.HasPrefix(l, "MemTotal:") {
+				_, _ = fmt.Sscanf(strings.TrimSpace(strings.TrimPrefix(l, "MemTotal:")), "%d", &kb)
+				return kb * 1024
+			}
+		}
+	}
+	if out, err := exec.Command("sysctl", "-n", "hw.memsize").Output(); err == nil {
+		var n uint64
+		_, _ = fmt.Sscanf(strings.TrimSpace(string(out)), "%d", &n)
+		return n
+	}
+	return 0
+}

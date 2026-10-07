@@ -143,3 +143,50 @@ func TestContainmentGuide(t *testing.T) {
 		t.Errorf("a guia: %s", got)
 	}
 }
+
+func TestAutoParallel(t *testing.T) {
+	if n := autoParallel(); n < 1 || n > 3 {
+		t.Errorf("paralelismo: %d", n)
+	}
+	if totalMemory() == 0 {
+		t.Log("memória desconhecida nesta máquina")
+	}
+}
+
+// Evaluating one task again keeps the other tasks' results of the last round.
+func TestBenchOneTaskKeepsTheRest(t *testing.T) {
+	if _, err := exec.LookPath("go"); err != nil {
+		t.Skip("sem go")
+	}
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	t.Setenv("AXYN_OPENCODE", benchAgent(t))
+	var o, e strings.Builder
+	if code := runBenchCmd([]string{"--models", "bom", "--timeout", "2m"}, &o, &e); code != exitOK {
+		t.Fatalf("bench: %d %s", code, e.String())
+	}
+	if code := runBenchCmd([]string{"--models", "bom", "--tasks", "plan", "--timeout", "2m"}, &o, &e); code != exitOK {
+		t.Fatalf("bench --tasks plan: %d %s", code, e.String())
+	}
+	p, _ := loadProfile()
+	for _, task := range []string{"plan-001", "code-001", "tests-001", "fix-001"} {
+		if findResult(p.Results, "bom", task) == nil {
+			t.Errorf("%s sumiu ao refazer só o plano", task)
+		}
+	}
+}
+
+// On Windows a locked test binary fails Go's cleanup although the tests passed: that is
+// the machine, not the model.
+func TestOnlyCleanupFailed(t *testing.T) {
+	win := "ok  \tbenchtests\t3.294s\tcoverage: 100.0% of statements\ngo: unlinkat C:\\Users\\G\\AppData\\Local\\Temp\\go-build1\\b001\\benchtests.test.exe: O arquivo já está sendo usado por outro processo."
+	if !onlyCleanupFailed(win) {
+		t.Error("só a limpeza falhou: os testes passaram")
+	}
+	real := "--- FAIL: TestMake (0.00s)\nFAIL\nFAIL\tbenchcode\t1.2s\ngo: unlinkat x.exe: O arquivo já está sendo usado por outro processo."
+	if onlyCleanupFailed(real) {
+		t.Error("um teste que falhou continua reprovado")
+	}
+	if onlyCleanupFailed("ok  \tx\t1s") {
+		t.Error("sem erro de limpeza, nada a relevar")
+	}
+}

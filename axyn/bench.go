@@ -13,6 +13,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -235,8 +236,32 @@ func runIn(dir, command string) (string, error) {
 		return "", err
 	}
 	cmd.Dir = dir
+	// Each sandbox gets its own Go temp folder: parallel attempts no longer share it.
+	tmp := filepath.Join(dir, ".gotmp")
+	_ = os.MkdirAll(tmp, 0o755)
+	if cmd.Env == nil {
+		cmd.Env = os.Environ()
+	}
+	cmd.Env = append(cmd.Env, "GOTMPDIR="+tmp, "GOFLAGS=-buildvcs=false")
 	b, err := cmd.CombinedOutput()
-	return string(b), err
+	out := string(b)
+	if err != nil && onlyCleanupFailed(out) {
+		err = nil
+	}
+	return out, err
+}
+
+var (
+	cleanupErr = regexp.MustCompile(`(?i)(unlinkat|remove|removeall).*(being used by another process|sendo usado por outro processo|access is denied|acesso negado)`)
+	realFail   = regexp.MustCompile(`(?m)(^FAIL|^--- FAIL|^panic:|^# |\.go:\d+:\d+: |build failed|cannot |undefined)`)
+)
+
+// onlyCleanupFailed: on Windows the test binary may still be locked (the antivirus scans
+// a fresh .exe) when Go deletes it, and go test exits with an error although every test
+// passed. That is the machine, not the model: the run counts as passed when the only
+// error is that cleanup and the tests themselves said ok.
+func onlyCleanupFailed(out string) bool {
+	return cleanupErr.MatchString(out) && strings.Contains(out, "ok ") && !realFail.MatchString(out)
 }
 
 const benchCI = "go vet ./... && go test -count=1 ./..."
@@ -547,6 +572,10 @@ func findResult(results []benchResult, model, task string) *benchResult {
 
 // report renders the classification table, the routing and the drift against prev.
 func report(p, prev *benchProfile) string {
+	return strings.ReplaceAll(reportText(p, prev), "\r", "")
+}
+
+func reportText(p, prev *benchProfile) string {
 	var b strings.Builder
 	w := func(f string, a ...any) { fmt.Fprintf(&b, f, a...) }
 	w("# Avaliação dos modelos (axyn bench)\n\n")
@@ -654,7 +683,7 @@ func runBenchCmd(args []string, stdout, stderr io.Writer) int {
 	runs := fs.Int("runs", 1, "quantas vezes cada tarefa roda por modelo (modelos variam: a taxa de sucesso pesa mais que uma vez)")
 	timeout := fs.Duration("timeout", 10*time.Minute, "tempo máximo de cada tentativa")
 	ask := fs.Bool("ask", false, "pergunta antes de aplicar o resultado (o padrão é aplicar sozinho)")
-	parallel := fs.Int("parallel", 2, "quantos modelos avaliar ao mesmo tempo")
+	parallel := fs.Int("parallel", 0, "quantos modelos avaliar ao mesmo tempo (padrão: o que a máquina aguenta, 1 com menos de 8 GB de RAM ou até 4 núcleos)")
 	minScore := fs.Int("min-score", 50, "nota mínima (0 a 100) para um modelo receber uma etapa; trapaça é veto em qualquer nota")
 	show := fs.Bool("show", false, "só mostra a última avaliação")
 	applyFlag := fs.Bool("apply", false, "aplica a última avaliação")
@@ -746,17 +775,37 @@ func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout 
 	p := &benchProfile{Date: time.Now(), Axyn: version, Opencode: toolVersion("opencode", "--version"), Models: models, prevForReport: prev}
 	if prev != nil {
 		p.Pinned = prev.Pinned // a choice by hand survives every new evaluation
+		// Evaluating only some tasks or models keeps the other results of the last round:
+		// axyn bench --tasks plan redoes the plan step, not the whole battery.
+		run := map[string]bool{}
+		for _, m := range models {
+			for _, t := range chosen {
+				run[m+"|"+t.ID] = true
+			}
+		}
+		for _, r := range prev.Results {
+			if !run[r.Model+"|"+r.Task] {
+				p.Results = append(p.Results, r)
+			}
+		}
+		for _, m := range prev.Models {
+			if !inList(p.Models, m) {
+				p.Models = append(p.Models, m)
+			}
+		}
+		p.Routing, p.Contained = route(p.Results, minScore)
 	}
 	if runs < 1 {
 		runs = 1
 	}
 	if parallel < 1 {
-		parallel = 1
+		parallel = autoParallel()
 	}
 	total := len(models) * len(chosen) * runs
 	benchRoundDir = filepath.Join(benchDir(), "bench-"+p.Date.Format("20060102-150405"))
 	defer func() { benchRoundDir = "" }()
-	_, _ = fmt.Fprintf(out, "avaliando %d modelo(s) em %d tarefa(s), %d vez(es) cada: %d tentativas, %d modelo(s) por vez (cada tentativa pode levar alguns minutos; o que já rodou fica salvo)\n", len(models), len(chosen), runs, total, parallel)
+	est := time.Duration(total) * 3 * time.Minute / time.Duration(parallel) // about 3 minutes per attempt
+	_, _ = fmt.Fprintf(out, "avaliando %d modelo(s) em %d tarefa(s), %d vez(es) cada: %d tentativas, %d modelo(s) por vez, por volta de %s (depende da máquina e da velocidade dos modelos; o que já rodou fica salvo)\n", len(models), len(chosen), runs, total, parallel, clock(est))
 	_ = os.MkdirAll(benchDir(), 0o755)
 	var log io.Writer = io.Discard
 	if logf, err := os.Create(filepath.Join(benchDir(), "bench-"+p.Date.Format("20060102-150405")+".log")); err == nil {
@@ -865,6 +914,13 @@ func benchOnce(t benchTask, model string, timeout time.Duration, log io.Writer) 
 	_, _ = fmt.Fprintf(log, "\n=== %s em %s (%s)\n", model, t.ID, dir)
 	start := time.Now()
 	out, err := callAgent(dir, t.Agent, model, t.Prompt, timeout, log)
+	if t.Role == roleplan && err == nil && freeTierRefused(out) {
+		// The same fallback the engine uses: the planner with opencode's tools on.
+		out, err = callAgent(dir, planOpenAgent, model, t.Prompt, timeout, log)
+		s := &mcpServer{dir: dir}
+		_, _ = s.git("checkout", "--", ".")
+		_, _ = s.git("clean", "-fdq")
+	}
 	sec := time.Since(start).Seconds()
 	var fe fatalErr
 	if errors.As(err, &fe) {
@@ -884,7 +940,7 @@ func benchModels(only string, all bool) ([]string, error) {
 	var out []string
 	seen := map[string]bool{}
 	add := func(m string) {
-		m = strings.TrimSpace(m)
+		m = strings.TrimSpace(strings.ReplaceAll(m, "\r", ""))
 		if m != "" && m != placeholder && !seen[m] {
 			seen[m] = true
 			out = append(out, m)
@@ -960,7 +1016,7 @@ func (r *runner) autoBench() {
 	}
 	r.set("avaliando modelos")
 	_, _ = fmt.Fprintf(r.log, "avaliando os modelos gratuitos da máquina antes de começar (%s); o axyn escolhe sozinho o melhor modelo para cada etapa\n", why)
-	p := benchCore(models, benchTasks, 1, 2, 10*time.Minute, 50, r.log, func(done, total int, detail string) {
+	p := benchCore(models, benchTasks, 1, 0, 10*time.Minute, 50, r.log, func(done, total int, detail string) {
 		r.st.Done, r.st.Of, r.st.Detail = done, total, detail
 		_ = saveRun(r.s.dir, r.st)
 	})
@@ -1007,3 +1063,18 @@ func benchSet(arg string, stdout, stderr io.Writer) int {
 
 // benchRoundDir is the folder of the running round, where each attempt's diff is kept.
 var benchRoundDir string
+
+// autoParallel is how many models to evaluate at once on this machine: every attempt runs
+// opencode and compiles Go, so a small machine (the owner's i3 with 4 GB) does one at a
+// time, which is faster there than two fighting for memory.
+func autoParallel() int {
+	mem := totalMemory()
+	cpus := runtime.NumCPU()
+	switch {
+	case mem > 0 && mem < 8<<30, cpus <= 4:
+		return 1
+	case mem >= 16<<30 && cpus >= 8:
+		return 3
+	}
+	return 2
+}

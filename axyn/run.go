@@ -267,10 +267,11 @@ func (s *mcpServer) toolStatus(id string) (string, error) {
 }
 
 type runner struct {
-	lastOut string // the tail of the last agent's output (model down detection)
-	s       *mcpServer
-	st      *runState
-	log     io.Writer
+	planAgent string // axyn-plan, or axyn-plan-open after the free tier refused it
+	lastOut   string // the tail of the last agent's output (model down detection)
+	s         *mcpServer
+	st        *runState
+	log       io.Writer
 }
 
 func (r *runner) set(phase string) {
@@ -351,6 +352,9 @@ func callAgent(dir, name, modelID, prompt string, timeout time.Duration, log io.
 }
 
 func (r *runner) plan() error {
+	if r.planAgent == "" {
+		r.planAgent = "axyn-plan"
+	}
 	oldSpec := ""
 	if pl, _, err := r.s.loadPlan(); err == nil {
 		oldSpec = pl.Spec
@@ -359,11 +363,18 @@ func (r *runner) plan() error {
 	for try := 1; try <= planTries; try++ {
 		r.set("planejando")
 		m := r.planModel()
-		if err := r.agent("axyn-plan", m, prompt); err != nil {
+		if err := r.agent(r.planAgent, m, prompt); err != nil {
 			return err
 		}
+		r.undoPlannerEdits()
 		if pl, _, err := r.s.loadPlan(); err == nil && pl.Spec != oldSpec && len(pl.Tickets) > 0 {
 			return nil
+		}
+		if freeTierRefused(r.lastOut) && r.planAgent != planOpenAgent {
+			_, _ = fmt.Fprintf(r.log, "o opencode recusou o planejador restrito no plano gratuito; refazendo com o %s (as edições dele são desfeitas)\n", planOpenAgent)
+			r.planAgent = planOpenAgent
+			try-- // the refusal is opencode's, not a planning attempt
+			continue
 		}
 		if why := downReason(r.lastOut, false); why != "" && m != "" {
 			r.s.markDown(m, why)

@@ -26,8 +26,13 @@ sh: ## shellcheck em todos os scripts (versionados ou novos)
 test: ## Testes dos scripts (tests/*.sh)
 	@set -e; for t in tests/*.sh; do [ -e "$$t" ] || continue; echo "== $$t"; sh "$$t"; done
 
+.PHONY: axyn-templates
+axyn-templates: ## Regenera axyn/templates (os templates que o axyn embute) a partir de template/ (021 FR-4)
+	sh scripts/axyn-templates.sh
+
 .PHONY: go
 go: ## axyn (Go): gofmt, go vet e testes com o race detector (spec 021)
+	sh scripts/axyn-templates.sh --check
 	@cd axyn && fmt="$$(gofmt -l .)" && { [ -z "$$fmt" ] || { echo "gofmt: $$fmt"; exit 1; }; }
 	cd axyn && go vet ./... && go test -race -count=1 ./...
 

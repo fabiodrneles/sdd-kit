@@ -1,0 +1,19 @@
+// Aplica o JaCoCo a todo projeto Java do build Gradle, sem mudar o build.gradle(.kts):
+// o make ci roda com --init-script e soma os CSVs (spec 010 do sdd-kit).
+allprojects {
+    pluginManager.withPlugin('java') {
+        apply plugin: 'jacoco'
+        jacoco { toolVersion = '0.8.15' } // a mesma versão do Makefile (Maven)
+        tasks.named('jacocoTestReport') {
+            dependsOn tasks.named('test')
+            reports {
+                csv.required = true
+                xml.required = false
+                html.required = false
+            }
+        }
+        tasks.named('check') {
+            dependsOn tasks.named('jacocoTestReport')
+        }
+    }
+}

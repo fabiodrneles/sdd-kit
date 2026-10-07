@@ -314,6 +314,10 @@ func (r *runner) run() {
 			return
 		}
 	}
+	if msg := r.prepare(); msg != "" {
+		r.stop(runStopped, msg)
+		return
+	}
 	for {
 		pl, t := r.s.openTicket()
 		switch {

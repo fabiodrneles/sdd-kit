@@ -23,6 +23,9 @@ Uso:
   axyn version        mostra a versão
   axyn gate [--base REF] [--max-lines N] [--ci CMD] [--protect CAMINHO]
                       portões do diff: CI, teste afrouxado, caminhos protegidos e tamanho
+  axyn init [--stack S] [--dir DIR]
+                      prepara o projeto com o template da stack (Makefile com o make ci, CI do
+                      GitHub e lint), sem alterar arquivo existente; o axyn run faz isso sozinho
   axyn install [--dir DIR]
                       configura o opencode do projeto: servidor MCP, agentes e o comando /axyn
   axyn mcp            servidor MCP (stdio) para o opencode: axyn_run, axyn_status e as ferramentas do laço
@@ -48,6 +51,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return exitOK
 	case "gate":
 		return runGate(args[1:], stdout, stderr)
+	case "init":
+		return runInitCmd(args[1:], stdout, stderr)
 	case "install":
 		return runInstall(args[1:], stdout, stderr)
 	case "run":

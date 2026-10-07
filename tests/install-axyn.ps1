@@ -57,3 +57,6 @@ try {
 } finally {
   Remove-Item -Recurse -Force -LiteralPath $tmp -ErrorAction SilentlyContinue
 }
+# O último pwsh filho (checksum errado) saiu com 1 de propósito; o passo do Actions
+# devolve o $LASTEXITCODE, então o sucesso precisa ser explícito.
+exit 0

@@ -258,6 +258,15 @@ From a freshly opened terminal to your first PR merged with axyn. Each step has 
 
 > **Important:** steps 1 to 7 are typed **straight into the terminal** (PowerShell, on Windows), not asked of the AI inside opencode. Each command opencode runs is a separate process, and what it changes in the PATH does not last. opencode only comes in at step 8.
 
+**How to tell where you are:**
+
+| You are in… | What you see | What to type there |
+|---|---|---|
+| **The terminal** (PowerShell, on Windows) | a line like `PS E:\projects\my-site>` (Windows) or `you@pc:~/my-site$` (Linux/macOS), with the cursor blinking at the end | the commands of steps 1 to 7, and `axyn status` |
+| **opencode** | a full screen with the conversation and, at the bottom, the bar with the model (e.g. `Build · Nemotron 3 Ultra Free`) | only `/models` and `/axyn ...` (step 8). Pasting a terminal command there makes the AI talk about it, but it does not run it properly |
+
+To leave opencode and go back to the terminal: `Ctrl + C` (twice, if needed) or `/exit`.
+
 ### 1. Open the terminal
 
 - **Windows:** Windows key, type `PowerShell` and open **Windows PowerShell** (or **Terminal**).

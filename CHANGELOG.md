@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.18.0] - 2026-10-07
+
+### Adicionado
+
+- cobertura de testes automática, sem editar o Makefile (#335)
+
 ## [1.17.0] - 2026-10-07
 
 ### Adicionado

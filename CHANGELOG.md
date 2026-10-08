@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.23.1] - 2026-10-08
+
+### Corrigido
+
+- versão nova não refaz a avaliação, status colorido e sinal de vida na janela clássica (#364)
+
 ## [1.23.0] - 2026-10-08
 
 ### Adicionado

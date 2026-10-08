@@ -8,7 +8,10 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ### Corrigido
 
-- versão nova não refaz a avaliação, status colorido e sinal de vida na janela clássica (#364)
+- atualizar o axyn ou o opencode não refaz mais a avaliação inteira: só um modelo novo é avaliado, e o resto fica como estava (#364)
+- status e perguntas coloridos no terminal: estado, rótulos, comandos a digitar e arquivos sem teste (#364)
+- na janela clássica do Windows, o título mostra o spinner e o tempo a cada segundo, e a linha do progresso se atualiza a cada 30 s, sem atrapalhar a rolagem (#364)
+- a dica da cobertura mostra um comando que o PowerShell aceita; a retomada não aparece mais como "avaliação dos modelos" (#364)
 
 ## [1.23.0] - 2026-10-08
 

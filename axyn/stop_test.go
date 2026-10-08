@@ -104,3 +104,34 @@ func TestGitDiffOddUntracked(t *testing.T) {
 		t.Errorf("o erro traz a mensagem do git: %v", err)
 	}
 }
+
+// #366: the sh and bash of Git for Windows, found from git --exec-path.
+func TestGitShellDirs(t *testing.T) {
+	got := gitShellDirs(`C:\Program Files\Git\mingw64\libexec\git-core` + "\n")
+	if len(got) != 2 || got[0] != `C:\Program Files\Git\usr\bin` || got[1] != `C:\Program Files\Git\bin` {
+		t.Errorf("Git for Windows: %v", got)
+	}
+	if got := gitShellDirs("/usr/lib/git-core"); got != nil {
+		t.Errorf("fora do Windows, nada: %v", got)
+	}
+}
+
+// #366: coverage profiles a model left in the tree go away before the gates; code stays.
+func TestCleanCoverageProfiles(t *testing.T) {
+	dir := t.TempDir()
+	cmd := exec.Command("git", "init", "-q")
+	cmd.Dir = dir
+	_ = cmd.Run()
+	_ = os.WriteFile(filepath.Join(dir, "full_coverage"), []byte("mode: atomic\nx.go:1.1,2.2 1 1\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(dir, "coverage.out"), []byte("mode: set\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(dir, "notes.txt"), []byte("mode: of thinking\n"), 0o644)
+	cleanCoverageProfiles(dir)
+	for _, gone := range []string{"full_coverage", "coverage.out"} {
+		if _, err := os.Stat(filepath.Join(dir, gone)); err == nil {
+			t.Errorf("%s ficou", gone)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(dir, "notes.txt")); err != nil {
+		t.Error("um arquivo que não é perfil de cobertura fica")
+	}
+}

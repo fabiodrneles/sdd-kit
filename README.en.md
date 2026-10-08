@@ -548,6 +548,7 @@ The evaluation runs in the background and the window becomes a panel:
 | Key or command | What it does |
 |---|---|
 | **Enter** | switches between the progress (bar, attempts left, time and estimate) and the readable live log |
+| **p** and Enter | pauses the output so you can scroll and read what already happened; Enter resumes |
 | **Ctrl + C** | closes only the panel; the evaluation goes on (you can even close the terminal) |
 | `axyn bench --watch` | comes back to the panel |
 | `axyn bench --show` | shows the result of the last evaluation: each model's score and which one gets each step |

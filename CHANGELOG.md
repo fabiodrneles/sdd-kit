@@ -8,7 +8,10 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ### Corrigido
 
-- painel legível e rolável na janela clássica do Windows, log colorido e diffs resumidos (#359)
+- na janela clássica do Windows PowerShell, símbolos que a fonte tem (`√ × ►`) no lugar das caixinhas, e o progresso sem animação, para a tela poder ser rolada (#359)
+- `p` e Enter pausam a escrita do painel para ler com calma, e a avaliação continua (#359)
+- log colorido por tipo de linha: ações, comandos, testes que passaram, falhas, tabelas (#359)
+- o diff de cada edição vira uma linha por arquivo, e o texto do modelo deixa de ser cortado (#359)
 
 ## [1.22.0] - 2026-10-08
 

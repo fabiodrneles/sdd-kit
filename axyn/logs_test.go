@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 // #356: the real lines of the owner's bench log, as a person reads them.
@@ -84,5 +85,29 @@ func TestLogFollow(t *testing.T) {
 	got := strings.Join(f.lines(), "\n")
 	if !strings.Contains(got, "⚠ Error: boom") || strings.Contains(got, "meia") {
 		t.Fatalf("new lines (and no partial line): %q", got)
+	}
+}
+
+// #359: the console report has the same facts as the file, laid out for a glance.
+func TestReportTerm(t *testing.T) {
+	now := time.Now()
+	p := &benchProfile{Date: now, Axyn: "v1", Opencode: "1", Models: []string{"opencode/forte", "opencode/fraco"},
+		Results: []benchResult{
+			{Model: "opencode/forte", Task: "plan-001", Role: roleplan, Date: now, Runs: []benchRun{{Score: 100, Pass: true}}},
+			{Model: "opencode/fraco", Task: "plan-001", Role: roleplan, Date: now, Runs: []benchRun{{Score: 0, Notes: []string{"o plano não foi gravado"}}}},
+			{Model: "opencode/forte", Task: "code-001", Role: roleCode, Runs: []benchRun{{Score: 80, Pass: true}}},
+		}}
+	p.Routing, p.Contained = route(p.Results, 50)
+	got := reportTerm(p, "x.md", false)
+	for _, want := range []string{"forte", "100", "80*", "* de uma rodada anterior", "plano     forte", "no modo guiado: fraco", "✘ fraco", "o plano não foi gravado", "x.md"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("falta %q em:\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, "\x1b[") {
+		t.Error("fora do terminal, sem cores")
+	}
+	if !strings.Contains(reportTerm(p, "", true), "\x1b[1;92m") {
+		t.Error("no terminal, a nota forte sai em verde")
 	}
 }

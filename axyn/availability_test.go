@@ -18,6 +18,7 @@ func TestDownReason(t *testing.T) {
 		"Error: 401 Unauthorized: No auth credentials found": "sem chave",
 		"AI_APICallError: Invalid API key provided":          "sem chave",
 		"402 Payment Required":                               "sem chave",
+		"Error: Missing Authentication header":               "sem chave",
 	}
 	for out, want := range cases {
 		got := downReason(out, false)

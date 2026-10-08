@@ -153,6 +153,13 @@ func (r *runner) gateWIP(t *ticket) (green bool, report string, ok bool) {
 	}
 	_, _ = r.s.git("reset", "-q")
 	_, _ = fmt.Fprintf(r.log, "retomando com o código da branch %s: os portões rodam nele primeiro\n", t.WIP)
+	if t.testsOnly() {
+		if pl, _, err := r.s.loadPlan(); err == nil {
+			if put := r.s.restoreProduction(pl); len(put) > 0 {
+				_, _ = fmt.Fprintf(r.log, "o ticket «%s» só acrescenta testes: voltei %s à versão da base; os testes ficam\n", t.Title, strings.Join(put, ", "))
+			}
+		}
+	}
 	r.set("portões")
 	green, report, err := r.gate()
 	if err != nil {

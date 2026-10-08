@@ -608,6 +608,10 @@ func reportText(p, prev *benchProfile) string {
 			if r.old(p.Date) {
 				mark, anyOld = " *", true
 			}
+			if r.allDown() {
+				w(" indisponível (não conta)%s |", mark) // #362: no zero for a model that was down
+				continue
+			}
 			w(" %d, taxa %.0f%%, %s%s |", r.score(), 100*r.rate(), level(*r), mark)
 		}
 		w("\n")
@@ -657,7 +661,11 @@ func reportText(p, prev *benchProfile) string {
 					when = ", rodada de " + r.Date.Format("2006-01-02")
 				}
 			}
-			w("- %s, %s (tentativa %d%s): nota %d em %.0fs", r.Model, r.Task, i+1, when, x.Score, x.Seconds)
+			verdict := fmt.Sprintf("nota %d", x.Score)
+			if x.Down {
+				verdict = "indisponível, sem nota"
+			}
+			w("- %s, %s (tentativa %d%s): %s em %.0fs", r.Model, r.Task, i+1, when, verdict, x.Seconds)
 			if len(x.Notes) > 0 {
 				w(": %s", strings.Join(x.Notes, "; "))
 			}

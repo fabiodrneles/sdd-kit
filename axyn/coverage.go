@@ -604,13 +604,21 @@ func (s *mcpServer) baseRef() string {
 // changed (#375): the saved code of an earlier, off-track attempt carried the spec's
 // --timeout work, and the model kept fixing it instead of writing the tests. The tests
 // stay; a file the base did not have is removed.
+//
+// Putting back only those files left the tests that called the new code broken, and the
+// model "fixed" them by writing the feature again (#379). So when production code changed,
+// the whole tree goes back to the base: the ticket starts clean, with tests only.
 func (s *mcpServer) restoreProduction(pl *plan) []string {
 	paths := s.testsOnlyOffenders(pl)
-	for _, p := range paths {
-		if _, err := s.git("cat-file", "-e", s.baseRef()+":"+p); err == nil {
-			_, _ = s.git("checkout", s.baseRef(), "--", p)
-		} else {
-			_ = os.Remove(filepath.Join(s.dir, filepath.FromSlash(p)))
+	if len(paths) == 0 {
+		return nil
+	}
+	_, _ = s.git("checkout", s.baseRef(), "--", ".")
+	if out, err := s.git("ls-files", "-z", "--others", "--exclude-standard"); err == nil {
+		for _, p := range strings.Split(out, "\x00") {
+			if p != "" && !strings.HasSuffix(p, "/") {
+				_ = os.Remove(filepath.Join(s.dir, filepath.FromSlash(p)))
+			}
 		}
 	}
 	return paths
@@ -624,4 +632,18 @@ func isCodePath(p string) bool {
 		}
 	}
 	return false
+}
+
+// revertOffenders undoes only the production files a tests-only ticket changed (the lock
+// after an attempt; the tests stay so the gates judge them on the real code).
+func (s *mcpServer) revertOffenders(pl *plan) []string {
+	paths := s.testsOnlyOffenders(pl)
+	for _, p := range paths {
+		if _, err := s.git("cat-file", "-e", s.baseRef()+":"+p); err == nil {
+			_, _ = s.git("checkout", s.baseRef(), "--", p)
+		} else {
+			_ = os.Remove(filepath.Join(s.dir, filepath.FromSlash(p)))
+		}
+	}
+	return paths
 }

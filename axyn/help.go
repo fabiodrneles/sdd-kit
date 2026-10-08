@@ -156,7 +156,7 @@ func (r *runner) gateWIP(t *ticket) (green bool, report string, ok bool) {
 	if t.testsOnly() {
 		if pl, _, err := r.s.loadPlan(); err == nil {
 			if put := r.s.restoreProduction(pl); len(put) > 0 {
-				_, _ = fmt.Fprintf(r.log, "o ticket «%s» só acrescenta testes: voltei %s à versão da base; os testes ficam\n", t.Title, strings.Join(put, ", "))
+				_, _ = fmt.Fprintf(r.log, "o ticket «%s» só acrescenta testes, e o código guardado mudava produção (%s): o ticket recomeça da base\n", t.Title, strings.Join(put, ", "))
 			}
 		}
 	}

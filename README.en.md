@@ -514,7 +514,7 @@ axyn writes the spec and the tickets, prepares the project (the `Makefile`, CI a
 
 ### 9. Follow progress
 
-**Where to run:** in a **second terminal**, at the project root (the same folder as in step 5). opencode may stay closed: axyn works in the background.
+**Where to run:** in the terminal, at the project root (the same folder as in step 5). opencode may be closed, because axyn works in the background: leave it with `Ctrl + C` and use the same window.
 
 ```bash
 axyn status --watch
@@ -523,7 +523,57 @@ axyn status --watch
 # Ctrl + C leaves the watch (axyn keeps working).
 ```
 
-To see just the current moment, once: `axyn status`.
+In the same window, press **Enter** to switch between the progress and the **live log**, that is, what the model is doing right now. Press Enter again to go back. No second window needed.
+
+To see just the current moment, once: `axyn status`. To see only the log: `axyn logs`.
+
+### Picking the best model for each step (`axyn bench`)
+
+Each free model is good at something: one plans well, another writes good tests. `axyn bench` tests your models on fixed tasks of each step (plan, code, tests, fix) and scores them only with automatic checks, with no AI judging. A model that weakens a test to pass is vetoed. Then each step goes to the model that solves it best.
+
+**You don't need to do anything:** on the first run, and when the evaluation expires (30 days, a new opencode or axyn version, a new model), `axyn run` evaluates on its own before starting.
+
+**To evaluate whenever you want.** **Where to run:** in the terminal, in any folder.
+
+```bash
+axyn bench
+# Evaluates every free model (those with a key) on every step.
+axyn bench plan tests
+# Redoes only those steps; the others stay as they were.
+# Steps: plan, code, tests, fix (or plano, codigo, testes, conserto).
+```
+
+The evaluation runs in the background and the window becomes a panel:
+
+| Key or command | What it does |
+|---|---|
+| **Enter** | switches between the progress (bar, attempts left, time and estimate) and the readable live log |
+| **Ctrl + C** | closes only the panel; the evaluation goes on (you can even close the terminal) |
+| `axyn bench --watch` | comes back to the panel |
+| `axyn bench --show` | shows the result of the last evaluation: each model's score and which one gets each step |
+
+At the end, the panel shows the summary, a notification pops up and the result is already in use. On a modest machine (4 GB of RAM) the full evaluation can take over an hour, because it evaluates one model at a time. Each attempt is capped at 10 minutes.
+
+**To customize:**
+
+| I want | Command |
+|---|---|
+| Only some models | `axyn bench --models opencode/A,opencode/B` |
+| Include the paid ones | `axyn bench --all` |
+| More confidence (each task 3 times) | `axyn bench --runs 3` |
+| Choose the model of a step myself | `axyn bench --set plan=MODEL` (undo: `--set plan=`) |
+| Be asked before applying | `axyn bench --ask` |
+| Run in this window, not in the background | `axyn bench --here` |
+| Turn it off and go back to the `axyn model` model | `axyn bench --off` (back on: `--apply`) |
+| No automatic evaluation in `axyn run` | `AXYN_BENCH=off` |
+
+Everything is recorded in `~/.config/axyn/bench/` (on Windows, `%USERPROFILE%\.config\axyn\bench\`):
+
+- `bench-DATE.md` has the score and the reason of each attempt.
+- `bench-DATE.log` has the full output of the models.
+- The `bench-DATE/` folder keeps the code each model wrote.
+
+The full explanation is in the [technical documentation](docs/axyn.md#avaliação-dos-modelos-axyn-bench) (in Portuguese).
 
 ### 10. Review and merge the PRs
 
@@ -625,9 +675,10 @@ A run that had stopped continues with `axyn run --resume`, already on the new ve
 | `axyn run --resume` | project root | continues where it stopped (after a question, a crash or a fix of yours) |
 | `axyn history` | project root | file with everything the run did, to ask for help |
 | `axyn version` | any folder | installed version |
-| `axyn bench` | any folder | evaluates your free models on each step (plan, code, tests, fix) and picks the best for each one on its own; runs by itself on the first run |
+| `axyn logs` | project root | follows live, in readable form, what axyn and the models are doing (run or bench) |
+| `axyn bench` | any folder | evaluates your free models on each step (plan, code, tests, fix) and picks the best for each one on its own; runs by itself on the first run; `axyn bench plan tests` redoes only those steps; runs in the background with a panel (Enter toggles progress and log, Ctrl + C closes the panel, `axyn bench --watch` comes back) |
 | `axyn release` | project root | closes a version: shows the computed version and what goes in, and with your yes opens the closing PR with the CHANGELOG |
-| the installer again (above) | root of each project | updates axyn to the new version |
+| `axyn update` | root of each project | updates axyn to the new version (before v1.21.0: the installer again, above) |
 | `gh pr list` / `gh pr view N --web` | project root | lists the PRs / opens PR N in the browser |
 | `gh pr checks N` | project root | PR N's CI |
 | `gh pr merge N --merge --delete-branch` | project root | merges PR N and deletes the branch |
@@ -683,6 +734,15 @@ After 10 attempts per model (each with the previous one's errors, and more help 
 
 **I want to see the code the model wrote**
 `axyn history` (the file has the code of each attempt that did not pass), or open the draft PR with `gh pr list` and `gh pr view N --web`.
+
+**The evaluation (`axyn bench`) shows a model as "unavailable"**
+The model was out of quota, down or gone from the server, and changed no file. It gets no bad score, is evaluated again on the next round, and axyn uses the other models. Nothing to do; to try again now: `axyn bench`.
+
+**Every model did badly on a step of the evaluation**
+No model is dropped: those below the minimum score run in **guided mode**, with files limited to the ticket's, small diffs and old tests protected. The gates still apply. To improve the result, add other models (`axyn model` shows the available ones) and run `axyn bench` again.
+
+**I closed the window in the middle of the evaluation**
+The evaluation keeps going in the background. To get back to the panel: `axyn bench --watch`. If the computer shut down, run `axyn bench` again: what was already evaluated is kept.
 
 **The computer slows down or freezes during `make ci`**
 Lint and tests use a lot of memory. Close opencode and other programs while axyn works: it does not need opencode open.

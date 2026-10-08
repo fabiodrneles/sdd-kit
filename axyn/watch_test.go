@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -98,5 +99,29 @@ func TestLiveLineDemo(t *testing.T) {
 	st := &runState{Phase: "avaliando modelos", PhaseSince: now.Add(-12*time.Minute - 5*time.Second), Done: 5, Of: 16, Detail: "nemotron, testes"}
 	for f := 0; f < 3; f++ {
 		fmt.Println(liveLine(st, f, now))
+	}
+}
+
+// #356: the files people open by hand start with the UTF-8 mark, once.
+func TestUTF8Mark(t *testing.T) {
+	dir := t.TempDir()
+	p := filepath.Join(dir, "r.md")
+	if err := writeText(p, utf8BOM+"ação"); err != nil {
+		t.Fatal(err)
+	}
+	if b, _ := os.ReadFile(p); string(b) != utf8BOM+"ação" {
+		t.Errorf("uma marca só: %q", b)
+	}
+	l := filepath.Join(dir, "x.log")
+	for i := 0; i < 2; i++ {
+		f, err := openLog(l)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, _ = f.WriteString("linha\n")
+		_ = f.Close()
+	}
+	if b, _ := os.ReadFile(l); string(b) != utf8BOM+"linha\nlinha\n" {
+		t.Errorf("o log ganha a marca só quando é novo: %q", b)
 	}
 }

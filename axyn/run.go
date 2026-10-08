@@ -35,13 +35,14 @@ const (
 )
 
 type runOpts struct {
-	CI         string `json:"ci"`
-	Base       string `json:"base"`
-	MaxLines   int    `json:"max_lines"`
-	Config     string `json:"config"`
-	Model      string `json:"model,omitempty"` // forces one model instead of the ladder
-	TimeoutSec int    `json:"timeout_sec"`
-	Resume     bool   `json:"resume,omitempty"` // use the open plan instead of planning again
+	CI         string     `json:"ci"`
+	Base       string     `json:"base"`
+	MaxLines   int        `json:"max_lines"`
+	Config     string     `json:"config"`
+	Model      string     `json:"model,omitempty"` // forces one model instead of the ladder
+	TimeoutSec int        `json:"timeout_sec"`
+	Resume     bool       `json:"resume,omitempty"` // use the open plan instead of planning again
+	Bench      *benchSpec `json:"bench,omitempty"`  // this run is a model bench, not a request (#356)
 }
 
 // runState is the file the status reads. It lives in .axyn/ (ignored by git), so the
@@ -224,7 +225,7 @@ func startDetached(dir, id string) error {
 	if err != nil {
 		return err
 	}
-	logf, err := os.OpenFile(filepath.Join(runsDir(dir), id+".log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
+	logf, err := openLog(filepath.Join(runsDir(dir), id+".log"))
 	if err != nil {
 		return err
 	}
@@ -661,6 +662,9 @@ func runJob(dir, id string, out io.Writer) int {
 	}
 	st.PID = os.Getpid()
 	_ = saveRun(dir, st)
+	if st.Opts.Bench != nil {
+		return benchJob(dir, st, out)
+	}
 	s := &mcpServer{dir: dir, ci: st.Opts.CI, base: st.Opts.Base, maxLines: st.Opts.MaxLines, config: st.Opts.Config, fallback: true}
 	r := &runner{s: s, st: st, log: out}
 	r.run()
@@ -727,7 +731,7 @@ func runRunCmd(args []string, stdout, stderr io.Writer) int {
 	}
 	// The log also goes to the run's file, as in the background, for axyn history (FR-7).
 	out := stdout
-	if logf, err := os.OpenFile(filepath.Join(runsDir(*dir), st.ID+".log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644); err == nil {
+	if logf, err := openLog(filepath.Join(runsDir(*dir), st.ID+".log")); err == nil {
 		defer func() { _ = logf.Close() }()
 		out = io.MultiWriter(stdout, logf)
 	}

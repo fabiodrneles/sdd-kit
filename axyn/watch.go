@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -66,6 +67,8 @@ func watchRun(dir, id string, interval time.Duration, out io.Writer) int {
 	var st *runState
 	next := time.Time{}
 	frame := 0
+	keys := enterKeys(tty) // Enter toggles between the progress and the live log (#356)
+	var follow *logFollow
 	clear := func() {
 		if tty {
 			_, _ = fmt.Fprint(out, "\r\x1b[K")
@@ -85,7 +88,12 @@ func watchRun(dir, id string, interval time.Duration, out io.Writer) int {
 				_, _ = fmt.Fprintf(out, "acompanhando a execução %s: %s (Ctrl + C para sair; o axyn continua trabalhando)\n", st.ID, oneLine(st.Request))
 				shownID = st.ID
 			}
-			if line := watchLine(st); line != last {
+			if follow != nil {
+				for _, l := range follow.lines() {
+					clear()
+					_, _ = fmt.Fprintln(out, l)
+				}
+			} else if line := watchLine(st); line != last {
 				clear()
 				_, _ = fmt.Fprintf(out, "%s  %s\n", time.Now().Format("15:04:05"), line)
 				last = line
@@ -94,6 +102,9 @@ func watchRun(dir, id string, interval time.Duration, out io.Writer) int {
 				clear()
 				_, _ = fmt.Fprintf(out, "\a\n%s\n", renderStatus(st))
 				switch {
+				case st.Status == runDone && st.Opts.Bench != nil:
+					notify("axyn: avaliação concluída", "O axyn já usa o melhor modelo de cada etapa; o resumo está no terminal.")
+					return exitOK
 				case st.Status == runDone:
 					notify("axyn: pronto", "Os tickets foram entregues: "+fmt.Sprint(len(st.Delivered))+" PR(s) para revisar.")
 					return exitOK
@@ -108,6 +119,20 @@ func watchRun(dir, id string, interval time.Duration, out io.Writer) int {
 		if !tty {
 			time.Sleep(interval)
 			continue
+		}
+		select {
+		case <-keys:
+			clear()
+			if follow == nil {
+				follow = newLogFollow(dir, 15)
+				_, _ = fmt.Fprintln(out, cGray+"── log ao vivo (Enter volta ao progresso) ──"+cReset)
+			} else {
+				follow = nil
+				last = ""
+				_, _ = fmt.Fprintln(out, cGray+"── progresso (Enter mostra o log ao vivo) ──"+cReset)
+			}
+			next = time.Time{}
+		default:
 		}
 		_, _ = fmt.Fprint(out, "\r\x1b[K"+liveLine(st, frame, time.Now()))
 		frame++
@@ -189,4 +214,89 @@ func isTerminal(out io.Writer) bool {
 	}
 	fi, err := f.Stat()
 	return err == nil && fi.Mode()&os.ModeCharDevice != 0
+}
+
+// enterKeys sends a value every time Enter is pressed on the console (nil off a terminal).
+func enterKeys(tty bool) <-chan struct{} {
+	if !tty || !isTerminal(os.Stdin) {
+		return nil
+	}
+	ch := make(chan struct{}, 1)
+	go func() {
+		r := bufio.NewReader(os.Stdin)
+		for {
+			if _, err := r.ReadString('\n'); err != nil {
+				return
+			}
+			select {
+			case ch <- struct{}{}:
+			default:
+			}
+		}
+	}()
+	return ch
+}
+
+// logFollow reads, formatted, what was added to the newest log since the last call.
+type logFollow struct {
+	dir, path string
+	off       int64
+	partial   string
+	backlog   []string // the end of the log, shown when the log view opens
+}
+
+func newLogFollow(dir string, back int) *logFollow {
+	f := &logFollow{dir: dir}
+	p, err := latestLog(dir)
+	if err != nil {
+		f.backlog = []string{"  " + err.Error()}
+		return f
+	}
+	f.path = p
+	b, err := os.ReadFile(p)
+	if err != nil {
+		return f
+	}
+	f.off = int64(len(b))
+	all := strings.Split(strings.TrimSuffix(string(b), "\n"), "\n")
+	for i := len(all) - 1; i >= 0 && len(f.backlog) < back; i-- {
+		if l := prettyLine(all[i], true); l != "" {
+			f.backlog = append([]string{l}, f.backlog...)
+		}
+	}
+	return f
+}
+
+func (f *logFollow) lines() []string {
+	out := f.backlog
+	f.backlog = nil
+	if p, err := latestLog(f.dir); err == nil && p != f.path {
+		f.path, f.off, f.partial = p, 0, "" // a newer log started (the next step)
+	}
+	if f.path == "" {
+		return out
+	}
+	fh, err := os.Open(f.path)
+	if err != nil {
+		return out
+	}
+	defer func() { _ = fh.Close() }()
+	if _, err := fh.Seek(f.off, io.SeekStart); err != nil {
+		return out
+	}
+	b, _ := io.ReadAll(fh)
+	f.off += int64(len(b))
+	text := f.partial + string(b)
+	i := strings.LastIndex(text, "\n")
+	if i < 0 {
+		f.partial = text
+		return out
+	}
+	f.partial = text[i+1:]
+	for _, l := range strings.Split(text[:i], "\n") {
+		if p := prettyLine(l, true); p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
 }

@@ -4,6 +4,14 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.23.8] - 2026-10-08
+
+### Corrigido
+
+- ticket só de testes: se o código guardado de uma tentativa anterior mudou produção, o ticket recomeça da base, só com testes, sem testes quebrados que empurrem o modelo a implementar a spec de novo (#379)
+- trava do ticket só de testes: depois de cada tentativa, o axyn desfaz sozinho qualquer mudança em código de produção antes dos portões; os testes precisam passar com o código como ele está (#379)
+- comandos do modelo no opencode ganham 15 minutos em vez de 2 (`OPENCODE_EXPERIMENTAL_BASH_DEFAULT_TIMEOUT_MS`), e o pedido diz para usar um tempo maior no `make test`: o `make ci` lento no Windows era cortado no meio (#379)
+
 ## [1.23.7] - 2026-10-08
 
 ### Corrigido

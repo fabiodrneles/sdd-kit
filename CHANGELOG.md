@@ -8,7 +8,8 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ### Corrigido
 
-- o pedido chega inteiro ao opencode.cmd no Windows e main.go sai da cobertura do patch (#377)
+- no Windows, o pedido chega inteiro ao modelo: o `opencode.cmd` corta o texto nas aspas e em `& | < >`, e o modelo ficava sem o ticket ("qual ticket devo trabalhar?"); esses caracteres são trocados por equivalentes que o cmd.exe não corta (#377)
+- `main.go` sai da cobertura do código novo: `main()` abre e fecha o programa e nenhum teste a roda (#377)
 
 ## [1.23.6] - 2026-10-08
 

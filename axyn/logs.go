@@ -32,7 +32,7 @@ var taskNames = map[string]string{"plan-001": "plano", "code-001": "código", "t
 // latestLog is the newest of this project's run logs and the bench logs.
 func latestLog(dir string) (string, error) {
 	var all []string
-	for _, pat := range []string{filepath.Join(runsDir(dir), "*.log"), filepath.Join(benchDir(), "bench-*.log")} {
+	for _, pat := range []string{filepath.Join(runsDir(dir), "*.log"), filepath.Join(benchRunsDir(dir), "*.log"), filepath.Join(benchDir(), "bench-*.log")} {
 		m, _ := filepath.Glob(pat)
 		all = append(all, m...)
 	}

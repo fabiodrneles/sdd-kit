@@ -198,6 +198,8 @@ O projeto que o axyn prepara recebe o `scripts/sdd-release.sh` e o workflow de r
 ## Interrupções e retomada
 
 - Cada execução grava o seu estado em `.axyn/runs/<ID>.json`, com o PID do processo, e o log completo em `.axyn/runs/<ID>.log`.
+- A avaliação dos modelos (`axyn bench`) tem a sua própria lista, `.axyn/bench-runs/bench-<ID>.json` e `.log`, separada do trabalho do projeto: uma nunca sobrescreve nem esconde a outra. O `axyn run --resume`, o `axyn decide`, o `axyn status` e o `axyn history` olham só para o trabalho; o `axyn bench --watch` olha só para a avaliação. Os resultados da avaliação, que valem para a máquina toda, ficam em `~/.config/axyn/bench/`.
+- Uma coisa por vez em cada pasta: enquanto a avaliação roda, o trabalho espera (e vice-versa), para uma máquina pequena rodar um opencode só. O `axyn stop` para o que estiver rodando.
 - O axyn considera uma execução **interrompida** quando o processo morreu (o computador desligou ou travou) ou quando ela está sem sinal há mais de 30 minutos.
 - `axyn run --resume` continua do ticket aberto. Se ele achar código de uma tentativa interrompida, guarda esse código num commit WIP antes de seguir. Nada se perde.
 - Fechar o terminal ou o opencode não para o axyn: ele roda num processo próprio.

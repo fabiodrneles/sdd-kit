@@ -75,10 +75,23 @@ type runState struct {
 
 func runsDir(dir string) string { return filepath.Join(dir, ".axyn", "runs") }
 
-func statePathFor(dir, id string) string { return filepath.Join(runsDir(dir), id+".json") }
+// The model benches keep their own list (#363): the project's work and the evaluations
+// never share a file, so neither hides the other from resume, decide, status or history.
+func benchRunsDir(dir string) string { return filepath.Join(dir, ".axyn", "bench-runs") }
+
+const benchIDPrefix = "bench-"
+
+func runDirFor(dir, id string) string {
+	if strings.HasPrefix(id, benchIDPrefix) {
+		return benchRunsDir(dir)
+	}
+	return runsDir(dir)
+}
+
+func statePathFor(dir, id string) string { return filepath.Join(runDirFor(dir, id), id+".json") }
 
 func saveRun(dir string, st *runState) error {
-	if err := os.MkdirAll(runsDir(dir), 0o755); err != nil {
+	if err := os.MkdirAll(runDirFor(dir, st.ID), 0o755); err != nil {
 		return err
 	}
 	// .axyn holds only engine state: it must never reach a diff or a commit.
@@ -96,18 +109,14 @@ func saveRun(dir string, st *runState) error {
 
 func loadRun(dir, id string) (*runState, error) {
 	if id == "" {
-		entries, _ := os.ReadDir(runsDir(dir))
-		var names []string
-		for _, e := range entries {
-			if strings.HasSuffix(e.Name(), ".json") {
-				names = append(names, strings.TrimSuffix(e.Name(), ".json"))
+		// The last run of the project's work; a bench saved here by axyn v1.22 is skipped.
+		names := runIDs(runsDir(dir))
+		for i := len(names) - 1; i >= 0; i-- {
+			if st, err := loadRun(dir, names[i]); err == nil && st.Opts.Bench == nil {
+				return st, nil
 			}
 		}
-		if len(names) == 0 {
-			return nil, fmt.Errorf("nenhuma execução ainda: peça uma tarefa com /axyn no opencode, ou rode axyn run \"seu pedido\" na raiz do projeto")
-		}
-		sort.Strings(names)
-		id = names[len(names)-1]
+		return nil, fmt.Errorf("nenhuma execução ainda: peça uma tarefa com /axyn no opencode, ou rode axyn run \"seu pedido\" na raiz do projeto")
 	}
 	if strings.ContainsAny(id, `/\.`) {
 		return nil, fmt.Errorf("id inválido: %s", id)
@@ -123,14 +132,17 @@ func loadRun(dir, id string) (*runState, error) {
 	return &st, nil
 }
 
-// loadWork is the last run of the project's work, past any model bench run after it
-// (#363): a bench is kept with the runs, but axyn run --resume, decide, status and history
-// are about the work. With an id, it is that run.
-func loadWork(dir, id string) (*runState, error) {
-	if id != "" {
-		return loadRun(dir, id)
+// loadBenchRun is the last model bench of this folder.
+func loadBenchRun(dir string) (*runState, error) {
+	names := runIDs(benchRunsDir(dir))
+	if len(names) == 0 {
+		return nil, fmt.Errorf("nenhuma avaliação dos modelos ainda nesta pasta; para começar: axyn bench")
 	}
-	entries, _ := os.ReadDir(runsDir(dir))
+	return loadRun(dir, names[len(names)-1])
+}
+
+func runIDs(d string) []string {
+	entries, _ := os.ReadDir(d)
 	var names []string
 	for _, e := range entries {
 		if strings.HasSuffix(e.Name(), ".json") {
@@ -138,21 +150,19 @@ func loadWork(dir, id string) (*runState, error) {
 		}
 	}
 	sort.Strings(names)
-	for i := len(names) - 1; i >= 0; i-- {
-		if st, err := loadRun(dir, names[i]); err == nil && st.Opts.Bench == nil {
-			return st, nil
-		}
-	}
-	return loadRun(dir, "")
+	return names
 }
 
-// shownRun is what axyn status shows: a bench while it runs, else the project's work.
-func shownRun(dir, id string) (*runState, error) {
-	st, err := loadRun(dir, id)
-	if err != nil || id != "" || st.Opts.Bench == nil || alive(st) {
-		return st, err
+// busy is what runs in this folder now: the work or a bench (one at a time, so a small
+// machine runs one opencode at a time).
+func busy(dir string) *runState {
+	if st, err := loadRun(dir, ""); err == nil && alive(st) {
+		return st
 	}
-	return loadWork(dir, "")
+	if st, err := loadBenchRun(dir); err == nil && alive(st) {
+		return st
+	}
+	return nil
 }
 
 // alive says whether a run marked "rodando" still has its worker (spec 021 FR-8): a
@@ -205,12 +215,11 @@ func (s *mcpServer) startRun(request string, resume bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	last, lastErr := loadRun(abs, "")
-	if lastErr == nil && alive(last) {
-		return "", errRunning{last}
+	if b := busy(abs); b != nil {
+		return "", errRunning{b}
 	}
-	if work, err := loadWork(abs, ""); resume && strings.TrimSpace(request) == "" && err == nil && work.Opts.Bench == nil {
-		request = work.Request // the status keeps showing what was asked (not the bench's)
+	if last, err := loadRun(abs, ""); resume && strings.TrimSpace(request) == "" && err == nil {
+		request = last.Request // the status keeps showing what was asked
 	}
 	if resume && strings.TrimSpace(request) == "" {
 		if pl, _, err := s.loadPlan(); err == nil {
@@ -257,7 +266,7 @@ func startDetached(dir, id string) error {
 	if err != nil {
 		return err
 	}
-	logf, err := openLog(filepath.Join(runsDir(dir), id+".log"))
+	logf, err := openLog(filepath.Join(runDirFor(dir, id), id+".log"))
 	if err != nil {
 		return err
 	}
@@ -296,7 +305,7 @@ func (s *mcpServer) toolRun(request string, resume bool) (string, error) {
 }
 
 func (s *mcpServer) toolStatus(id string) (string, error) {
-	st, err := shownRun(s.dir, id)
+	st, err := loadRun(s.dir, id)
 	if err != nil {
 		return "", err
 	}
@@ -786,7 +795,7 @@ func runStatusCmd(args []string, stdout, stderr io.Writer) int {
 	if *watch {
 		return watchRun(*dir, fs.Arg(0), *interval, stdout)
 	}
-	st, err := shownRun(*dir, fs.Arg(0))
+	st, err := loadRun(*dir, fs.Arg(0))
 	if err != nil {
 		_, _ = fmt.Fprintf(stderr, "axyn status: %v\n", err)
 		return exitFail

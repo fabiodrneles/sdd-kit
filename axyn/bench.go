@@ -751,7 +751,12 @@ func runBenchCmd(args []string, stdout, stderr io.Writer) int {
 		return exitOK
 	}
 	if *watch {
-		return watchRun(".", "", 2*time.Second, stdout)
+		last, err := loadBenchRun(".")
+		if err != nil {
+			_, _ = fmt.Fprintln(stdout, err.Error())
+			return exitOK
+		}
+		return watchRun(".", last.ID, 2*time.Second, stdout)
 	}
 	for _, need := range []string{"go", "git"} {
 		if _, err := lookPath(need); err != nil {
@@ -1241,8 +1246,12 @@ func pickTasks(names []string) []benchTask {
 // Ctrl + C closes only the panel; axyn bench --watch comes back to it (#356).
 func startBench(models []string, chosen []benchTask, runs, parallel int, timeout time.Duration, minScore int, stdout, stderr io.Writer) int {
 	dir, _ := filepath.Abs(".")
-	if last, err := loadRun(dir, ""); err == nil && alive(last) {
-		_, _ = fmt.Fprintf(stderr, "axyn bench: já há uma execução em andamento nesta pasta (%s); para acompanhar: axyn status --watch\n", last.ID)
+	if b := busy(dir); b != nil {
+		if b.Opts.Bench != nil {
+			_, _ = fmt.Fprintf(stderr, "axyn bench: já há uma avaliação em andamento nesta pasta (%s); para acompanhar: axyn bench --watch; para parar: axyn stop\n", b.ID)
+		} else {
+			_, _ = fmt.Fprintf(stderr, "axyn bench: o axyn está trabalhando no projeto nesta pasta (%s); avalie depois que ele terminar, ou pare com axyn stop (axyn run --resume continua depois)\n", b.ID)
+		}
 		return exitFail
 	}
 	spec := &benchSpec{Models: models, Runs: runs, Parallel: parallel, TimeoutSec: int(timeout / time.Second), MinScore: minScore}
@@ -1250,7 +1259,7 @@ func startBench(models []string, chosen []benchTask, runs, parallel int, timeout
 		spec.Tasks = append(spec.Tasks, t.Role)
 	}
 	now := time.Now()
-	st := &runState{ID: now.Format("20060102-150405"), Request: "avaliação dos modelos", Status: runRunning, Phase: "avaliando modelos", Started: now, PhaseSince: now, Opts: runOpts{Bench: spec}}
+	st := &runState{ID: benchIDPrefix + now.Format("20060102-150405"), Request: "avaliação dos modelos", Status: runRunning, Phase: "avaliando modelos", Started: now, PhaseSince: now, Opts: runOpts{Bench: spec}}
 	if err := saveRun(dir, st); err != nil {
 		_, _ = fmt.Fprintf(stderr, "axyn bench: %v\n", err)
 		return exitFail

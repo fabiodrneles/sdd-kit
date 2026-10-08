@@ -153,7 +153,7 @@ func buildHistory(dir string, st *runState) string {
 	w("```\n")
 
 	w("\n## Log completo\n\n")
-	if logb, err := os.ReadFile(filepath.Join(runsDir(dir), st.ID+".log")); err == nil {
+	if logb, err := os.ReadFile(filepath.Join(runDirFor(dir, st.ID), st.ID+".log")); err == nil {
 		w("```text\n%s\n```\n", strings.TrimRight(strings.TrimPrefix(string(logb), utf8BOM), "\n"))
 	} else {
 		w("Sem log (%v).\n", err)
@@ -163,7 +163,7 @@ func buildHistory(dir string, st *runState) string {
 
 // writeHistory writes the history of run id (the last one when empty) and returns its path.
 func writeHistory(dir, id, out string) (string, error) {
-	st, err := loadWork(dir, id)
+	st, err := loadRun(dir, id)
 	if err != nil {
 		return "", fmt.Errorf("nenhuma execução para o histórico: %v", err)
 	}

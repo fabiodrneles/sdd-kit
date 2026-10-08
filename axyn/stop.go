@@ -19,7 +19,13 @@ func runStopCmd(args []string, stdout, stderr io.Writer) int {
 		return exitUsage
 	}
 	abs, _ := filepath.Abs(*dir)
-	st, err := loadRun(abs, fs.Arg(0))
+	var st *runState
+	var err error
+	if fs.Arg(0) != "" {
+		st, err = loadRun(abs, fs.Arg(0))
+	} else if st = busy(abs); st == nil {
+		err = fmt.Errorf("nada rodando")
+	}
 	if err != nil || !alive(st) {
 		_, _ = fmt.Fprintln(stdout, "nada rodando nesta pasta; para ver a última execução: axyn status")
 		return exitOK

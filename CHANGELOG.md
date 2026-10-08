@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.24.0] - 2026-10-08
+
+### Adicionado
+
+- trava dos testes existentes nos tickets de código: depois de cada tentativa, o axyn desfaz as mudanças nos testes que a base já tem (testes novos ficam), e o pedido ao modelo avisa disso; se o modelo insiste no mesmo teste em 2 tentativas, a execução para e pergunta ao dono: `axyn decide A` libera esses testes para o ticket, `axyn decide B` mantém a trava (#381)
+
 ## [1.23.8] - 2026-10-08
 
 ### Corrigido

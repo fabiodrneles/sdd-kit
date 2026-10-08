@@ -12,6 +12,7 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 - `p` e Enter pausam a escrita do painel para ler com calma, e a avaliação continua (#359)
 - log colorido por tipo de linha: ações, comandos, testes que passaram, falhas, tabelas (#359)
 - o diff de cada edição vira uma linha por arquivo, e o texto do modelo deixa de ser cortado (#359)
+- modelo sem chave de API válida ou sem crédito fica como indisponível, e não como nota zero; depois da primeira queda, as outras tarefas dele na rodada são puladas na hora (#360)
 
 ## [1.22.0] - 2026-10-08
 

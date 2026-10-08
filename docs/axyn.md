@@ -76,7 +76,7 @@ Os portões são determinísticos: o mesmo código dá sempre o mesmo resultado.
 |---|---|---|
 | `[protected]` | O diff mexe num caminho protegido: `.github/workflows`, `Makefile`, configuração do lint (`.golangci.yml`, `eslint`, `.markdownlint`), `lychee.toml`, `specs`, `.axyn`, `axyn.yaml`, `.sdd-release`, `plugin.json` | O modelo não pode mudar as regras do jogo. Mude esses arquivos você mesmo, na branch base, com commit |
 | `[tests]` | Um arquivo de teste foi apagado ou ficou com menos testes | Os testes só podem aumentar |
-| `[size]` | O diff passa de 400 linhas (adicionadas mais removidas) | Ticket grande demais: a escada divide o ticket |
+| `[size]` | O diff passa de 400 linhas (adicionadas mais removidas). As linhas novas de teste não contam, e as de teste apagadas contam | Ticket grande demais: a escada divide o ticket |
 | `[tests]` | O ticket muda código sem nenhum teste novo ou alterado | Escreva um teste para cada critério de aceite |
 | `[coverage]` | Em Go, menos de 80% das linhas novas rodam nos testes | A reprovação cita arquivo e linhas sem teste |
 | `[ci]` | O `make ci` falhou | O motivo traz até 6 linhas de erro da saída do `make ci` |

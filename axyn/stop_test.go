@@ -135,3 +135,20 @@ func TestCleanCoverageProfiles(t *testing.T) {
 		t.Error("um arquivo que não é perfil de cobertura fica")
 	}
 }
+
+// #368: new test lines do not count against the size of a ticket; production code does.
+func TestCheckSizeIgnoresNewTests(t *testing.T) {
+	many := make([]string, 1180)
+	tests := fileDiff{path: "cmd/check_test.go", added: many}
+	if f := checkSize([]fileDiff{tests}, 400); len(f) != 0 {
+		t.Errorf("1180 linhas de teste novas não passam do limite: %v", f)
+	}
+	code := fileDiff{path: "cmd/check.go", added: make([]string, 401)}
+	if f := checkSize([]fileDiff{tests, code}, 400); len(f) != 1 || !strings.Contains(f[0].reason, "1180 linhas novas de teste") {
+		t.Errorf("código de produção conta: %v", f)
+	}
+	gone := fileDiff{path: "cmd/check_test.go", removed: make([]string, 401)}
+	if f := checkSize([]fileDiff{gone}, 400); len(f) != 1 {
+		t.Errorf("linhas de teste apagadas contam: %v", f)
+	}
+}

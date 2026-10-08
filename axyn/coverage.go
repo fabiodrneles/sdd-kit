@@ -425,9 +425,9 @@ func applyCoverageChoice(s *mcpServer, choice string) error {
 		}
 		// #366: on the owner's machine the model reached 94.8% and kept going for main() and
 		// os.Exit, writing a new coverage file at every try. The ticket says when to stop.
-		body := fmt.Sprintf("Escreva testes para o código que já existe, até a cobertura do projeto chegar a %d%% (hoje: %.1f%%). Não mude o código de produção, só acrescente testes. Comece pelos arquivos menos cobertos:\n- %s\n\nMeça só com `make test` (ele mostra a cobertura total) e pare assim que ela passar de %d%%: não é preciso cobrir main() nem funções que chamam os.Exit. Não grave arquivos de cobertura na pasta do projeto.",
+		body := fmt.Sprintf("Escreva testes para o código que já existe, até a cobertura do projeto chegar a %d%% (hoje: %.1f%%). Não mude o código de produção, só acrescente testes. Comece pelos arquivos menos cobertos:\n- %s\n\nMeça só com `make test` (ele mostra a cobertura total) e pare assim que ela passar de %d%%: não é preciso cobrir main() nem funções que chamam os.Exit. Não grave arquivos de cobertura na pasta do projeto. Não implemente nada da spec neste ticket: as funcionalidades ficam para os outros tickets, e o axyn reprova mudança em código de produção aqui (só o necessário para os erros que o make ci já tinha na base).",
 			pl.CoverageGoal, pl.CoverageNow, strings.Join(pl.CoverageGaps, "\n- "), pl.CoverageGoal)
-		t := ticket{ID: id + 1, Title: fmt.Sprintf("Testes para a cobertura chegar a %d%%", pl.CoverageGoal), Body: body}
+		t := ticket{ID: id + 1, Title: fmt.Sprintf("%s %d%%", coverageTicketTitle, pl.CoverageGoal), Body: body, TestsOnly: true}
 		pl.Tickets = append([]ticket{t}, pl.Tickets...)
 	}
 	return s.savePlan(pl, path)
@@ -546,4 +546,52 @@ func coverageDropMessage(s *mcpServer, pl *plan) string {
 	w("  2. O axyn escreve testes até a cobertura voltar a %d%%, num ticket antes dos outros:\n       axyn coverage auto\n", pl.CoverageFloor)
 	w("  3. Aceitar o novo mínimo de %.0f%% (fica registrado como decisão na spec, para auditoria):\n       axyn coverage accept", math.Floor(pl.CoverageNow))
 	return b.String()
+}
+
+const coverageTicketTitle = "Testes para a cobertura chegar a"
+
+// testsOnly: a coverage ticket, also one written before the flag existed.
+func (t *ticket) testsOnly() bool {
+	return t.TestsOnly || strings.HasPrefix(t.Title, coverageTicketTitle)
+}
+
+var baseErrorPathRe = regexp.MustCompile(`^\s*(?:\./|\.\\)?([^\s:]+\.\w+):\d+`)
+
+// testsOnlyFindings rejects production code changed by a tests-only ticket (#372): on the
+// owner's project the model of the coverage ticket started implementing the spec's
+// --timeout flag, the work of the other tickets. The files named in the errors the base
+// already had (make ci failing before any ticket) may change: the first ticket fixes them.
+func (s *mcpServer) testsOnlyFindings(pl *plan, t *ticket) []finding {
+	base := s.base
+	if base == "" {
+		base = "HEAD"
+	}
+	d, err := gitDiff(s.dir, base)
+	if err != nil {
+		return nil
+	}
+	allowed := map[string]bool{}
+	for _, e := range pl.BaseErrors {
+		if m := baseErrorPathRe.FindStringSubmatch(e); m != nil {
+			allowed[strings.ReplaceAll(m[1], "\\", "/")] = true
+		}
+	}
+	var out []finding
+	for _, f := range parseDiff(strings.NewReader(d)) {
+		if isTestPath(f.path) || allowed[f.path] || !isCodePath(f.path) {
+			continue
+		}
+		out = append(out, finding{"escopo", fmt.Sprintf("o ticket «%s» só acrescenta testes; desfaça a mudança em %s (as funcionalidades da spec ficam para os outros tickets)", t.Title, f.path)})
+	}
+	return out
+}
+
+// isCodePath: production source code (not docs, config or tests).
+func isCodePath(p string) bool {
+	for _, ext := range []string{".go", ".py", ".js", ".jsx", ".ts", ".tsx", ".java", ".kt", ".rs", ".cs", ".rb", ".php"} {
+		if strings.HasSuffix(p, ext) {
+			return true
+		}
+	}
+	return false
 }

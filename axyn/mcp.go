@@ -48,6 +48,8 @@ type ticket struct {
 	ACs   []string `json:"acs"`
 	Done  bool     `json:"done"`
 	WIP   string   `json:"wip,omitempty"` // branch with the last attempt that did not pass (#324)
+	// TestsOnly: the ticket adds tests and nothing else (the coverage ticket, #372).
+	TestsOnly bool `json:"tests_only,omitempty"`
 
 	// Record of the delivery (spec 021 FR-7).
 	Attempts []attempt `json:"attempts,omitempty"`
@@ -304,6 +306,9 @@ func (s *mcpServer) gate(a gateArgs) (bool, string, error) {
 		if _, t := s.openTicket(); t != nil {
 			findings = append(findings, checkPlan(t, a.Plan)...)
 		}
+	}
+	if pl, t := s.openTicket(); t != nil && t.testsOnly() {
+		findings = append(findings, s.testsOnlyFindings(pl, t)...)
 	}
 	if s.contained {
 		if _, t := s.openTicket(); t != nil {

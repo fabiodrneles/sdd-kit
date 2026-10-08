@@ -69,6 +69,8 @@ func watchRun(dir, id string, interval time.Duration, out io.Writer) int {
 	frame := 0
 	keys := enterKeys(tty) // Enter toggles between the progress and the live log (#356)
 	var follow *logFollow
+	paused := false // p + Enter: nothing is written, so the window can be scrolled (#360)
+	lastLive := ""
 	clear := func() {
 		if tty {
 			_, _ = fmt.Fprint(out, "\r\x1b[K")
@@ -88,7 +90,9 @@ func watchRun(dir, id string, interval time.Duration, out io.Writer) int {
 				_, _ = fmt.Fprintf(out, "acompanhando a execução %s: %s (Ctrl + C para sair; o axyn continua trabalhando)\n", st.ID, oneLine(st.Request))
 				shownID = st.ID
 			}
-			if follow != nil {
+			if paused && alive(st) {
+				// nothing is written while paused; the log is read later, from where it stopped
+			} else if follow != nil {
 				for _, l := range follow.lines() {
 					clear()
 					_, _ = fmt.Fprintln(out, l)
@@ -125,18 +129,39 @@ func watchRun(dir, id string, interval time.Duration, out io.Writer) int {
 			continue
 		}
 		select {
-		case <-keys:
+		case k := <-keys:
 			clear()
-			if follow == nil {
+			switch {
+			case k == "p" && !paused:
+				paused = true
+				_, _ = fmt.Fprintln(out, cGray+"── pausado: role a tela à vontade; a avaliação continua (Enter volta) ──"+cReset)
+			case paused:
+				paused = false
+				_, _ = fmt.Fprintln(out, cGray+"── continuando ──"+cReset)
+			case follow == nil:
 				follow = newLogFollow(dir, 15)
-				_, _ = fmt.Fprintln(out, cGray+"── log ao vivo (Enter volta ao progresso) ──"+cReset)
-			} else {
+				_, _ = fmt.Fprintln(out, cGray+"── log ao vivo (Enter volta ao progresso; p + Enter pausa para rolar a tela) ──"+cReset)
+			default:
 				follow = nil
 				last = ""
-				_, _ = fmt.Fprintln(out, cGray+"── progresso (Enter mostra o log ao vivo) ──"+cReset)
+				_, _ = fmt.Fprintln(out, cGray+"── progresso (Enter mostra o log ao vivo; p + Enter pausa para rolar a tela) ──"+cReset)
 			}
 			next = time.Time{}
 		default:
+		}
+		if paused {
+			time.Sleep(120 * time.Millisecond)
+			continue
+		}
+		if classicConsole {
+			// The classic console jumps back to the end on every write, so a line redrawn
+			// all the time would forbid scrolling (#360): one line per change of progress.
+			if k := fmt.Sprint(st.Phase, st.Done, st.Of, st.Detail); k != lastLive {
+				_, _ = fmt.Fprintln(out, liveLine(st, frame, time.Now()))
+				lastLive = k
+			}
+			time.Sleep(120 * time.Millisecond)
+			continue
 		}
 		_, _ = fmt.Fprint(out, "\r\x1b[K"+liveLine(st, frame, time.Now()))
 		frame++
@@ -146,12 +171,28 @@ func watchRun(dir, id string, interval time.Duration, out io.Writer) int {
 
 var spinner = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
 
+// The classic Windows console (conhost, the "Windows PowerShell" window) draws with a font
+// that has no braille or check marks: they show as empty boxes (#360). There, the axyn uses
+// the glyphs every Windows font has; Windows Terminal and the other systems keep the rich ones.
+var classicConsole = hostOS == "windows" && os.Getenv("WT_SESSION") == "" && os.Getenv("TERM_PROGRAM") == ""
+
+var spinnerClassic = []string{"▌", "▀", "▐", "▄"}
+
+// glyph is fancy, or plain on the classic Windows console.
+func glyph(fancy, plain string) string {
+	if classicConsole {
+		return plain
+	}
+	return fancy
+}
+
 // The axyn palette: yellow and white (#348); gray only for what is secondary.
 const (
 	cReset  = "\x1b[0m"
 	cYellow = "\x1b[1;93m" // bright yellow, bold: the spinner and the bar
 	cWhite  = "\x1b[1;97m" // bright white, bold: the phase and the numbers
 	cGray   = "\x1b[90m"
+	cCyan   = "\x1b[96m" // the actions of an agent in the log
 )
 
 func clock(d time.Duration) string {
@@ -172,7 +213,7 @@ func liveLine(st *runState, frame int, now time.Time) string {
 		since = st.Started
 	}
 	var b strings.Builder
-	fmt.Fprintf(&b, "%s%s%s %s%s%s", cYellow, spinner[frame%len(spinner)], cReset, cWhite, st.Phase, cReset)
+	fmt.Fprintf(&b, "%s%s%s %s%s%s", cYellow, spinnerFrame(frame), cReset, cWhite, st.Phase, cReset)
 	if st.Of > 0 {
 		fmt.Fprintf(&b, "  %s  %s%3d%%%s  %d/%d", richBar(st.Done, st.Of, 30), cWhite, 100*st.Done/st.Of, cReset, st.Done, st.Of)
 	}
@@ -220,20 +261,21 @@ func isTerminal(out io.Writer) bool {
 	return err == nil && fi.Mode()&os.ModeCharDevice != 0
 }
 
-// enterKeys sends a value every time Enter is pressed on the console (nil off a terminal).
-func enterKeys(tty bool) <-chan struct{} {
+// enterKeys sends what was typed every time Enter is pressed on the console (nil off a terminal).
+func enterKeys(tty bool) <-chan string {
 	if !tty || !isTerminal(os.Stdin) {
 		return nil
 	}
-	ch := make(chan struct{}, 1)
+	ch := make(chan string, 1)
 	go func() {
 		r := bufio.NewReader(os.Stdin)
 		for {
-			if _, err := r.ReadString('\n'); err != nil {
+			l, err := r.ReadString('\n')
+			if err != nil {
 				return
 			}
 			select {
-			case ch <- struct{}{}:
+			case ch <- strings.ToLower(strings.TrimSpace(l)):
 			default:
 			}
 		}
@@ -247,10 +289,11 @@ type logFollow struct {
 	off       int64
 	partial   string
 	backlog   []string // the end of the log, shown when the log view opens
+	pretty    *logPretty
 }
 
 func newLogFollow(dir string, back int) *logFollow {
-	f := &logFollow{dir: dir}
+	f := &logFollow{dir: dir, pretty: &logPretty{color: true}}
 	p, err := latestLog(dir)
 	if err != nil {
 		f.backlog = []string{"  " + err.Error()}
@@ -262,12 +305,14 @@ func newLogFollow(dir string, back int) *logFollow {
 		return f
 	}
 	f.off = int64(len(b))
-	all := strings.Split(strings.TrimSuffix(string(b), "\n"), "\n")
-	for i := len(all) - 1; i >= 0 && len(f.backlog) < back; i-- {
-		if l := prettyLine(all[i], true); l != "" {
-			f.backlog = append([]string{l}, f.backlog...)
-		}
+	var shown []string
+	for _, l := range strings.Split(strings.TrimSuffix(string(b), "\n"), "\n") {
+		shown = append(shown, f.pretty.lines(l)...)
 	}
+	if len(shown) > back {
+		shown = shown[len(shown)-back:]
+	}
+	f.backlog = shown
 	return f
 }
 
@@ -275,7 +320,7 @@ func (f *logFollow) lines() []string {
 	out := f.backlog
 	f.backlog = nil
 	if p, err := latestLog(f.dir); err == nil && p != f.path {
-		f.path, f.off, f.partial = p, 0, "" // a newer log started (the next step)
+		f.path, f.off, f.partial, f.pretty = p, 0, "", &logPretty{color: true} // a newer log started (the next step)
 	}
 	if f.path == "" {
 		return out
@@ -298,9 +343,14 @@ func (f *logFollow) lines() []string {
 	}
 	f.partial = text[i+1:]
 	for _, l := range strings.Split(text[:i], "\n") {
-		if p := prettyLine(l, true); p != "" {
-			out = append(out, p)
-		}
+		out = append(out, f.pretty.lines(l)...)
 	}
 	return out
+}
+
+func spinnerFrame(frame int) string {
+	if classicConsole {
+		return spinnerClassic[frame%len(spinnerClassic)]
+	}
+	return spinner[frame%len(spinner)]
 }

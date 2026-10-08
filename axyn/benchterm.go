@@ -92,7 +92,7 @@ func reportTerm(p *benchProfile, path string, color bool) string {
 	for _, role := range []string{roleplan, roleCode, roleTests, roleFix} {
 		label := pad(roleNames[role], 9)
 		if pin := p.Pinned[role]; pin != "" {
-			w("  %s %s %s %s\n", c(cYellow, "▸"), c(cWhite, label), short(pin), c(cGray, "(fixado por você)"))
+			w("  %s %s %s %s\n", c(cYellow, glyph("▸", "►")), c(cWhite, label), short(pin), c(cGray, "(fixado por você)"))
 			continue
 		}
 		var top, held []string
@@ -117,7 +117,7 @@ func reportTerm(p *benchProfile, path string, color bool) string {
 		if len(held) > 0 {
 			line += c(cGray, fmt.Sprintf("  (no modo guiado: %s)", strings.Join(held, ", ")))
 		}
-		w("  %s %s %s\n", c(cYellow, "▸"), c(cWhite, label), line)
+		w("  %s %s %s\n", c(cYellow, glyph("▸", "►")), c(cWhite, label), line)
 	}
 
 	var bad []string
@@ -134,7 +134,7 @@ func reportTerm(p *benchProfile, path string, color bool) string {
 			if r.old(p.Date) {
 				when = c(cGray, " *")
 			}
-			bad = append(bad, fmt.Sprintf("  %s %s %s%s %s", c(dimRd, "✘"), pad(short(r.Model), width), c(cWhite, pad(taskNames[r.Task], 9)), when, c(cGray, shorten(oneLine(why), 110))))
+			bad = append(bad, fmt.Sprintf("  %s %s %s%s %s", c(dimRd, glyph("✘", "×")), pad(short(r.Model), width), c(cWhite, pad(taskNames[r.Task], 9)), when, c(cGray, shorten(oneLine(why), 110))))
 		}
 	}
 	if len(bad) > 0 {

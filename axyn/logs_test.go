@@ -111,3 +111,57 @@ func TestReportTerm(t *testing.T) {
 		t.Error("no terminal, a nota forte sai em verde")
 	}
 }
+
+// #360: the diff an agent prints after an edit folds into one line; the prose stays whole.
+func TestLogPrettyFoldsDiffs(t *testing.T) {
+	p := &logPretty{}
+	var got []string
+	prose := "I'll help you debug the CI failure. Since this involves a test failure, I need to use the systematic-debugging skill first to properly investigate it."
+	for _, l := range []string{
+		`← Edit slug.go`,
+		`Index: C:\Users\G\AppData\Local\Temp\axyn-bench-code-001-1\slug.go`,
+		"===================================================================",
+		`--- C:\x\slug.go`, `+++ C:\x\slug.go`, "@@ -1,9 +1,49 @@", " package slug", "+import (", "+\t\"strings\"", "-\treturn \"\"", "",
+		"Now let me verify the fixes work:", prose,
+	} {
+		got = append(got, p.lines(l)...)
+	}
+	all := strings.Join(got, "\n")
+	if !strings.Contains(all, "slug.go: +2 −1 linhas") || strings.Contains(all, "import") || strings.Contains(all, "@@") {
+		t.Fatalf("diff not folded:\n%s", all)
+	}
+	if !strings.Contains(all, "Now let me verify") || !strings.Contains(all, prose) {
+		t.Fatalf("prose must stay whole:\n%s", all)
+	}
+}
+
+// #360: the classic Windows console has no braille nor check marks; the axyn uses the
+// glyphs every Windows font has.
+func TestClassicConsoleGlyphs(t *testing.T) {
+	defer func(v bool) { classicConsole = v }(classicConsole)
+	classicConsole = true
+	if got := prettyLine("--- nota 100, passou true, trapaça false: ok", false); !strings.Contains(got, "√ nota 100") {
+		t.Errorf("score: %q", got)
+	}
+	if f := spinnerFrame(0); f != "▌" {
+		t.Errorf("spinner: %q", f)
+	}
+}
+
+// #360: each kind of line has its color, so the log is not a wall of white.
+func TestPrettyLineColors(t *testing.T) {
+	for line, color := range map[string]string{
+		"→ Read slug.go":                cCyan,
+		"$ go test ./...":               cYellow,
+		"ok  \tbenchcode\t3.1s":         "\x1b[92m",
+		"FAIL\tbenchfix [build failed]": "\x1b[91m",
+		"**Summary of fixes**":          cWhite,
+	} {
+		if got := prettyLine(line, true); !strings.HasPrefix(got, color) {
+			t.Errorf("%q: %q", line, got)
+		}
+	}
+	if got := prettyLine(`go: unlinkat C:\x\b.test.exe: O arquivo já está sendo usado por outro processo.`, false); !strings.Contains(got, "não conta") {
+		t.Errorf("Windows cleanup warning: %q", got)
+	}
+}

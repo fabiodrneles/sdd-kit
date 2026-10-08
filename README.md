@@ -608,6 +608,7 @@ A avaliação roda em segundo plano e a janela vira um painel:
 | Tecla ou comando | O que faz |
 |---|---|
 | **Enter** | troca entre o progresso (barra, quantas tentativas faltam, tempo e estimativa) e o log ao vivo, legível |
+| **p** e Enter | pausa a escrita para você rolar a tela e ler o que já passou; Enter continua |
 | **Ctrl + C** | fecha só o painel; a avaliação continua (pode até fechar o terminal) |
 | `axyn bench --watch` | volta ao painel |
 | `axyn bench --show` | mostra o resultado da última avaliação: a nota de cada modelo e qual vai para cada etapa |

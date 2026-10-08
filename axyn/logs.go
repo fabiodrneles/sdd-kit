@@ -23,6 +23,8 @@ var (
 	attemptRe = regexp.MustCompile(`^=== (\S+) em (\S+)`)
 	scoreRe   = regexp.MustCompile(`^--- nota (\d+), passou (\w+), trapaça (\w+)(?::\s*(.*))?$`)
 	agentRe   = regexp.MustCompile(`^== \S+ (axyn-[\w-]+)`)
+	passRe    = regexp.MustCompile(`^(ok\s|PASS$|--- PASS|=== RUN)`)
+	failRe    = regexp.MustCompile(`^(FAIL|--- FAIL|panic:|# \S+ \[)|\.go:\d+:\d+: `)
 )
 
 var taskNames = map[string]string{"plan-001": "plano", "code-001": "código", "tests-001": "testes", "fix-001": "conserto"}
@@ -64,7 +66,7 @@ func prettyLine(l string, color bool) string {
 		if task == "" {
 			task = m[2]
 		}
-		return "\n" + c(cYellow, "▶ "+m[1]) + c(cWhite, " · "+task)
+		return "\n" + c(cYellow, glyph("▶", "►")+" "+m[1]) + c(cWhite, " · "+task)
 	case agentRe.MatchString(t):
 		return c(cGray, "  agente "+agentRe.FindStringSubmatch(t)[1])
 	case strings.HasPrefix(t, "== "):
@@ -77,26 +79,42 @@ func prettyLine(l string, color bool) string {
 		}
 		switch {
 		case strings.HasPrefix(m[4], "indisponível"):
-			return c(cYellow, "  ⏸ "+shorten(m[4], 160)+" (não conta como nota)")
+			return c(cYellow, "  "+glyph("⏸", "■")+" "+shorten(m[4], 160)+" (não conta como nota)")
 		case m[3] == "true":
-			return c("\x1b[1;91m", "  ✘ trapaça (veto)"+why)
+			return c("\x1b[1;91m", "  "+glyph("✘", "×")+" trapaça (veto)"+why)
 		case m[2] == "true":
-			return c("\x1b[1;92m", "  ✔ nota "+m[1]+why)
+			return c("\x1b[1;92m", "  "+glyph("✔", "√")+" nota "+m[1]+why)
 		}
-		return c("\x1b[1;91m", "  ✘ nota "+m[1]+why)
+		return c("\x1b[1;91m", "  "+glyph("✘", "×")+" nota "+m[1]+why)
 	case strings.HasPrefix(t, "Error:") || strings.HasPrefix(t, "error:"):
-		return c("\x1b[91m", "  ⚠ "+shorten(t, 200))
+		return c("\x1b[91m", "  "+glyph("⚠", "!")+" "+shorten(t, 300))
 	case strings.HasPrefix(t, "> "):
 		return c(cGray, "  "+t)
-	}
-	if len([]rune(t)) > 160 {
-		head := t
-		if i := strings.IndexAny(t, "{["); i > 0 && i < 60 {
-			head = t[:i] + "{…}"
-		} else {
-			head = shorten(t, 140)
+	case strings.HasPrefix(t, "→ ") || strings.HasPrefix(t, "← ") || strings.HasPrefix(t, "✱ ") || strings.HasPrefix(t, "⚙ ") || strings.HasPrefix(t, "◇ "):
+		if i := strings.IndexAny(t, "{["); len([]rune(t)) > 160 && i > 0 && i < 60 {
+			return c(cCyan, "  "+t[:i]+"{…}") + c(cGray, fmt.Sprintf(" (%s)", sizeText(len(t))))
 		}
-		return "  " + head + c(cGray, fmt.Sprintf(" (%s)", sizeText(len(t))))
+		return c(cCyan, "  "+t) // an action of the agent: read, edit, search, tool
+	case strings.HasPrefix(t, "$ "):
+		return c(cYellow, "  "+t) // a command the agent ran
+	case passRe.MatchString(t):
+		return c("\x1b[92m", "  "+t)
+	case failRe.MatchString(t):
+		return c("\x1b[91m", "  "+t)
+	case cleanupErr.MatchString(t):
+		return c(cGray, "  "+shorten(t, 120)+" (aviso do Windows; não conta)")
+	case strings.HasPrefix(t, "**") || strings.HasPrefix(t, "#"):
+		return c(cWhite, "  "+strings.Trim(t, "*# "))
+	case strings.HasPrefix(t, "|") || strings.HasPrefix(t, "Mode ") || strings.HasPrefix(t, "-a---") || strings.HasPrefix(t, "----"):
+		return c(cGray, "  "+t) // tables and listings
+	}
+	// Long tool calls (JSON) become one line with their size; the models' prose stays
+	// whole (#360), unless it is huge.
+	if i := strings.IndexAny(t, "{["); len([]rune(t)) > 160 && i > 0 && i < 60 {
+		return "  " + t[:i] + "{…}" + c(cGray, fmt.Sprintf(" (%s)", sizeText(len(t))))
+	}
+	if len([]rune(t)) > 1000 {
+		return "  " + shorten(t, 900) + c(cGray, fmt.Sprintf(" (%s)", sizeText(len(t))))
 	}
 	return "  " + t
 }
@@ -138,12 +156,13 @@ func runLogsCmd(args []string, stdout, stderr io.Writer) int {
 		enableVT()
 	}
 	_, _ = fmt.Fprintf(stdout, "log: %s%s\n", path, map[bool]string{true: "", false: " (Ctrl + C para sair; o trabalho continua)"}[*once])
+	pretty := &logPretty{color: color}
 	show := func(l string) {
 		if *raw {
 			_, _ = fmt.Fprintln(stdout, strings.TrimPrefix(l, utf8BOM))
 			return
 		}
-		if p := prettyLine(l, color); p != "" {
+		for _, p := range pretty.lines(l) {
 			_, _ = fmt.Fprintln(stdout, p)
 		}
 	}
@@ -181,4 +200,50 @@ func runLogsCmd(args []string, stdout, stderr io.Writer) int {
 		show(strings.TrimSuffix(partial+l, "\n"))
 		partial = ""
 	}
+}
+
+// logPretty formats a log line by line, and folds the diffs the agents print after each
+// edit into one line per file (#360): "✎ slug.go: +47 −1 linhas". axyn logs --raw keeps them.
+type logPretty struct {
+	color    bool
+	inDiff   bool
+	file     string
+	add, del int
+}
+
+func (p *logPretty) lines(raw string) []string {
+	l := strings.TrimPrefix(ansiRe.ReplaceAllString(strings.TrimRight(raw, "\r"), ""), utf8BOM)
+	var out []string
+	if p.inDiff {
+		switch {
+		case strings.HasPrefix(l, "===") || strings.HasPrefix(l, "--- ") || strings.HasPrefix(l, "+++ ") || strings.HasPrefix(l, "@@") || strings.HasPrefix(l, "\\"):
+			return nil
+		case strings.HasPrefix(l, "+"):
+			p.add++
+			return nil
+		case strings.HasPrefix(l, "-"):
+			p.del++
+			return nil
+		case l == "" || strings.HasPrefix(l, " ") || strings.HasPrefix(l, "\t"):
+			return nil
+		}
+		out = append(out, p.summary())
+		p.inDiff = false
+	}
+	if strings.HasPrefix(l, "Index: ") {
+		p.inDiff, p.file, p.add, p.del = true, filepath.Base(strings.ReplaceAll(strings.TrimSpace(l[len("Index: "):]), "\\", "/")), 0, 0
+		return out
+	}
+	if s := prettyLine(l, p.color); s != "" {
+		out = append(out, s)
+	}
+	return out
+}
+
+func (p *logPretty) summary() string {
+	s := fmt.Sprintf("  %s %s: +%d −%d linhas", glyph("✎", "»"), p.file, p.add, p.del)
+	if p.color {
+		return cGray + s + cReset
+	}
+	return s
 }

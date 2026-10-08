@@ -694,6 +694,13 @@ Anexe esse arquivo ao pedir ajuda: com ele, quem for ajudar vê exatamente o que
 
 Para auditar uma execução você mesmo, sem depender de outra IA, leia a [documentação técnica do axyn](docs/axyn.md). Ela cobre o ciclo completo (preparação, plano, tickets, portões, escada de recuperação, entrega), o que cada código de reprovação (`[ci]`, `[tests]`, `[size]`, `[protected]`) quer dizer e como corrigir, onde ficam o estado, o log e o plano, e o comando para responder cada pergunta.
 
+**Travas contra o modelo.** Quem escreve testes não mexe no código, e quem escreve código não mexe nos testes que já existem. No ticket só de testes, o axyn desfaz qualquer mudança em código de produção depois de cada tentativa. Nos tickets de código, desfaz qualquer mudança nos testes que a base já tem; testes novos podem entrar. Se o modelo insiste em mudar um teste existente, o axyn para e pergunta a você. No terminal, na raiz do projeto:
+
+```bash
+axyn decide A   # libera esses testes para o ticket: o comportamento mudou de propósito
+axyn decide B   # mantém a trava: o ticket precisa passar sem mudar esses testes
+```
+
 ### Atualizar o axyn (quando sair uma versão nova)
 
 O axyn avisa sozinho: o `axyn doctor`, o `axyn status` e as respostas do `/axyn` mostram quando sai uma versão nova, com as novidades e o comando para atualizar (no máximo uma consulta por dia; `AXYN_NO_UPDATE_CHECK=1` desliga o aviso).

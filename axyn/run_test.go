@@ -96,10 +96,38 @@ func TestRunTwoTicketsInOrder(t *testing.T) {
 	}
 }
 
-// 021 AC-7: a fake agent that deletes a test never gets the ticket delivered.
-func TestRunAgentDeletingTestIsNotDelivered(t *testing.T) {
+// 021 AC-7: a fake agent that deletes a test never gets the ticket delivered. Since the
+// lock on existing tests (381 AC), the test comes back after each attempt, and the owner
+// is asked when the model insists.
+func TestRunAgentDeletingTestIsLocked(t *testing.T) {
 	dir := repo(t)
 	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `rm -f x_test.go`))
+	code, out := runLoopIn(t, dir)
+	if code != exitFail {
+		t.Fatalf("code %d, quer %d\n%s", code, exitFail, out)
+	}
+	for _, s := range subjects(t, dir) {
+		if strings.HasPrefix(s, "feat:") {
+			t.Errorf("ticket entregue com um teste apagado: %s", s)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(dir, "x_test.go")); err != nil {
+		t.Error("o teste apagado deveria voltar")
+	}
+	st, _ := loadRun(dir, "")
+	if !strings.Contains(st.Message, testLockMark) || !strings.Contains(st.Message, "x_test.go") || !strings.Contains(st.Message, "axyn decide A") {
+		t.Errorf("a execução deveria parar com a pergunta da trava:\n%s", st.Message)
+	}
+	calls, _ := os.ReadFile(os.Getenv("FAKE_LOG"))
+	if !strings.Contains(string(calls), "Trava dos testes") || !strings.Contains(string(calls), testLockMark+": desfiz") {
+		t.Errorf("o modelo deveria saber da trava:\n%s", calls)
+	}
+}
+
+// 021 AC-7: a fake agent that skips a test never gets the ticket delivered.
+func TestRunAgentSkippingTestIsNotDelivered(t *testing.T) {
+	dir := repo(t)
+	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `printf '\nfunc TestC(t *testing.T) { t.Skip() }\n' >> x_test.go`))
 
 	code, out := runLoopIn(t, dir)
 	if code != exitFail {
@@ -110,7 +138,7 @@ func TestRunAgentDeletingTestIsNotDelivered(t *testing.T) {
 			t.Errorf("ticket entregue com um teste apagado: %s", s)
 		}
 	}
-	if !strings.Contains(out, "parado") || !strings.Contains(out, "e precisa de você") || !strings.Contains(out, "arquivo de teste apagado") {
+	if !strings.Contains(out, "parado") || !strings.Contains(out, "e precisa de você") || !strings.Contains(out, "teste(s) pulado(s)") {
 		t.Errorf("status sem o motivo e a pergunta:\n%s", out)
 	}
 	s := &mcpServer{dir: dir}

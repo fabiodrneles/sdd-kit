@@ -634,6 +634,13 @@ Attach that file when asking for help: with it, whoever helps sees exactly what 
 
 To audit a run yourself, read the [axyn technical documentation](docs/axyn.md) (in Portuguese): the full cycle, what each rejection code means and how to fix it, where the state, log and plan live, and the command for each question.
 
+**Locks on the model.** Whoever writes tests does not touch the code, and whoever writes code does not touch the tests that already exist. In the tests-only ticket, axyn undoes any production change after each attempt. In code tickets, it undoes any change to the tests the base already has; new tests may go in. If the model keeps changing an existing test, axyn stops and asks you. In the terminal, at the project root:
+
+```bash
+axyn decide A   # releases those tests for the ticket: the behavior changed on purpose
+axyn decide B   # keeps the lock: the ticket must pass without changing those tests
+```
+
 ### Updating axyn (when a new version is out)
 
 axyn tells you on its own: `axyn doctor`, `axyn status` and the `/axyn` answers show when a new version is out, with what is new and the command to update (at most one check a day; `AXYN_NO_UPDATE_CHECK=1` turns the notice off).

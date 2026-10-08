@@ -93,7 +93,7 @@ func TestDeadRunIsResumable(t *testing.T) {
 func TestStoppedTicketHelpAndFixOnResume(t *testing.T) {
 	dir := repo(t)
 	base, _ := (&mcpServer{dir: dir}).git("rev-parse", "--abbrev-ref", "HEAD")
-	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `rm -f x_test.go`))
+	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `printf '\nfunc TestC(t *testing.T) { t.Skip() }\n' >> x_test.go`))
 	if code, out := runLoopIn(t, dir); code == exitOK || !strings.Contains(out, "e precisa de você") {
 		t.Fatalf("deveria parar com a pergunta: %d\n%s", code, out)
 	}
@@ -145,7 +145,7 @@ func TestStoppedTicketHelpAndFixOnResume(t *testing.T) {
 // #321: a resume that finds the code of an interrupted attempt keeps it in a WIP commit.
 func TestResumeSavesInterruptedCode(t *testing.T) {
 	dir := repo(t)
-	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `rm -f x_test.go`))
+	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `printf '\nfunc TestC(t *testing.T) { t.Skip() }\n' >> x_test.go`))
 	if code, _ := runLoopIn(t, dir); code == exitOK {
 		t.Fatal("deveria parar")
 	}
@@ -183,7 +183,7 @@ func TestStoppedTicketBecomesDraftPR(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `rm -f x_test.go`))
+	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `printf '\nfunc TestC(t *testing.T) { t.Skip() }\n' >> x_test.go`))
 	code, out := runLanding(t, dir)
 	if code == exitOK {
 		t.Fatal("deveria parar")

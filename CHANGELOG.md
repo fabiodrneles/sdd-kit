@@ -8,11 +8,14 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ### Adicionado
 
-- axyn stop e a avaliação numa lista própria, separada do trabalho do projeto (#362)
+- `axyn stop` para a execução ou a avaliação em andamento, mesmo em segundo plano, junto com os modelos que o axyn chamou; nada se perde, e `axyn run --resume` continua (#362)
 
 ### Corrigido
 
-- avaliação mostra modelos × etapas, falta de chave conta como indisponível e relatório mais enxuto (#361)
+- a avaliação dos modelos tem uma lista própria (`.axyn/bench-runs/`): depois de um `axyn bench`, o `axyn run --resume`, o `axyn decide`, o `axyn status` e o `axyn history` voltam a mostrar o trabalho do projeto, e não a avaliação (#362)
+- a avaliação mostra a conta (`27 modelo(s) em 2 etapa(s) = 54 tentativas`) e em que modelo está; os nomes das etapas podem vir antes ou depois das opções (#361)
+- `Missing Authentication header` (chave de API que não chega ao provedor) conta como indisponível, e não como nota zero (#361)
+- relatório no terminal mais enxuto: falhas iguais numa linha só; no `.md`, modelo indisponível aparece sem nota (#361)
 
 ## [1.22.1] - 2026-10-08
 

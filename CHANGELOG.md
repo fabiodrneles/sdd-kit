@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.23.5] - 2026-10-08
+
+### Corrigido
+
+- ticket só de testes que muda código de produção é reprovado ([escopo]) (#373)
+
 ## [1.23.4] - 2026-10-08
 
 ### Corrigido

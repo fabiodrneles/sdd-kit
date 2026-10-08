@@ -862,6 +862,7 @@ func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout 
 		go func(m string) {
 			defer wg.Done()
 			defer func() { <-sem }()
+			down := "" // once a model is down (no key, no quota, offline), its other tasks wait for the next round (#361)
 			for _, t := range chosen {
 				res := benchResult{Model: m, Task: t.ID, Role: t.Role, Date: p.Date}
 				for i := 0; i < runs; i++ {
@@ -870,7 +871,15 @@ func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout 
 						progress(n, total, fmt.Sprintf("%s, %s", m, roleNames[t.Role]))
 						mu.Unlock()
 					}
-					run := benchOnce(t, m, timeout, log)
+					var run benchRun
+					if down != "" {
+						run = benchRun{Down: true, Notes: []string{"indisponível durante a avaliação (pulado: " + down + ")"}}
+					} else {
+						run = benchOnce(t, m, timeout, log)
+						if run.Down {
+							down = "o modelo já tinha caído nesta rodada"
+						}
+					}
 					res.Runs = append(res.Runs, run)
 					verdict := "reprovado"
 					switch {

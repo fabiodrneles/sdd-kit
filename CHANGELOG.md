@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.23.3] - 2026-10-08
+
+### Corrigido
+
+- linhas novas de teste não contam no limite de tamanho (#368)
+
 ## [1.23.2] - 2026-10-08
 
 ### Corrigido

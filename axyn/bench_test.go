@@ -31,6 +31,7 @@ axyn-code:bom)
 	*price_test.go*) cp '`+ref+`/price_test.go' price_test.go ;;
 	*cart.go*) cp '`+ref+`/cart.go' cart.go ;;
 	esac ;;
+*:semchave) echo x >> '`+filepath.Join(dir, "calls")+`'; echo "Error: 401 Unauthorized: No auth credentials found" ;;
 axyn-code:trapaceiro)
 	case "$prompt" in
 	*slug.go*) printf 'package slug\n' > slug_test.go ;;
@@ -223,5 +224,27 @@ func TestKeyAvailable(t *testing.T) {
 	write(t, filepath.Join(os.Getenv("XDG_DATA_HOME"), "opencode"), "auth.json", `{"openrouter":{"type":"api","key":"k"}}`)
 	if !keyAvailable("openrouter/x:free") {
 		t.Error("com a chave do opencode auth login, entra")
+	}
+}
+
+// #361: a model without a valid key (or down) answers the first task with the provider's
+// error; it is unavailable, not a zero, and its other tasks are skipped in this round.
+func TestBenchDownModelIsSkipped(t *testing.T) {
+	if _, err := exec.LookPath("go"); err != nil {
+		t.Skip("sem go")
+	}
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	agent := benchAgent(t)
+	t.Setenv("AXYN_OPENCODE", agent)
+	var o, e strings.Builder
+	if code := runBenchCmd([]string{"--models", "semchave", "--timeout", "2m"}, &o, &e); code != exitOK {
+		t.Fatalf("bench: %d %s", code, e.String())
+	}
+	calls, _ := os.ReadFile(filepath.Join(filepath.Dir(strings.TrimPrefix(agent, "sh ")), "calls"))
+	if n := strings.Count(string(calls), "x"); n != 1 {
+		t.Errorf("o modelo sem chave foi chamado %d vezes; devia ser 1", n)
+	}
+	if !strings.Contains(o.String(), "pulado") || strings.Contains(o.String(), "semchave, plano: nota") {
+		t.Errorf("as outras tarefas ficam como indisponíveis:\n%s", o.String())
 	}
 }

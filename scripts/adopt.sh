@@ -10,7 +10,7 @@
 # versão SDD_KIT_REF do GitHub.
 set -eu
 
-KIT_REF="${SDD_KIT_REF:-v1.23.5}"
+KIT_REF="${SDD_KIT_REF:-v1.23.6}"
 LANGS="go node java python rust dotnet web"
 
 usage() {

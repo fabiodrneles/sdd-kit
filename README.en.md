@@ -561,7 +561,7 @@ At the end, the panel shows the summary, a notification pops up and the result i
 
 | I want | Command |
 |---|---|
-| Only some models | `axyn bench --models opencode/A,opencode/B` |
+| Only some models (much faster) | `axyn bench plan code tests fix --models opencode/fledge-alpha-free,opencode/ling-3.1-flash-free` (2 models × 4 steps = 8 attempts; the names come from `axyn model`) |
 | Include the paid ones | `axyn bench --all` |
 | More confidence (each task 3 times) | `axyn bench --runs 3` |
 | Choose the model of a step myself | `axyn bench --set plan=MODEL` (undo: `--set plan=`) |
@@ -738,8 +738,8 @@ After 10 attempts per model (each with the previous one's errors, and more help 
 **I want to see the code the model wrote**
 `axyn history` (the file has the code of each attempt that did not pass), or open the draft PR with `gh pr list` and `gh pr view N --web`.
 
-**The evaluation (`axyn bench`) shows a model as "unavailable"**
-The model was out of quota, down or gone from the server, and changed no file. It gets no bad score, is evaluated again on the next round, and axyn uses the other models. Nothing to do; to try again now: `axyn bench`.
+**The evaluation (`axyn bench`) shows a model as "unavailable" (or the log shows in red `Missing Authentication header`, `401`, `No auth credentials`)**
+The model was out of quota, down, gone from the server or the provider refused the API key (missing or invalid), and changed no file. To include the models of a provider that needs a key, run `opencode auth login` and pick the provider; not to wait for them, evaluate only the opencode ones with `--models`. It gets no bad score, is evaluated again on the next round, and axyn uses the other models. Nothing to do; to try again now: `axyn bench`.
 
 **Every model did badly on a step of the evaluation**
 No model is dropped: those below the minimum score run in **guided mode**, with files limited to the ticket's, small diffs and old tests protected. The gates still apply. To improve the result, add other models (`axyn model` shows the available ones) and run `axyn bench` again.

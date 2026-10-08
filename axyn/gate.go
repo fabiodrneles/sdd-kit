@@ -202,7 +202,9 @@ func gitDiff(dir, base string) (string, error) {
 	// diff instead of stopping the whole gate.
 	var added []string
 	for _, p := range strings.Split(untracked, "\x00") {
-		if p == "" {
+		// "sub/": a nested repository (git lists it as a folder); adding it makes a gitlink
+		// that git diff cannot hash ("does not have a commit checked out"), exit 128.
+		if p == "" || strings.HasSuffix(p, "/") {
 			continue
 		}
 		if _, err := git("add", "-N", "--", p); err != nil {

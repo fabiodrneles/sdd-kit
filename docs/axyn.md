@@ -80,7 +80,7 @@ Os portões são determinísticos: o mesmo código dá sempre o mesmo resultado.
 | `[tests]` | O ticket muda código sem nenhum teste novo ou alterado | Escreva um teste para cada critério de aceite |
 | `[coverage]` | Em Go, menos de 80% das linhas novas rodam nos testes | A reprovação cita arquivo e linhas sem teste |
 | `[ci]` | O `make ci` falhou | O motivo traz até 6 linhas de erro da saída do `make ci` |
-| `[escopo]` | O ticket só de testes (o da cobertura) mudou código de produção. Os arquivos citados nos erros que o `make ci` já tinha na base podem mudar | Desfaça a mudança e escreva só testes; as funcionalidades ficam para os outros tickets |
+| `[escopo]` | O ticket só de testes (o da cobertura) mudou código de produção. Os arquivos citados nos erros que o `make ci` já tinha na base podem mudar. Antes de cada tentativa desse ticket, o axyn volta os outros arquivos de produção à versão da base | Desfaça a mudança e escreva só testes; as funcionalidades ficam para os outros tickets |
 | `[guia]` | Um modelo no modo guiado mexeu fora dos arquivos do ticket ou alterou um teste que já existia | Faça só o que o ticket pede, nos arquivos citados; acrescente testes novos em vez de alterar os antigos |
 | `[plan]` | O agente alterou o plano do axyn | O plano é restaurado e a tentativa conta como reprovada |
 

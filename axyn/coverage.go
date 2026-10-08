@@ -562,11 +562,17 @@ var baseErrorPathRe = regexp.MustCompile(`^\s*(?:\./|\.\\)?([^\s:]+\.\w+):\d+`)
 // --timeout flag, the work of the other tickets. The files named in the errors the base
 // already had (make ci failing before any ticket) may change: the first ticket fixes them.
 func (s *mcpServer) testsOnlyFindings(pl *plan, t *ticket) []finding {
-	base := s.base
-	if base == "" {
-		base = "HEAD"
+	var out []finding
+	for _, p := range s.testsOnlyOffenders(pl) {
+		out = append(out, finding{"escopo", fmt.Sprintf("o ticket «%s» só acrescenta testes; desfaça a mudança em %s (as funcionalidades da spec ficam para os outros tickets)", t.Title, p)})
 	}
-	d, err := gitDiff(s.dir, base)
+	return out
+}
+
+// testsOnlyOffenders are the production files changed against the base, but for the ones
+// the base errors name.
+func (s *mcpServer) testsOnlyOffenders(pl *plan) []string {
+	d, err := gitDiff(s.dir, s.baseRef())
 	if err != nil {
 		return nil
 	}
@@ -576,14 +582,36 @@ func (s *mcpServer) testsOnlyFindings(pl *plan, t *ticket) []finding {
 			allowed[strings.ReplaceAll(m[1], "\\", "/")] = true
 		}
 	}
-	var out []finding
+	var out []string
 	for _, f := range parseDiff(strings.NewReader(d)) {
-		if isTestPath(f.path) || allowed[f.path] || !isCodePath(f.path) {
-			continue
+		if !isTestPath(f.path) && !allowed[f.path] && isCodePath(f.path) {
+			out = append(out, f.path)
 		}
-		out = append(out, finding{"escopo", fmt.Sprintf("o ticket «%s» só acrescenta testes; desfaça a mudança em %s (as funcionalidades da spec ficam para os outros tickets)", t.Title, f.path)})
 	}
 	return out
+}
+
+func (s *mcpServer) baseRef() string {
+	if s.base == "" {
+		return "HEAD"
+	}
+	return s.base
+}
+
+// restoreProduction puts back, from the base, the production files a tests-only ticket
+// changed (#375): the saved code of an earlier, off-track attempt carried the spec's
+// --timeout work, and the model kept fixing it instead of writing the tests. The tests
+// stay; a file the base did not have is removed.
+func (s *mcpServer) restoreProduction(pl *plan) []string {
+	paths := s.testsOnlyOffenders(pl)
+	for _, p := range paths {
+		if _, err := s.git("cat-file", "-e", s.baseRef()+":"+p); err == nil {
+			_, _ = s.git("checkout", s.baseRef(), "--", p)
+		} else {
+			_ = os.Remove(filepath.Join(s.dir, filepath.FromSlash(p)))
+		}
+	}
+	return paths
 }
 
 // isCodePath: production source code (not docs, config or tests).

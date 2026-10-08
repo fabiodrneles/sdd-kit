@@ -210,3 +210,44 @@ func TestTestsOnlyFindings(t *testing.T) {
 		t.Errorf("só cmd/check.go é reprovado (checker.go corrige o erro da base; o teste é livre): %v", got)
 	}
 }
+
+// #375: before an attempt of a tests-only ticket, production files go back to the base;
+// the tests and the files of the base errors stay.
+func TestRestoreProduction(t *testing.T) {
+	dir := t.TempDir()
+	run := func(args ...string) {
+		cmd := exec.Command("git", append([]string{"-c", "user.email=a@b", "-c", "user.name=a"}, args...)...)
+		cmd.Dir = dir
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v %s", args, err, out)
+		}
+	}
+	run("init", "-q")
+	_ = os.MkdirAll(filepath.Join(dir, "cmd"), 0o755)
+	_ = os.WriteFile(filepath.Join(dir, "cmd", "check.go"), []byte("package cmd\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0o644)
+	run("add", "-A")
+	run("commit", "-q", "-m", "base")
+	_ = os.WriteFile(filepath.Join(dir, "cmd", "check.go"), []byte("package cmd\nvar timeout = 30\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n// fixed\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(dir, "cmd", "timeout.go"), []byte("package cmd\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(dir, "cmd", "check_test.go"), []byte("package cmd\n"), 0o644)
+	s := &mcpServer{dir: dir, base: "HEAD"}
+	pl := &plan{BaseErrors: []string{"main.go:1:1: something (errcheck)"}}
+	put := s.restoreProduction(pl)
+	if len(put) != 2 {
+		t.Errorf("voltam check.go e timeout.go: %v", put)
+	}
+	if b, _ := os.ReadFile(filepath.Join(dir, "cmd", "check.go")); string(b) != "package cmd\n" {
+		t.Errorf("check.go volta à base: %q", b)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "cmd", "timeout.go")); err == nil {
+		t.Error("arquivo novo de produção sai")
+	}
+	if _, err := os.Stat(filepath.Join(dir, "cmd", "check_test.go")); err != nil {
+		t.Error("o teste fica")
+	}
+	if b, _ := os.ReadFile(filepath.Join(dir, "main.go")); !strings.Contains(string(b), "fixed") {
+		t.Error("o arquivo do erro da base fica")
+	}
+}

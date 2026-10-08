@@ -603,6 +603,14 @@ func (r *runner) ticket() (string, string) {
 		if feedback != "" {
 			prompt += "\n\nA tentativa anterior foi reprovada pelo motor:\n" + feedback
 		}
+		if t.testsOnly() {
+			if pl, _, err := r.s.loadPlan(); err == nil {
+				if put := r.s.restoreProduction(pl); len(put) > 0 {
+					_, _ = fmt.Fprintf(r.log, "o ticket «%s» só acrescenta testes: voltei %s à versão da base antes da tentativa; os testes ficam\n", t.Title, strings.Join(put, ", "))
+					prompt += "\n\nO axyn voltou " + strings.Join(put, ", ") + " à versão da base: este ticket só acrescenta testes. Apague os testes que dependiam dessas mudanças (de funcionalidades da spec que ainda não existem) e cubra o código como ele está."
+				}
+			}
+		}
 		r.set("código")
 		planPath, planBefore := r.planSnapshot()
 		if err := r.agent("axyn-code", modelArg, prompt); err != nil {

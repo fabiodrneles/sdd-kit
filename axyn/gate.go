@@ -255,24 +255,32 @@ func evalGate(dir, base string, maxLines int, ci string, extraProtect []string, 
 	findings = append(findings, checkCodeHasTests(files)...)
 
 	if strings.TrimSpace(ci) != "" {
-		cmd, err := shellCommand(ci)
-		if err != nil {
-			return 0, nil, err // a missing tool is not a failed attempt: the run stops with how to fix it
-		}
-		cmd.Dir = dir
 		var out strings.Builder
-		w := io.MultiWriter(ciOut, &out)
-		cmd.Stdout, cmd.Stderr = w, w
-		floor, ok := coverageFloor(dir)
-		if ok {
-			if cmd.Env == nil {
-				cmd.Env = os.Environ()
-			}
-			cmd.Env = append(cmd.Env, fmt.Sprintf("COVERAGE_MIN=%d", floor))
-		}
+		var err error
 		lastCoverage = -1
 		started := time.Now()
-		err = cmd.Run()
+		// On Windows the antivirus may hold a test binary Go is deleting: go test exits
+		// with an error although every test passed ("unlinkat ... being used by another
+		// process"), and make ci fails for the machine, not the code (#371). That run is
+		// done again, up to twice; a real failure is never retried.
+		for try := 0; try < 3; try++ {
+			var cmd *exec.Cmd
+			cmd, err = shellCommand(ci)
+			if err != nil {
+				return 0, nil, err // a missing tool is not a failed attempt: the run stops with how to fix it
+			}
+			cmd.Dir = dir
+			out.Reset()
+			w := io.MultiWriter(ciOut, &out)
+			cmd.Stdout, cmd.Stderr = w, w
+			if floor, ok := coverageFloor(dir); ok {
+				cmd.Env = append(os.Environ(), fmt.Sprintf("COVERAGE_MIN=%d", floor))
+			}
+			if err = cmd.Run(); err == nil || !onlyCleanupFailed(out.String()) {
+				break
+			}
+			_, _ = fmt.Fprintln(ciOut, "axyn: o make ci falhou só na limpeza do Windows (arquivo de teste preso pelo antivírus); rodando de novo")
+		}
 		if c, found := parseCoverage(out.String()); found {
 			lastCoverage = c
 		}

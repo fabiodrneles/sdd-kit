@@ -808,6 +808,9 @@ Nenhum modelo é descartado: os que ficaram abaixo da nota mínima rodam no **mo
 **Fechei a janela no meio da avaliação**
 A avaliação continua em segundo plano. Para voltar ao painel: `axyn bench --watch`. Se o computador desligou, rode `axyn bench` de novo: o que já foi avaliado fica guardado.
 
+**Aparece `go: unlinkat ... O arquivo já está sendo usado por outro processo`**
+O antivírus do Windows segura por um instante o programa de teste que o Go acabou de criar, e o Go não consegue apagá-lo. Os testes passaram, mas o `go test` sai com erro. O axyn reconhece esse caso e roda o `make ci` de novo (até 2 vezes). Para acabar com o aviso, exclua a pasta temporária do Go do antivírus. No PowerShell **como administrador**, em qualquer pasta: `Add-MpPreference -ExclusionPath "$env:LOCALAPPDATA\Temp\go-build"`.
+
 **O computador fica lento ou trava durante o `make ci`**
 O lint e os testes usam bastante memória. Feche o opencode e outros programas enquanto o axyn trabalha: ele não precisa do opencode aberto.
 

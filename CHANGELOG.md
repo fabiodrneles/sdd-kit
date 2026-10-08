@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.23.5] - 2026-10-08
+
+### Corrigido
+
+- o ticket só de testes (o da cobertura) que muda código de produção é reprovado pelo novo portão `[escopo]`; só os arquivos com erros que o `make ci` já tinha na base podem mudar, e o pedido ao modelo diz para não implementar nada da spec ali (#373)
+
 ## [1.23.4] - 2026-10-08
 
 ### Corrigido

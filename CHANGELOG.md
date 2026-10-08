@@ -8,7 +8,7 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ### Corrigido
 
-- ticket só de testes volta o código de produção à base antes de cada tentativa (#375)
+- no ticket só de testes, o axyn volta os arquivos de produção à versão da base antes de cada tentativa e ao retomar o código guardado; os testes ficam, e o modelo é avisado para apagar os testes que dependiam dessas mudanças (#375)
 
 ## [1.23.5] - 2026-10-08
 

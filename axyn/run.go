@@ -123,6 +123,38 @@ func loadRun(dir, id string) (*runState, error) {
 	return &st, nil
 }
 
+// loadWork is the last run of the project's work, past any model bench run after it
+// (#363): a bench is kept with the runs, but axyn run --resume, decide, status and history
+// are about the work. With an id, it is that run.
+func loadWork(dir, id string) (*runState, error) {
+	if id != "" {
+		return loadRun(dir, id)
+	}
+	entries, _ := os.ReadDir(runsDir(dir))
+	var names []string
+	for _, e := range entries {
+		if strings.HasSuffix(e.Name(), ".json") {
+			names = append(names, strings.TrimSuffix(e.Name(), ".json"))
+		}
+	}
+	sort.Strings(names)
+	for i := len(names) - 1; i >= 0; i-- {
+		if st, err := loadRun(dir, names[i]); err == nil && st.Opts.Bench == nil {
+			return st, nil
+		}
+	}
+	return loadRun(dir, "")
+}
+
+// shownRun is what axyn status shows: a bench while it runs, else the project's work.
+func shownRun(dir, id string) (*runState, error) {
+	st, err := loadRun(dir, id)
+	if err != nil || id != "" || st.Opts.Bench == nil || alive(st) {
+		return st, err
+	}
+	return loadWork(dir, "")
+}
+
 // alive says whether a run marked "rodando" still has its worker (spec 021 FR-8): a
 // worker that died (the computer froze, the terminal was killed) leaves the state behind,
 // and the run must be resumable at once, not after staleAfter.
@@ -177,8 +209,8 @@ func (s *mcpServer) startRun(request string, resume bool) (string, error) {
 	if lastErr == nil && alive(last) {
 		return "", errRunning{last}
 	}
-	if resume && strings.TrimSpace(request) == "" && lastErr == nil {
-		request = last.Request // the status keeps showing what was asked
+	if work, err := loadWork(abs, ""); resume && strings.TrimSpace(request) == "" && err == nil && work.Opts.Bench == nil {
+		request = work.Request // the status keeps showing what was asked (not the bench's)
 	}
 	if resume && strings.TrimSpace(request) == "" {
 		if pl, _, err := s.loadPlan(); err == nil {
@@ -243,8 +275,12 @@ func startDetached(dir, id string) error {
 type errRunning struct{ st *runState }
 
 func (e errRunning) Error() string {
+	if e.st.Opts.Bench != nil {
+		return "Agora há uma avaliação dos modelos rodando nesta pasta (execução " + e.st.ID + "), e o trabalho do projeto espera ela terminar. Andamento:\n" + renderStatus(e.st) +
+			"\nPara acompanhar: axyn bench --watch. Para não esperar: axyn stop (o que já foi avaliado fica salvo) e, em seguida, axyn run --resume para continuar o trabalho do projeto."
+	}
 	return "Já estou trabalhando nisso (execução " + e.st.ID + "). Andamento agora:\n" + renderStatus(e.st) +
-		"\nPara acompanhar sem rodar nada à mão: axyn status --watch"
+		"\nPara acompanhar sem rodar nada à mão: axyn status --watch. Para parar: axyn stop (depois, axyn run --resume continua de onde parou)."
 }
 
 func (s *mcpServer) toolRun(request string, resume bool) (string, error) {
@@ -260,7 +296,7 @@ func (s *mcpServer) toolRun(request string, resume bool) (string, error) {
 }
 
 func (s *mcpServer) toolStatus(id string) (string, error) {
-	st, err := loadRun(s.dir, id)
+	st, err := shownRun(s.dir, id)
 	if err != nil {
 		return "", err
 	}
@@ -750,7 +786,7 @@ func runStatusCmd(args []string, stdout, stderr io.Writer) int {
 	if *watch {
 		return watchRun(*dir, fs.Arg(0), *interval, stdout)
 	}
-	st, err := loadRun(*dir, fs.Arg(0))
+	st, err := shownRun(*dir, fs.Arg(0))
 	if err != nil {
 		_, _ = fmt.Fprintf(stderr, "axyn status: %v\n", err)
 		return exitFail

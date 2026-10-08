@@ -163,7 +163,7 @@ func buildHistory(dir string, st *runState) string {
 
 // writeHistory writes the history of run id (the last one when empty) and returns its path.
 func writeHistory(dir, id, out string) (string, error) {
-	st, err := loadRun(dir, id)
+	st, err := loadWork(dir, id)
 	if err != nil {
 		return "", fmt.Errorf("nenhuma execução para o histórico: %v", err)
 	}

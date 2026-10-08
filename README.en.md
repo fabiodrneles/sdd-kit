@@ -673,6 +673,7 @@ A run that had stopped continues with `axyn run --resume`, already on the new ve
 | `axyn run "request"` | project root | the same as opencode's `/axyn`, straight from the terminal |
 | `axyn status` | project root | the run's progress, once |
 | `axyn status --watch` | project root | follows and warns when it ends, stops or asks something |
+| `axyn stop` | project root | stops what axyn is doing in this folder, even in the background (run or evaluation); then `axyn run --resume` continues |
 | `axyn run --resume` | project root | continues where it stopped (after a question, a crash or a fix of yours) |
 | `axyn history` | project root | file with everything the run did, to ask for help |
 | `axyn version` | any folder | installed version |
@@ -713,7 +714,7 @@ Copy and paste the command it shows, in any folder, close and reopen the termina
 `axyn status` shows "interrompida" (interrupted). At the project root, `axyn run --resume`: axyn keeps the half-done code in a WIP commit (nothing is lost) and continues the ticket.
 
 **"Já estou trabalhando nisso" (I am already working on it)**
-A task is already running; follow it with `axyn status --watch` (project root). To stop it for good (any folder): `Stop-Process -Name axyn -Force` on Windows, or `pkill -f "axyn run"` on Linux/macOS; then, to continue: `axyn run --resume`.
+A task is already running in this folder: a run or a model evaluation (`axyn bench`). Follow it with `axyn status --watch` (or `axyn bench --watch` for the evaluation). To stop it, at the project root: `axyn stop`. It stops axyn and the models it called, even in the background, and nothing is lost: `axyn run --resume` continues the project's work where it stopped, and the evaluation keeps what it already measured.
 
 **The model could not pass the gates**
 After 10 attempts per model (each with the previous one's errors, and more help every time), axyn stops. The last attempt's code is on a `feat/…-wip` branch, published as a **draft PR** with the errors and a text ready to paste into another AI (without GitHub, in `.axyn/ajuda-ticket-N.md`). Three ways out, at the project root:

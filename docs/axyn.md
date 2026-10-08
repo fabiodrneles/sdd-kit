@@ -181,6 +181,10 @@ Arquivos: `~/.config/axyn/bench/profile.json` (o resultado em uso), `bench-DATA.
 
 Os logs, relatórios e históricos do axyn são gravados em UTF-8 com a marca (BOM) no início, para o PowerShell 5.1 e os editores mostrarem os acentos certos. As tarefas são em Go e precisam do Go instalado.
 
+## Parar o axyn (`axyn stop`)
+
+Na raiz do projeto, `axyn stop` para a execução ou a avaliação em andamento nesta pasta, mesmo em segundo plano. Ele encerra o processo do axyn e todos os que ele iniciou: o opencode e os comandos dos modelos (no Windows, com `taskkill /T`; no Linux e no macOS, o grupo de processos inteiro). O estado fica como "parado". Nada se perde: numa execução, `axyn run --resume` guarda o código da tentativa interrompida num commit WIP e continua o ticket; numa avaliação, o que já foi medido fica salvo (`axyn bench --show`). Sem nada rodando, o comando só avisa.
+
 ## Fechar uma versão (release)
 
 O projeto que o axyn prepara recebe o `scripts/sdd-release.sh` e o workflow de release do sdd-kit. O `axyn release` usa os dois. Rode-o no terminal, na raiz do projeto, ou peça no `/axyn` ("feche a versão"):

@@ -38,7 +38,7 @@ func runDecideCmd(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintln(stderr, "axyn decide: informe a resposta, por exemplo: axyn decide B (ou axyn decide \"use só o pacote cmd\")")
 		return exitUsage
 	}
-	st, err := loadRun(*dir, "")
+	st, err := loadWork(*dir, "")
 	if err != nil {
 		_, _ = fmt.Fprintf(stderr, "axyn decide: %v\n", err)
 		return exitFail

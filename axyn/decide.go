@@ -73,6 +73,9 @@ func runDecideCmd(args []string, stdout, stderr io.Writer) int {
 				if pl.Tickets[i].ID == open.ID {
 					pl.Tickets[i].Earlier = append(pl.Tickets[i].Earlier, pl.Tickets[i].Attempts...)
 					pl.Tickets[i].Attempts = nil
+					if strings.Contains(question, testLockMark) {
+						answerTestLock(&pl.Tickets[i], answer)
+					}
 				}
 			}
 			_ = s.savePlan(pl, path)

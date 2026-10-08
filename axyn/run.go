@@ -620,6 +620,9 @@ func (r *runner) ticket() (string, string) {
 				}
 			}
 		}
+		if !t.testsOnly() {
+			prompt += testLockPrompt(t)
+		}
 		r.set("código")
 		planPath, planBefore := r.planSnapshot()
 		if err := r.agent("axyn-code", modelArg, prompt); err != nil {
@@ -639,7 +642,18 @@ func (r *runner) ticket() (string, string) {
 		// The lock of a tests-only ticket (#380): whatever production code the model changed
 		// is undone before the gates, so it never reaches a delivery; its tests must pass on
 		// the code as it is.
+		tampered := r.planTampered(planPath, planBefore)
 		lockNote := ""
+		if !tampered {
+			if undone, ask := r.s.freezeTests(t.ID); len(ask) > 0 {
+				_, _ = fmt.Fprintf(r.log, "%s: desfiz as mudanças em %s, e o modelo insiste\n", testLockMark, strings.Join(undone, ", "))
+				_ = r.s.saveWIP(t, "à espera da resposta do usuário")
+				return runStopped, testLockQuestion(t, ask)
+			} else if len(undone) > 0 {
+				lockNote = testLockMark + ": desfiz as mudanças em " + strings.Join(undone, ", ") + "; acrescente testes novos, sem mudar nem apagar os que existem\n"
+				_, _ = fmt.Fprint(r.log, lockNote)
+			}
+		}
 		if t.testsOnly() {
 			if pl, _, err := r.s.loadPlan(); err == nil {
 				if undone := r.s.revertOffenders(pl); len(undone) > 0 {
@@ -652,7 +666,7 @@ func (r *runner) ticket() (string, string) {
 		var green bool
 		var report string
 		var err error
-		if r.planTampered(planPath, planBefore) {
+		if tampered {
 			advice, _ := r.s.recordAttempt(false, []finding{{"plan", "o agente alterou o plano do axyn (restaurado)"}}, nil, "")
 			report = strings.TrimSpace("gate: reprovado [plan] o agente alterou o plano do axyn (restaurado)\n" + advice)
 		} else if green, report, err = r.gate(); err != nil {

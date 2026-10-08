@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.23.6] - 2026-10-08
+
+### Corrigido
+
+- no ticket só de testes, o axyn volta os arquivos de produção à versão da base antes de cada tentativa e ao retomar o código guardado; os testes ficam, e o modelo é avisado para apagar os testes que dependiam dessas mudanças (#375)
+
 ## [1.23.5] - 2026-10-08
 
 ### Corrigido

@@ -251,3 +251,19 @@ func TestRestoreProduction(t *testing.T) {
 		t.Error("o arquivo do erro da base fica")
 	}
 }
+
+// #377: a prompt for opencode.cmd loses what cmd.exe would cut or run.
+func TestCmdSafe(t *testing.T) {
+	defer func(o string) { hostOS = o }(hostOS)
+	hostOS = "windows"
+	got := cmdSafe(`C:\npm\opencode.cmd`, `rode "make ci" && echo ok | x > y`)
+	if strings.ContainsAny(got, "\"&|<>") || !strings.Contains(got, "make ci") {
+		t.Errorf("cmd.exe: %q", got)
+	}
+	if got := cmdSafe(`C:\x\opencode.exe`, `a "b" && c`); got != `a "b" && c` {
+		t.Errorf("um .exe recebe o texto como está: %q", got)
+	}
+	if strings.ContainsAny(windowsShellNote(), "\"&|<>") {
+		t.Error("a nota do Windows não tem caracteres que o cmd.exe corta")
+	}
+}

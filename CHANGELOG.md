@@ -12,6 +12,7 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 - no Windows, o axyn põe o `sh` e o `bash` do Git no PATH: o `make ci` e os comandos dos modelos funcionam como no Linux (#366)
 - perfis de cobertura que o modelo deixa soltos (`coverage.out` e parecidos) são apagados antes dos portões e não entram no PR (#366)
 - `axyn run` fora da pasta de um projeto avisa na hora (#366)
+- o ticket de cobertura diz quando parar: medir com `make test`, parar ao passar da meta e não cobrir `main()` nem `os.Exit` (#367)
 
 ## [1.23.1] - 2026-10-08
 

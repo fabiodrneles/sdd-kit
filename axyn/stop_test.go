@@ -74,3 +74,33 @@ func TestBenchHasItsOwnList(t *testing.T) {
 		t.Errorf("a avaliação rodando ocupa a pasta: %+v", b)
 	}
 }
+
+// #365: an untracked name with accents, and a nested repository git refuses to add, do
+// not stop the gate with "exit status 128".
+func TestGitDiffOddUntracked(t *testing.T) {
+	dir := t.TempDir()
+	run := func(d string, args ...string) {
+		cmd := exec.Command("git", args...)
+		cmd.Dir = d
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v %s", args, err, out)
+		}
+	}
+	run(dir, "init", "-q")
+	run(dir, "-c", "user.email=a@b", "-c", "user.name=a", "commit", "-q", "--allow-empty", "-m", "base")
+	_ = os.WriteFile(filepath.Join(dir, "relatório.go"), []byte("package x\n"), 0o644)
+	nested := filepath.Join(dir, "sub")
+	_ = os.MkdirAll(nested, 0o755)
+	run(nested, "init", "-q")
+	_ = os.WriteFile(filepath.Join(nested, "a.txt"), []byte("x\n"), 0o644)
+	diff, err := gitDiff(dir, "HEAD")
+	if err != nil {
+		t.Fatalf("gitDiff: %v", err)
+	}
+	if !strings.Contains(diff, "relatório.go") {
+		t.Errorf("o arquivo com acento entra no diff:\n%s", diff)
+	}
+	if _, err := gitDiff(dir, "nao-existe"); err == nil || !strings.Contains(err.Error(), "git diff:") {
+		t.Errorf("o erro traz a mensagem do git: %v", err)
+	}
+}

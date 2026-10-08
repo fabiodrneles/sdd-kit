@@ -176,25 +176,36 @@ func checkSize(files []fileDiff, max int) []finding {
 
 // gitDiff returns the working tree diff against base, untracked files included.
 func gitDiff(dir, base string) (string, error) {
+	// git's own message goes into the error (#365): "exit status 128" alone said nothing.
 	git := func(args ...string) (string, error) {
-		cmd := exec.Command("git", args...)
+		cmd := exec.Command("git", append([]string{"-c", "core.quotepath=off"}, args...)...)
 		cmd.Dir = dir
+		var stderr strings.Builder
+		cmd.Stderr = &stderr
 		b, err := cmd.Output()
+		if err != nil {
+			if msg := strings.TrimSpace(stderr.String()); msg != "" {
+				err = fmt.Errorf("git %s: %s", args[0], msg)
+			}
+		}
 		return string(b), err
 	}
-	untracked, err := git("ls-files", "--others", "--exclude-standard")
+	// -z: names with accents or spaces come raw, not quoted ("caf\303\251"), so git add finds them.
+	untracked, err := git("ls-files", "-z", "--others", "--exclude-standard")
 	if err != nil {
 		return "", err
 	}
 	// intent-to-add makes untracked files show up in `git diff` as additions; it is undone
-	// right after, or it stays in the index and breaks `git stash` ("not uptodate").
+	// right after, or it stays in the index and breaks `git stash` ("not uptodate"). A file
+	// git refuses to add (a reserved Windows name, a nested repository) is left out of the
+	// diff instead of stopping the whole gate.
 	var added []string
-	for _, p := range strings.Split(strings.TrimSpace(untracked), "\n") {
+	for _, p := range strings.Split(untracked, "\x00") {
 		if p == "" {
 			continue
 		}
 		if _, err := git("add", "-N", "--", p); err != nil {
-			return "", err
+			continue
 		}
 		added = append(added, p)
 	}

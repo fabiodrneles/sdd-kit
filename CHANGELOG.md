@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.22.0] - 2026-10-08
+
+### Adicionado
+
+- painel do axyn bench (Enter alterna progresso e log), comando curto, axyn logs legível e acentos certos (#357)
+
 ## [1.21.1] - 2026-10-07
 
 ### Corrigido

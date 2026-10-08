@@ -164,8 +164,22 @@ func TestBenchOneTaskKeepsTheRest(t *testing.T) {
 	if code := runBenchCmd([]string{"--models", "bom", "--timeout", "2m"}, &o, &e); code != exitOK {
 		t.Fatalf("bench: %d %s", code, e.String())
 	}
+	// #359: a model without a key, left from an older round, goes away.
+	t.Setenv("OPENROUTER_API_KEY", "")
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	old, _ := loadProfile()
+	old.Models = append(old.Models, "openrouter/x:free")
+	old.Results = append(old.Results, benchResult{Model: "openrouter/x:free", Task: "code-001", Role: roleCode, Runs: []benchRun{{}}})
+	_ = saveProfile(old)
+	o.Reset()
 	if code := runBenchCmd([]string{"--models", "bom", "--tasks", "plan", "--timeout", "2m"}, &o, &e); code != exitOK {
 		t.Fatalf("bench --tasks plan: %d %s", code, e.String())
+	}
+	if strings.Contains(o.String(), "openrouter/x:free") {
+		t.Error("modelo sem chave de uma rodada anterior continua no relatório")
+	}
+	if !strings.Contains(o.String(), "forte *") || !strings.Contains(o.String(), "code-001 (tentativa 1, rodada de ") {
+		t.Errorf("o resultado mantido da rodada anterior precisa estar marcado:\n%s", o.String())
 	}
 	p, _ := loadProfile()
 	for _, task := range []string{"plan-001", "code-001", "tests-001", "fix-001"} {

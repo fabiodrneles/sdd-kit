@@ -62,6 +62,9 @@ func decisions(spec string) string {
 func meaning(reason string) (what, hint string) {
 	r := strings.ToLower(reason)
 	switch {
+	case strings.Contains(r, "[escopo]") || strings.Contains(r, "só acrescenta testes"):
+		return "o ticket era só de testes, mas o modelo mudou código de produção (fez trabalho de outro ticket).",
+			"desfaça a mudança no código de produção e escreva só testes; as funcionalidades ficam para os outros tickets"
 	case strings.Contains(r, "sem nenhum teste novo"):
 		return "o ticket mudou código sem escrever nenhum teste; todo código novo precisa de teste.",
 			"escreva um teste para cada critério de aceite do ticket, citando o AC no nome ou num comentário"

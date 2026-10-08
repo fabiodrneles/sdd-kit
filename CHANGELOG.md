@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.23.7] - 2026-10-08
+
+### Corrigido
+
+- o pedido chega inteiro ao opencode.cmd no Windows e main.go sai da cobertura do patch (#377)
+
 ## [1.23.6] - 2026-10-08
 
 ### Corrigido

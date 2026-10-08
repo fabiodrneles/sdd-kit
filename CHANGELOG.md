@@ -8,7 +8,9 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ### Corrigido
 
-- make ci repetido quando só a limpeza do Windows falha e cobertura da base explicada (#370)
+- no Windows, um `make ci` que falha só porque o antivírus prendeu o arquivo de teste (`unlinkat ... sendo usado por outro processo`) é rodado de novo, até 2 vezes; uma falha de verdade não é repetida (#370)
+- a mensagem de cobertura diz que mede a branch base e que os testes de um ticket só contam depois que o PR dele é mesclado (#370)
+- README: o aviso `unlinkat` e como excluir as pastas `go-build*` do Defender (#370)
 
 ## [1.23.3] - 2026-10-08
 

@@ -41,3 +41,48 @@ func TestLogsOnce(t *testing.T) {
 		t.Errorf("logs: %d %s %s", code, o.String(), e.String())
 	}
 }
+
+// #356: axyn bench plano testes is the short form of --tasks plan,tests, in PT or EN.
+func TestPickTasks(t *testing.T) {
+	roles := func(ts []benchTask) string {
+		var r []string
+		for _, x := range ts {
+			r = append(r, x.Role)
+		}
+		return strings.Join(r, ",")
+	}
+	if got := roles(pickTasks([]string{"plano", "Testes"})); got != roleplan+","+roleTests {
+		t.Fatalf("plano testes: %s", got)
+	}
+	if got := roles(pickTasks([]string{"código"})); got != roleCode {
+		t.Fatalf("código: %s", got)
+	}
+	if got := pickTasks([]string{""}); len(got) != len(benchTasks) {
+		t.Fatalf("nothing named must mean all: %d", len(got))
+	}
+}
+
+// #356: the log view of the panel shows the end of the log, then only what is added.
+func TestLogFollow(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	t.Setenv("APPDATA", t.TempDir())
+	_ = os.MkdirAll(runsDir(dir), 0o755)
+	p := filepath.Join(runsDir(dir), "1.log")
+	_ = os.WriteFile(p, []byte("=== m em plan-001 (x)\n--- nota 100, passou true, trapaça false: ok\n"), 0o644)
+	f := newLogFollow(dir, 15)
+	first := strings.Join(f.lines(), "\n")
+	if !strings.Contains(first, "plano") || !strings.Contains(first, "nota 100") {
+		t.Fatalf("backlog: %q", first)
+	}
+	if again := f.lines(); len(again) != 0 {
+		t.Fatalf("nothing new must show nothing: %q", again)
+	}
+	fh, _ := os.OpenFile(p, os.O_APPEND|os.O_WRONLY, 0o644)
+	_, _ = fh.WriteString("Error: boom\nmeia")
+	_ = fh.Close()
+	got := strings.Join(f.lines(), "\n")
+	if !strings.Contains(got, "⚠ Error: boom") || strings.Contains(got, "meia") {
+		t.Fatalf("new lines (and no partial line): %q", got)
+	}
+}

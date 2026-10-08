@@ -164,7 +164,9 @@ O que sair da guia é reprovado com o código `[guia]`, e os portões de sempre 
 | Quero | Comando |
 |---|---|
 | Ver a última avaliação | `axyn bench --show` |
-| Refazer só uma etapa, sem perder as outras | `axyn bench --tasks plan` (ou `code`, `tests`, `fix`; dá para juntar com `--models A,B`) |
+| Refazer só algumas etapas, sem perder as outras | `axyn bench plano testes` (as etapas: `plano`, `codigo`, `testes`, `conserto`, ou em inglês `plan`, `code`, `tests`, `fix`; dá para juntar com `--models A,B`) |
+| Voltar ao painel de uma avaliação em andamento | `axyn bench --watch` |
+| Rodar nesta janela, sem segundo plano | `axyn bench --here` |
 | Avaliar de novo agora | `axyn bench` |
 | Só alguns modelos, ou também os pagos | `axyn bench --models A,B` ou `axyn bench --all` |
 | Mais confiança (cada tarefa várias vezes) | `axyn bench --runs 3` |
@@ -173,7 +175,7 @@ O que sair da guia é reprovado com o código `[guia]`, e os portões de sempre 
 | Fixar à mão o modelo de uma etapa | `axyn bench --set plano=MODELO` (desfazer: `--set plano=`) |
 | Desligar e voltar à escada do `axyn model` | `axyn bench --off` (religar: `--apply`) |
 
-Arquivos: `~/.config/axyn/bench/profile.json` (o resultado em uso), `bench-DATA.md` (o relatório de cada rodada, com a nota e o motivo de cada tentativa) e `bench-DATA.log` (a saída completa dos modelos) e a pasta `bench-DATA/`, com o código que o modelo escreveu em cada tentativa (um `.diff` por tentativa). Com os três, dá para conferir se cada nota foi justa e ajustar o processo de avaliação. Para acompanhar ao vivo o que os modelos estão fazendo, noutra janela do terminal: `axyn logs`. O comando mostra o log mais recente, de uma execução deste projeto ou de uma avaliação, de forma legível: um cabeçalho por tentativa, uma linha por ação, erros em vermelho, notas em verde, indisponíveis em amarelo e JSON longo resumido com o tamanho. Para ver o texto completo, sem formatação, use `axyn logs --raw`.
+Arquivos: `~/.config/axyn/bench/profile.json` (o resultado em uso), `bench-DATA.md` (o relatório de cada rodada, com a nota e o motivo de cada tentativa) e `bench-DATA.log` (a saída completa dos modelos) e a pasta `bench-DATA/`, com o código que o modelo escreveu em cada tentativa (um `.diff` por tentativa). Com os três, dá para conferir se cada nota foi justa e ajustar o processo de avaliação. **Uma janela só.** O `axyn bench` roda em segundo plano, como o `axyn run`, e a janela vira um painel. **Enter** alterna entre o progresso (barra, contagem, tempo e estimativa) e o log ao vivo, formatado. **Ctrl + C** fecha só o painel, e a avaliação continua; `axyn bench --watch` volta para ele, e `axyn status` mostra em que pé está. No fim, o painel mostra o resumo e uma notificação avisa. O mesmo Enter vale no `axyn status --watch` de uma execução. Para ver só o log, sem o painel: `axyn logs`. O comando mostra o log mais recente, de uma execução deste projeto ou de uma avaliação, de forma legível: um cabeçalho por tentativa, uma linha por ação, erros em vermelho, notas em verde, indisponíveis em amarelo e JSON longo resumido com o tamanho. Para ver o texto completo, sem formatação, use `axyn logs --raw`.
 
 Os logs, relatórios e históricos do axyn são gravados em UTF-8 com a marca (BOM) no início, para o PowerShell 5.1 e os editores mostrarem os acentos certos. As tarefas são em Go e precisam do Go instalado.
 

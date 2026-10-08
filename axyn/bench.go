@@ -686,6 +686,8 @@ func runBenchCmd(args []string, stdout, stderr io.Writer) int {
 	parallel := fs.Int("parallel", 0, "quantos modelos avaliar ao mesmo tempo (padrão: o que a máquina aguenta, 1 com menos de 8 GB de RAM ou até 4 núcleos)")
 	minScore := fs.Int("min-score", 50, "nota mínima (0 a 100) para um modelo receber uma etapa; trapaça é veto em qualquer nota")
 	show := fs.Bool("show", false, "só mostra a última avaliação")
+	watch := fs.Bool("watch", false, "volta ao painel de uma avaliação em andamento")
+	here := fs.Bool("here", false, "roda nesta janela, em primeiro plano, em vez de em segundo plano")
 	applyFlag := fs.Bool("apply", false, "aplica a última avaliação")
 	off := fs.Bool("off", false, "deixa de usar a avaliação (volta à escada do axyn model)")
 	set := fs.String("set", "", "fixa à mão o modelo de uma etapa, por exemplo plano=MODELO (etapas: plano, codigo, testes, conserto); etapa= sem modelo desfaz")
@@ -722,6 +724,9 @@ func runBenchCmd(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintln(stdout, report(p, nil))
 		return exitOK
 	}
+	if *watch {
+		return watchRun(".", "", 2*time.Second, stdout)
+	}
 	for _, need := range []string{"go", "git"} {
 		if _, err := lookPath(need); err != nil {
 			_, _ = fmt.Fprintf(stderr, "axyn bench: as tarefas da avaliação são em Go e precisam de %s; para instalar: %s\n", need, strings.Join(installCommands([]string{need}, hostOS), " && "))
@@ -733,14 +738,11 @@ func runBenchCmd(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintf(stderr, "axyn bench: %v\n", err)
 		return exitFail
 	}
-	chosen := benchTasks
-	if *tasks != "" {
-		chosen = nil
-		for _, t := range benchTasks {
-			if strings.Contains(","+*tasks+",", ","+t.Role+",") {
-				chosen = append(chosen, t)
-			}
-		}
+	want := strings.Split(*tasks, ",")
+	want = append(want, fs.Args()...) // axyn bench plano testes
+	chosen := pickTasks(want)
+	if !*here && !*ask && isTerminal(stdout) {
+		return startBench(models, chosen, *runs, *parallel, *timeout, *minScore, stdout, stderr)
 	}
 	out, progress, stop := liveBench(stdout)
 	p := benchCore(models, chosen, *runs, *parallel, *timeout, *minScore, out, progress)
@@ -1163,3 +1165,85 @@ func keyAvailable(id string) bool {
 
 // benchNotes are the warnings of the model list (skipped providers), shown before a round.
 var benchNotes []string
+
+// benchSpec is what a bench run in the background evaluates.
+type benchSpec struct {
+	Models     []string `json:"models"`
+	Tasks      []string `json:"tasks"`
+	Runs       int      `json:"runs"`
+	Parallel   int      `json:"parallel"`
+	TimeoutSec int      `json:"timeout_sec"`
+	MinScore   int      `json:"min_score"`
+}
+
+// pickTasks reads the steps by name, in Portuguese or English; none means all.
+func pickTasks(names []string) []benchTask {
+	roles := map[string]bool{}
+	for _, n := range names {
+		if r := roleAliases[strings.ToLower(strings.TrimSpace(n))]; r != "" {
+			roles[r] = true
+		}
+	}
+	if len(roles) == 0 {
+		return benchTasks
+	}
+	var out []benchTask
+	for _, t := range benchTasks {
+		if roles[t.Role] {
+			out = append(out, t)
+		}
+	}
+	return out
+}
+
+// startBench runs the bench in the background, like axyn run, and opens the panel on it:
+// Ctrl + C closes only the panel; axyn bench --watch comes back to it (#356).
+func startBench(models []string, chosen []benchTask, runs, parallel int, timeout time.Duration, minScore int, stdout, stderr io.Writer) int {
+	dir, _ := filepath.Abs(".")
+	if last, err := loadRun(dir, ""); err == nil && alive(last) {
+		_, _ = fmt.Fprintf(stderr, "axyn bench: já há uma execução em andamento nesta pasta (%s); para acompanhar: axyn status --watch\n", last.ID)
+		return exitFail
+	}
+	spec := &benchSpec{Models: models, Runs: runs, Parallel: parallel, TimeoutSec: int(timeout / time.Second), MinScore: minScore}
+	for _, t := range chosen {
+		spec.Tasks = append(spec.Tasks, t.Role)
+	}
+	now := time.Now()
+	st := &runState{ID: now.Format("20060102-150405"), Request: "avaliação dos modelos", Status: runRunning, Phase: "avaliando modelos", Started: now, PhaseSince: now, Opts: runOpts{Bench: spec}}
+	if err := saveRun(dir, st); err != nil {
+		_, _ = fmt.Fprintf(stderr, "axyn bench: %v\n", err)
+		return exitFail
+	}
+	if err := spawnWorker(dir, st.ID); err != nil {
+		_, _ = fmt.Fprintf(stderr, "axyn bench: não consegui iniciar em segundo plano: %v; rode: axyn bench --here\n", err)
+		return exitFail
+	}
+	_, _ = fmt.Fprintln(stdout, "avaliação iniciada em segundo plano. Enter alterna entre o progresso e o log ao vivo; Ctrl + C fecha o painel (a avaliação continua); para voltar: axyn bench --watch")
+	return watchRun(dir, st.ID, 2*time.Second, stdout)
+}
+
+// benchJob is the worker of a background bench.
+func benchJob(dir string, st *runState, out io.Writer) int {
+	sp := st.Opts.Bench
+	r := &runner{s: &mcpServer{dir: dir}, st: st, log: out}
+	r.set("avaliando modelos")
+	p := benchCore(sp.Models, pickTasks(sp.Tasks), sp.Runs, sp.Parallel, time.Duration(sp.TimeoutSec)*time.Second, sp.MinScore, out, func(done, total int, detail string) {
+		st.Done, st.Of, st.Detail = done, total, detail
+		_ = saveRun(dir, st)
+	})
+	p.Applied = true
+	_ = saveProfile(p)
+	text := report(p, p.prevForReport)
+	md := filepath.Join(benchDir(), "bench-"+p.Date.Format("20060102-150405")+".md")
+	_ = writeText(md, text)
+	_, _ = fmt.Fprintln(out, text)
+	summary := text
+	if i := strings.Index(text, "## Para que o axyn vai usar cada modelo"); i >= 0 {
+		summary = text[i:]
+		if j := strings.Index(summary, "\n## Detalhes"); j > 0 {
+			summary = summary[:j]
+		}
+	}
+	r.stop(runDone, "avaliação concluída e aplicada; relatório completo: "+md+"\n"+strings.TrimSpace(summary))
+	return exitOK
+}

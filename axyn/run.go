@@ -215,6 +215,15 @@ func (s *mcpServer) startRun(request string, resume bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	// #365: outside a repository (the owner ran it in his home folder) the run would only
+	// start to stop; say so at once, with where to go.
+	if _, err := os.Stat(filepath.Join(abs, ".git")); err != nil {
+		example := "cd ~/caminho/do/projeto"
+		if hostOS == "windows" {
+			example = "cd E:\\caminho\\do\\projeto"
+		}
+		return "", fmt.Errorf("esta pasta (%s) não é a raiz de um projeto git; entre na pasta do projeto (%s) e rode de novo", abs, example)
+	}
 	if b := busy(abs); b != nil {
 		return "", errRunning{b}
 	}

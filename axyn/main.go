@@ -82,6 +82,7 @@ func main() {
 
 func run(args []string, stdout, stderr io.Writer) int {
 	cleanOldBinary()
+	useGitShell()
 	if len(args) == 0 {
 		_, _ = fmt.Fprint(stdout, usage)
 		return exitOK

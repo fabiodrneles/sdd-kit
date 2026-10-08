@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -176,25 +177,38 @@ func checkSize(files []fileDiff, max int) []finding {
 
 // gitDiff returns the working tree diff against base, untracked files included.
 func gitDiff(dir, base string) (string, error) {
+	// git's own message goes into the error (#365): "exit status 128" alone said nothing.
 	git := func(args ...string) (string, error) {
-		cmd := exec.Command("git", args...)
+		cmd := exec.Command("git", append([]string{"-c", "core.quotepath=off"}, args...)...)
 		cmd.Dir = dir
+		var stderr strings.Builder
+		cmd.Stderr = &stderr
 		b, err := cmd.Output()
+		if err != nil {
+			if msg := strings.TrimSpace(stderr.String()); msg != "" {
+				err = fmt.Errorf("git %s: %s", args[0], msg)
+			}
+		}
 		return string(b), err
 	}
-	untracked, err := git("ls-files", "--others", "--exclude-standard")
+	// -z: names with accents or spaces come raw, not quoted ("caf\303\251"), so git add finds them.
+	untracked, err := git("ls-files", "-z", "--others", "--exclude-standard")
 	if err != nil {
 		return "", err
 	}
 	// intent-to-add makes untracked files show up in `git diff` as additions; it is undone
-	// right after, or it stays in the index and breaks `git stash` ("not uptodate").
+	// right after, or it stays in the index and breaks `git stash` ("not uptodate"). A file
+	// git refuses to add (a reserved Windows name, a nested repository) is left out of the
+	// diff instead of stopping the whole gate.
 	var added []string
-	for _, p := range strings.Split(strings.TrimSpace(untracked), "\n") {
-		if p == "" {
+	for _, p := range strings.Split(untracked, "\x00") {
+		// "sub/": a nested repository (git lists it as a folder); adding it makes a gitlink
+		// that git diff cannot hash ("does not have a commit checked out"), exit 128.
+		if p == "" || strings.HasSuffix(p, "/") {
 			continue
 		}
 		if _, err := git("add", "-N", "--", p); err != nil {
-			return "", err
+			continue
 		}
 		added = append(added, p)
 	}
@@ -213,6 +227,7 @@ func (s *stringList) Set(v string) error { *s = append(*s, v); return nil }
 
 // evalGate runs every gate on the working tree diff against base; the CI output goes to ciOut.
 func evalGate(dir, base string, maxLines int, ci string, extraProtect []string, ciOut io.Writer) (int, []finding, error) {
+	cleanCoverageProfiles(dir)
 	diff, err := gitDiff(dir, base)
 	if err != nil {
 		return 0, nil, err
@@ -290,4 +305,33 @@ func runGate(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintf(stdout, "gate: reprovado [%s] %s\n", f.gate, f.reason)
 	}
 	return exitGateFailed
+}
+
+// cleanCoverageProfiles removes the Go coverage profiles a model left loose in the tree
+// (coverage.out, full_coverage, ...): untracked files that start with "mode: set|count|
+// atomic" (#366). They are scratch output, not part of the ticket: in the diff they would
+// count against the size gate and land in the PR.
+func cleanCoverageProfiles(dir string) {
+	cmd := exec.Command("git", "ls-files", "-z", "--others", "--exclude-standard")
+	cmd.Dir = dir
+	out, err := cmd.Output()
+	if err != nil {
+		return
+	}
+	for _, p := range strings.Split(string(out), "\x00") {
+		if p == "" || strings.HasSuffix(p, ".go") {
+			continue
+		}
+		full := filepath.Join(dir, filepath.FromSlash(p))
+		f, err := os.Open(full)
+		if err != nil {
+			continue
+		}
+		head := make([]byte, 16)
+		n, _ := f.Read(head)
+		_ = f.Close()
+		if h := string(head[:n]); strings.HasPrefix(h, "mode: set") || strings.HasPrefix(h, "mode: count") || strings.HasPrefix(h, "mode: atomic") {
+			_ = os.Remove(full)
+		}
+	}
 }

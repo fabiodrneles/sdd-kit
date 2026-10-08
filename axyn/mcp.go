@@ -298,7 +298,7 @@ func (s *mcpServer) gate(a gateArgs) (bool, string, error) {
 	var ciLog bytes.Buffer
 	n, findings, err := evalGate(s.dir, s.base, maxLines, s.ci, nil, &ciLog)
 	if err != nil {
-		return false, "", fmt.Errorf("git diff falhou: %v", err)
+		return false, "", fmt.Errorf("não consegui comparar o código do ticket com a base %s (%v); o código fica como está: confira com git status e git diff %s e, para continuar, axyn run --resume", s.base, err, s.base)
 	}
 	if len(a.Plan) > 0 {
 		if _, t := s.openTicket(); t != nil {

@@ -398,6 +398,11 @@ func callAgent(dir, name, modelID, prompt string, timeout time.Duration, log io.
 	defer cancel()
 	cmd := exec.CommandContext(ctx, argv[0], args...)
 	cmd.Dir = dir
+	// opencode's shell tool stops a command after 2 minutes; make ci on a small machine
+	// takes longer (#380). Its default goes to 15 minutes; the call itself keeps its own cap.
+	if os.Getenv("OPENCODE_EXPERIMENTAL_BASH_DEFAULT_TIMEOUT_MS") == "" {
+		cmd.Env = append(os.Environ(), "OPENCODE_EXPERIMENTAL_BASH_DEFAULT_TIMEOUT_MS=900000")
+	}
 	tail := &tailWriter{max: 16 << 10}
 	w := io.MultiWriter(log, tail)
 	cmd.Stdout, cmd.Stderr = w, w
@@ -631,6 +636,18 @@ func (r *runner) ticket() (string, string) {
 			r.st.Gate = "modelo " + cur + " " + why + "; trocando para " + next
 			continue
 		}
+		// The lock of a tests-only ticket (#380): whatever production code the model changed
+		// is undone before the gates, so it never reaches a delivery; its tests must pass on
+		// the code as it is.
+		lockNote := ""
+		if t.testsOnly() {
+			if pl, _, err := r.s.loadPlan(); err == nil {
+				if undone := r.s.revertOffenders(pl); len(undone) > 0 {
+					lockNote = "trava do ticket só de testes: desfiz as mudanças em " + strings.Join(undone, ", ") + "; os testes precisam passar com o código como ele está, sem mexer em produção\n"
+					_, _ = fmt.Fprint(r.log, lockNote)
+				}
+			}
+		}
 		r.set("portões")
 		var green bool
 		var report string
@@ -641,6 +658,7 @@ func (r *runner) ticket() (string, string) {
 		} else if green, report, err = r.gate(); err != nil {
 			return runStopped, err.Error()
 		}
+		report = lockNote + report
 		r.st.Gate = firstLine(report)
 		if green {
 			return r.ship(t)

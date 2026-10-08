@@ -633,3 +633,17 @@ func isCodePath(p string) bool {
 	}
 	return false
 }
+
+// revertOffenders undoes only the production files a tests-only ticket changed (the lock
+// after an attempt; the tests stay so the gates judge them on the real code).
+func (s *mcpServer) revertOffenders(pl *plan) []string {
+	paths := s.testsOnlyOffenders(pl)
+	for _, p := range paths {
+		if _, err := s.git("cat-file", "-e", s.baseRef()+":"+p); err == nil {
+			_, _ = s.git("checkout", s.baseRef(), "--", p)
+		} else {
+			_ = os.Remove(filepath.Join(s.dir, filepath.FromSlash(p)))
+		}
+	}
+	return paths
+}

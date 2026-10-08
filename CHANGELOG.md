@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.23.8] - 2026-10-08
+
+### Corrigido
+
+- ticket só de testes cuja tentativa mudou produção recomeça da base (#379)
+
 ## [1.23.7] - 2026-10-08
 
 ### Corrigido

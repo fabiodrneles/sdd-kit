@@ -4,6 +4,16 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.23.0] - 2026-10-08
+
+### Adicionado
+
+- axyn stop e a avaliação numa lista própria, separada do trabalho do projeto (#362)
+
+### Corrigido
+
+- avaliação mostra modelos × etapas, falta de chave conta como indisponível e relatório mais enxuto (#361)
+
 ## [1.22.1] - 2026-10-08
 
 ### Corrigido

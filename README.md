@@ -574,7 +574,7 @@ O axyn escreve a spec e os tickets, prepara o projeto (o `Makefile`, o CI e o li
 
 ### 9. Acompanhar o andamento
 
-**Onde rodar:** num **segundo terminal**, na raiz do projeto (a mesma pasta do passo 5). O opencode pode ficar fechado: o axyn trabalha em segundo plano.
+**Onde rodar:** no terminal, na raiz do projeto (a mesma pasta do passo 5). O opencode pode ficar fechado, porque o axyn trabalha em segundo plano: saia dele com `Ctrl + C` e use a mesma janela.
 
 ```bash
 axyn status --watch
@@ -583,7 +583,57 @@ axyn status --watch
 # Ctrl + C sai do acompanhamento (o axyn continua trabalhando).
 ```
 
-Para ver só o momento atual, uma vez: `axyn status`.
+Na mesma janela, aperte **Enter** para trocar entre o progresso e o **log ao vivo**, isto é, o que o modelo está fazendo naquele momento. Aperte Enter de novo para voltar ao progresso. Não precisa abrir outra janela.
+
+Para ver só o momento atual, uma vez: `axyn status`. Para ver só o log: `axyn logs`.
+
+### Escolher o melhor modelo para cada etapa (`axyn bench`)
+
+Cada modelo gratuito é bom numa coisa: um planeja bem, outro escreve bons testes. O `axyn bench` testa os seus modelos em tarefas fixas de cada etapa (plano, código, testes, conserto) e dá uma nota calculada só por verificações automáticas, sem IA. Quem enfraquece um teste para passar é vetado. Depois, cada etapa vai para o modelo que melhor a resolve.
+
+**Você não precisa fazer nada:** na primeira execução, e quando a avaliação vence (30 dias, versão nova do opencode ou do axyn, modelo novo), o `axyn run` avalia sozinho antes de começar.
+
+**Para avaliar quando quiser.** **Onde rodar:** no terminal, em qualquer pasta.
+
+```bash
+axyn bench
+# Avalia todos os modelos gratuitos (os que têm chave) em todas as etapas.
+axyn bench plano testes
+# Refaz só essas etapas; as outras ficam como estavam.
+# Etapas: plano, codigo, testes, conserto (ou plan, code, tests, fix).
+```
+
+A avaliação roda em segundo plano e a janela vira um painel:
+
+| Tecla ou comando | O que faz |
+|---|---|
+| **Enter** | troca entre o progresso (barra, quantas tentativas faltam, tempo e estimativa) e o log ao vivo, legível |
+| **Ctrl + C** | fecha só o painel; a avaliação continua (pode até fechar o terminal) |
+| `axyn bench --watch` | volta ao painel |
+| `axyn bench --show` | mostra o resultado da última avaliação: a nota de cada modelo e qual vai para cada etapa |
+
+No fim, o painel mostra o resumo, uma notificação avisa e o resultado já passa a valer. Numa máquina modesta (4 GB de RAM), a avaliação completa pode passar de uma hora, porque avalia um modelo por vez. Cada tentativa tem um teto de 10 minutos.
+
+**Para personalizar:**
+
+| Quero | Comando |
+|---|---|
+| Só alguns modelos | `axyn bench --models opencode/A,opencode/B` |
+| Incluir os pagos | `axyn bench --all` |
+| Mais confiança (cada tarefa 3 vezes) | `axyn bench --runs 3` |
+| Escolher eu o modelo de uma etapa | `axyn bench --set plano=MODELO` (desfazer: `--set plano=`) |
+| Ser perguntado antes de aplicar | `axyn bench --ask` |
+| Rodar nesta janela, sem segundo plano | `axyn bench --here` |
+| Desligar e voltar ao modelo do `axyn model` | `axyn bench --off` (religar: `--apply`) |
+| Não avaliar sozinho no `axyn run` | `AXYN_BENCH=off` |
+
+Tudo fica registrado em `~/.config/axyn/bench/` (no Windows, `%USERPROFILE%\.config\axyn\bench\`):
+
+- `bench-DATA.md` traz a nota e o motivo de cada tentativa.
+- `bench-DATA.log` traz a saída completa dos modelos.
+- A pasta `bench-DATA/` guarda o código que cada modelo escreveu.
+
+A explicação completa está na [documentação técnica](docs/axyn.md#avaliação-dos-modelos-axyn-bench).
 
 ### 10. Revisar e mesclar os PRs
 
@@ -688,7 +738,7 @@ Uma execução que estava parada continua com `axyn run --resume`, já na versã
 | `axyn logs` | raiz do projeto | acompanha ao vivo, de forma legível, o que o axyn e os modelos estão fazendo (execução ou avaliação) |
 | `axyn bench` | qualquer pasta | avalia os seus modelos gratuitos em cada etapa (plano, código, testes, conserto) e escolhe sozinho o melhor para cada uma; roda sozinho na primeira execução; `axyn bench plano testes` refaz só essas etapas; em segundo plano, com painel (Enter alterna progresso e log, Ctrl + C fecha o painel, `axyn bench --watch` volta) |
 | `axyn release` | raiz do projeto | fecha uma versão: mostra a versão calculada e o que entra nela e, com o seu sim, abre o PR de fechamento com o CHANGELOG |
-| o instalador de novo (acima) | raiz de cada projeto | atualiza o axyn para a versão nova |
+| `axyn update` | raiz de cada projeto | atualiza o axyn para a versão nova (antes da v1.21.0: o instalador de novo, acima) |
 | `gh pr list` / `gh pr view N --web` | raiz do projeto | lista os PRs / abre o PR N no navegador |
 | `gh pr checks N` | raiz do projeto | CI do PR N |
 | `gh pr merge N --merge --delete-branch` | raiz do projeto | mescla o PR N e apaga a branch |
@@ -744,6 +794,15 @@ Depois de 10 tentativas por modelo (cada uma com os erros da anterior, e com mai
 
 **Quero ver o código que o modelo escreveu**
 `axyn history` (o arquivo traz o código de cada tentativa que não passou), ou abra o PR em rascunho com `gh pr list` e `gh pr view N --web`.
+
+**A avaliação (`axyn bench`) mostra um modelo como "indisponível"**
+O modelo estava sem cota, fora do ar ou saiu do servidor, e não mudou nenhum arquivo. Ele não leva nota ruim e é avaliado de novo na próxima rodada, e o axyn usa os outros modelos. Nada a fazer; para tentar de novo agora: `axyn bench`.
+
+**Todos os modelos foram mal numa etapa da avaliação**
+Nenhum modelo é descartado: os que ficaram abaixo da nota mínima rodam no **modo guiado**, com arquivos limitados aos do ticket, diffs pequenos e testes antigos protegidos. Os portões continuam valendo. Para melhorar o resultado, inclua outros modelos (`axyn model` mostra os disponíveis) e rode `axyn bench` de novo.
+
+**Fechei a janela no meio da avaliação**
+A avaliação continua em segundo plano. Para voltar ao painel: `axyn bench --watch`. Se o computador desligou, rode `axyn bench` de novo: o que já foi avaliado fica guardado.
 
 **O computador fica lento ou trava durante o `make ci`**
 O lint e os testes usam bastante memória. Feche o opencode e outros programas enquanto o axyn trabalha: ele não precisa do opencode aberto.

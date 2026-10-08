@@ -181,6 +181,10 @@ Arquivos: `~/.config/axyn/bench/profile.json` (o resultado em uso), `bench-DATA.
 
 Os logs, relatórios e históricos do axyn são gravados em UTF-8 com a marca (BOM) no início, para o PowerShell 5.1 e os editores mostrarem os acentos certos. As tarefas são em Go e precisam do Go instalado.
 
+## Parar o axyn (`axyn stop`)
+
+Na raiz do projeto, `axyn stop` para a execução ou a avaliação em andamento nesta pasta, mesmo em segundo plano. Ele encerra o processo do axyn e todos os que ele iniciou: o opencode e os comandos dos modelos (no Windows, com `taskkill /T`; no Linux e no macOS, o grupo de processos inteiro). O estado fica como "parado". Nada se perde: numa execução, `axyn run --resume` guarda o código da tentativa interrompida num commit WIP e continua o ticket; numa avaliação, o que já foi medido fica salvo (`axyn bench --show`). Sem nada rodando, o comando só avisa.
+
 ## Fechar uma versão (release)
 
 O projeto que o axyn prepara recebe o `scripts/sdd-release.sh` e o workflow de release do sdd-kit. O `axyn release` usa os dois. Rode-o no terminal, na raiz do projeto, ou peça no `/axyn` ("feche a versão"):
@@ -194,6 +198,8 @@ O projeto que o axyn prepara recebe o `scripts/sdd-release.sh` e o workflow de r
 ## Interrupções e retomada
 
 - Cada execução grava o seu estado em `.axyn/runs/<ID>.json`, com o PID do processo, e o log completo em `.axyn/runs/<ID>.log`.
+- A avaliação dos modelos (`axyn bench`) tem a sua própria lista, `.axyn/bench-runs/bench-<ID>.json` e `.log`, separada do trabalho do projeto: uma nunca sobrescreve nem esconde a outra. O `axyn run --resume`, o `axyn decide`, o `axyn status` e o `axyn history` olham só para o trabalho; o `axyn bench --watch` olha só para a avaliação. Os resultados da avaliação, que valem para a máquina toda, ficam em `~/.config/axyn/bench/`.
+- Uma coisa por vez em cada pasta: enquanto a avaliação roda, o trabalho espera (e vice-versa), para uma máquina pequena rodar um opencode só. O `axyn stop` para o que estiver rodando.
 - O axyn considera uma execução **interrompida** quando o processo morreu (o computador desligou ou travou) ou quando ela está sem sinal há mais de 30 minutos.
 - `axyn run --resume` continua do ticket aberto. Se ele achar código de uma tentativa interrompida, guarda esse código num commit WIP antes de seguir. Nada se perde.
 - Fechar o terminal ou o opencode não para o axyn: ele roda num processo próprio.

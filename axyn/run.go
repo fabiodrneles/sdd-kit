@@ -75,10 +75,23 @@ type runState struct {
 
 func runsDir(dir string) string { return filepath.Join(dir, ".axyn", "runs") }
 
-func statePathFor(dir, id string) string { return filepath.Join(runsDir(dir), id+".json") }
+// The model benches keep their own list (#363): the project's work and the evaluations
+// never share a file, so neither hides the other from resume, decide, status or history.
+func benchRunsDir(dir string) string { return filepath.Join(dir, ".axyn", "bench-runs") }
+
+const benchIDPrefix = "bench-"
+
+func runDirFor(dir, id string) string {
+	if strings.HasPrefix(id, benchIDPrefix) {
+		return benchRunsDir(dir)
+	}
+	return runsDir(dir)
+}
+
+func statePathFor(dir, id string) string { return filepath.Join(runDirFor(dir, id), id+".json") }
 
 func saveRun(dir string, st *runState) error {
-	if err := os.MkdirAll(runsDir(dir), 0o755); err != nil {
+	if err := os.MkdirAll(runDirFor(dir, st.ID), 0o755); err != nil {
 		return err
 	}
 	// .axyn holds only engine state: it must never reach a diff or a commit.
@@ -96,18 +109,14 @@ func saveRun(dir string, st *runState) error {
 
 func loadRun(dir, id string) (*runState, error) {
 	if id == "" {
-		entries, _ := os.ReadDir(runsDir(dir))
-		var names []string
-		for _, e := range entries {
-			if strings.HasSuffix(e.Name(), ".json") {
-				names = append(names, strings.TrimSuffix(e.Name(), ".json"))
+		// The last run of the project's work; a bench saved here by axyn v1.22 is skipped.
+		names := runIDs(runsDir(dir))
+		for i := len(names) - 1; i >= 0; i-- {
+			if st, err := loadRun(dir, names[i]); err == nil && st.Opts.Bench == nil {
+				return st, nil
 			}
 		}
-		if len(names) == 0 {
-			return nil, fmt.Errorf("nenhuma execução ainda: peça uma tarefa com /axyn no opencode, ou rode axyn run \"seu pedido\" na raiz do projeto")
-		}
-		sort.Strings(names)
-		id = names[len(names)-1]
+		return nil, fmt.Errorf("nenhuma execução ainda: peça uma tarefa com /axyn no opencode, ou rode axyn run \"seu pedido\" na raiz do projeto")
 	}
 	if strings.ContainsAny(id, `/\.`) {
 		return nil, fmt.Errorf("id inválido: %s", id)
@@ -121,6 +130,39 @@ func loadRun(dir, id string) (*runState, error) {
 		return nil, err
 	}
 	return &st, nil
+}
+
+// loadBenchRun is the last model bench of this folder.
+func loadBenchRun(dir string) (*runState, error) {
+	names := runIDs(benchRunsDir(dir))
+	if len(names) == 0 {
+		return nil, fmt.Errorf("nenhuma avaliação dos modelos ainda nesta pasta; para começar: axyn bench")
+	}
+	return loadRun(dir, names[len(names)-1])
+}
+
+func runIDs(d string) []string {
+	entries, _ := os.ReadDir(d)
+	var names []string
+	for _, e := range entries {
+		if strings.HasSuffix(e.Name(), ".json") {
+			names = append(names, strings.TrimSuffix(e.Name(), ".json"))
+		}
+	}
+	sort.Strings(names)
+	return names
+}
+
+// busy is what runs in this folder now: the work or a bench (one at a time, so a small
+// machine runs one opencode at a time).
+func busy(dir string) *runState {
+	if st, err := loadRun(dir, ""); err == nil && alive(st) {
+		return st
+	}
+	if st, err := loadBenchRun(dir); err == nil && alive(st) {
+		return st
+	}
+	return nil
 }
 
 // alive says whether a run marked "rodando" still has its worker (spec 021 FR-8): a
@@ -173,11 +215,10 @@ func (s *mcpServer) startRun(request string, resume bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	last, lastErr := loadRun(abs, "")
-	if lastErr == nil && alive(last) {
-		return "", errRunning{last}
+	if b := busy(abs); b != nil {
+		return "", errRunning{b}
 	}
-	if resume && strings.TrimSpace(request) == "" && lastErr == nil {
+	if last, err := loadRun(abs, ""); resume && strings.TrimSpace(request) == "" && err == nil {
 		request = last.Request // the status keeps showing what was asked
 	}
 	if resume && strings.TrimSpace(request) == "" {
@@ -225,7 +266,7 @@ func startDetached(dir, id string) error {
 	if err != nil {
 		return err
 	}
-	logf, err := openLog(filepath.Join(runsDir(dir), id+".log"))
+	logf, err := openLog(filepath.Join(runDirFor(dir, id), id+".log"))
 	if err != nil {
 		return err
 	}
@@ -243,8 +284,12 @@ func startDetached(dir, id string) error {
 type errRunning struct{ st *runState }
 
 func (e errRunning) Error() string {
+	if e.st.Opts.Bench != nil {
+		return "Agora há uma avaliação dos modelos rodando nesta pasta (execução " + e.st.ID + "), e o trabalho do projeto espera ela terminar. Andamento:\n" + renderStatus(e.st) +
+			"\nPara acompanhar: axyn bench --watch. Para não esperar: axyn stop (o que já foi avaliado fica salvo) e, em seguida, axyn run --resume para continuar o trabalho do projeto."
+	}
 	return "Já estou trabalhando nisso (execução " + e.st.ID + "). Andamento agora:\n" + renderStatus(e.st) +
-		"\nPara acompanhar sem rodar nada à mão: axyn status --watch"
+		"\nPara acompanhar sem rodar nada à mão: axyn status --watch. Para parar: axyn stop (depois, axyn run --resume continua de onde parou)."
 }
 
 func (s *mcpServer) toolRun(request string, resume bool) (string, error) {

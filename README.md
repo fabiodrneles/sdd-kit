@@ -735,6 +735,7 @@ Uma execução que estava parada continua com `axyn run --resume`, já na versã
 | `axyn run "pedido"` | raiz do projeto | o mesmo que o `/axyn` do opencode, direto do terminal |
 | `axyn status` | raiz do projeto | andamento da execução, uma vez |
 | `axyn status --watch` | raiz do projeto | acompanha e avisa quando termina, para ou pergunta algo |
+| `axyn stop` | raiz do projeto | para o que o axyn está fazendo nesta pasta, mesmo em segundo plano (execução ou avaliação); depois, `axyn run --resume` continua |
 | `axyn run --resume` | raiz do projeto | continua de onde parou (depois de uma pergunta, de um travamento ou de uma correção sua) |
 | `axyn history` | raiz do projeto | arquivo com tudo o que a execução fez, para pedir ajuda |
 | `axyn version` | qualquer pasta | versão instalada |
@@ -775,7 +776,7 @@ Copie e cole o comando que ele mostra, em qualquer pasta, feche e abra o termina
 O `axyn status` mostra "interrompida". Na raiz do projeto, `axyn run --resume`: o axyn guarda num commit WIP o código que estava pela metade (nada se perde) e continua o ticket.
 
 **"Já estou trabalhando nisso"**
-Já há uma tarefa rodando; acompanhe com `axyn status --watch` (raiz do projeto). Para parar de vez (em qualquer pasta): `Stop-Process -Name axyn -Force` no Windows, ou `pkill -f "axyn run"` no Linux/macOS; depois, para continuar: `axyn run --resume`.
+Já há uma tarefa rodando nesta pasta: uma execução ou uma avaliação dos modelos (`axyn bench`). Acompanhe com `axyn status --watch` (ou `axyn bench --watch`, na avaliação). Para parar, na raiz do projeto: `axyn stop`. Ele para o axyn e os modelos que ele chamou, mesmo em segundo plano, e nada se perde: `axyn run --resume` continua o trabalho do projeto de onde parou, e a avaliação guarda o que já mediu.
 
 **O modelo não conseguiu passar nos portões**
 Depois de 10 tentativas por modelo (cada uma com os erros da anterior, e com mais ajuda a cada vez), o axyn para. O código da última tentativa fica numa branch `feat/…-wip`, publicada como **PR em rascunho** com os erros e um texto pronto para colar noutra IA (sem GitHub, em `.axyn/ajuda-ticket-N.md`). Três saídas, na raiz do projeto:

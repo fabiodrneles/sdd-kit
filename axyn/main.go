@@ -71,6 +71,8 @@ Uso:
   axyn status [ID] [--watch]
                       andamento de uma execução: ticket, portões, modelo e tentativas; com --watch,
                       fica acompanhando e avisa (bipe e notificação) quando termina, para ou pergunta
+  axyn stop [ID]    para o que o axyn está fazendo nesta pasta, mesmo em segundo plano (execução ou
+                      avaliação), com os modelos que ele chamou; nada se perde: axyn run --resume continua
   axyn help         mostra esta ajuda
 `
 
@@ -120,6 +122,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runRunCmd(args[1:], stdout, stderr)
 	case "status":
 		return runStatusCmd(args[1:], stdout, stderr)
+	case "stop":
+		return runStopCmd(args[1:], stdout, stderr)
 	case "mcp":
 		return runMCP(args[1:], os.Stdin, stdout, stderr)
 	case "help", "-h", "--help":

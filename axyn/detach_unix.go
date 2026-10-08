@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+	"time"
 )
 
 // detach puts the worker in its own session, so it outlives the MCP server that started it.
@@ -17,6 +18,22 @@ func detach(cmd *exec.Cmd) { cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true
 func processAlive(pid int) bool {
 	err := syscall.Kill(pid, 0)
 	return err == nil || err == syscall.EPERM
+}
+
+// killTree ends the worker and everything it started: the worker leads its own session
+// (Setsid), so the signal goes to the whole group; what does not stop in 3 s is killed.
+func killTree(pid int) error {
+	if err := syscall.Kill(-pid, syscall.SIGTERM); err != nil && syscall.Kill(pid, syscall.SIGTERM) != nil {
+		return err
+	}
+	for i := 0; i < 30 && processAlive(pid); i++ {
+		time.Sleep(100 * time.Millisecond)
+	}
+	if processAlive(pid) {
+		_ = syscall.Kill(-pid, syscall.SIGKILL)
+		_ = syscall.Kill(pid, syscall.SIGKILL)
+	}
+	return nil
 }
 
 // hideWindow is a Windows concern: helpers here have no window to hide.

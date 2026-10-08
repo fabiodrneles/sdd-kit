@@ -153,7 +153,7 @@ func buildHistory(dir string, st *runState) string {
 	w("```\n")
 
 	w("\n## Log completo\n\n")
-	if logb, err := os.ReadFile(filepath.Join(runsDir(dir), st.ID+".log")); err == nil {
+	if logb, err := os.ReadFile(filepath.Join(runDirFor(dir, st.ID), st.ID+".log")); err == nil {
 		w("```text\n%s\n```\n", strings.TrimRight(strings.TrimPrefix(string(logb), utf8BOM), "\n"))
 	} else {
 		w("Sem log (%v).\n", err)

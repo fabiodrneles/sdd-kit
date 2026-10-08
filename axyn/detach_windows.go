@@ -3,7 +3,9 @@
 package main
 
 import (
+	"fmt"
 	"os/exec"
+	"strings"
 	"syscall"
 	"unsafe"
 )
@@ -24,6 +26,16 @@ func processAlive(pid int) bool {
 		return false
 	}
 	return code == stillActive
+}
+
+// killTree ends the worker and every process it started (/T), opencode and the models' tools.
+func killTree(pid int) error {
+	cmd := exec.Command("taskkill", "/PID", fmt.Sprint(pid), "/T", "/F")
+	hideWindow(cmd)
+	if out, err := cmd.CombinedOutput(); err != nil && processAlive(pid) {
+		return fmt.Errorf("%v: %s", err, strings.TrimSpace(string(out)))
+	}
+	return nil
 }
 
 // hideWindow starts a helper with no console of its own (CREATE_NO_WINDOW), so it can

@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -73,5 +74,20 @@ func windowsShellNote() string {
 	if hostOS != "windows" {
 		return ""
 	}
-	return "Ambiente: Windows. Se o seu terminal for o PowerShell, não use && nem || (rode um comando por vez), nem grep, ls -la, cat <<, /tmp; ponha entre aspas os argumentos com = (go tool cover \"-func=c.out\", go test \"-coverprofile=c.out\"). Para verificar o projeto, prefira make ci e make test.\n\n"
+	// No quote, ampersand, pipe or angle bracket here: on Windows opencode is often a .cmd
+	// shim, and cmd.exe cuts the argument at them (#377: the model got no ticket at all).
+	return "Ambiente: Windows. Se o seu terminal for o PowerShell, rode um comando por vez (sem encadear com E-E ou OU-OU), e não use grep, ls -la nem /tmp; ponha entre aspas simples os argumentos com sinal de igual, por exemplo go tool cover '-func=c.out'. Para verificar o projeto, prefira make ci e make test.\n\n"
+}
+
+// cmdSafe makes an argument survive cmd.exe, which runs .cmd and .bat files (npm installs
+// opencode as opencode.cmd): it would cut the prompt at a double quote and treat & | < >
+// as operators (#377). Their look-alikes keep the text readable for the model.
+func cmdSafe(exe, arg string) string {
+	if hostOS != "windows" {
+		return arg
+	}
+	if ext := strings.ToLower(filepath.Ext(exe)); ext != ".cmd" && ext != ".bat" {
+		return arg
+	}
+	return strings.NewReplacer(`"`, "'", "&", "＆", "|", "｜", "<", "‹", ">", "›", "%", "％", "^", "ˆ").Replace(arg)
 }

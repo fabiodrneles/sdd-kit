@@ -389,7 +389,11 @@ func callAgent(dir, name, modelID, prompt string, timeout time.Duration, log io.
 	if modelID != "" {
 		args = append(args, "--model", modelID)
 	}
-	args = append(args, windowsShellNote()+prompt)
+	exe := argv[0]
+	if p, err := exec.LookPath(argv[0]); err == nil {
+		exe = p
+	}
+	args = append(args, cmdSafe(exe, windowsShellNote()+prompt))
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, argv[0], args...)

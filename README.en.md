@@ -543,6 +543,8 @@ axyn bench plan tests
 # Steps: plan, code, tests, fix (or plano, codigo, testes, conserto).
 ```
 
+At the start, the evaluation shows the count, for example `avaliando 27 modelo(s) em 2 etapa(s) (código, conserto) = 54 tentativas`: each model does each chosen step once. The panel shows which model it is on (`modelo 3 de 27`). With all 4 steps, the same 27 models would make 108 attempts; to shorten it, evaluate only some steps or only some models (`--models`).
+
 The evaluation runs in the background and the window becomes a panel:
 
 | Key or command | What it does |

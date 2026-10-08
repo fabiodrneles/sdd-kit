@@ -603,6 +603,8 @@ axyn bench plano testes
 # Etapas: plano, codigo, testes, conserto (ou plan, code, tests, fix).
 ```
 
+No começo, a avaliação mostra a conta, por exemplo `avaliando 27 modelo(s) em 2 etapa(s) (código, conserto) = 54 tentativas`: cada modelo faz cada etapa escolhida uma vez. O painel mostra em que modelo está (`modelo 3 de 27`). Com as 4 etapas, os mesmos 27 modelos dariam 108 tentativas; para encurtar, avalie só algumas etapas ou só alguns modelos (`--models`).
+
 A avaliação roda em segundo plano e a janela vira um painel:
 
 | Tecla ou comando | O que faz |

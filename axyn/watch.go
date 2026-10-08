@@ -215,7 +215,11 @@ func liveLine(st *runState, frame int, now time.Time) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "%s%s%s %s%s%s", cYellow, spinnerFrame(frame), cReset, cWhite, st.Phase, cReset)
 	if st.Of > 0 {
-		fmt.Fprintf(&b, "  %s  %s%3d%%%s  %d/%d", richBar(st.Done, st.Of, 30), cWhite, 100*st.Done/st.Of, cReset, st.Done, st.Of)
+		unit := ""
+		if st.Phase == "avaliando modelos" {
+			unit = " tentativas"
+		}
+		fmt.Fprintf(&b, "  %s  %s%3d%%%s  %d/%d%s", richBar(st.Done, st.Of, 30), cWhite, 100*st.Done/st.Of, cReset, st.Done, st.Of, unit)
 	}
 	fmt.Fprintf(&b, "  %s%s%s", cYellow, clock(now.Sub(since)), cReset)
 	if st.Of > 0 && st.Done > 0 && st.Done < st.Of {

@@ -218,8 +218,8 @@ func (s *mcpServer) startRun(request string, resume bool) (string, error) {
 	if b := busy(abs); b != nil {
 		return "", errRunning{b}
 	}
-	if last, err := loadRun(abs, ""); resume && strings.TrimSpace(request) == "" && err == nil {
-		request = last.Request // the status keeps showing what was asked
+	if last, err := loadRun(abs, ""); resume && strings.TrimSpace(request) == "" && err == nil && last.Request != "avaliação dos modelos" {
+		request = last.Request // the status keeps showing what was asked (v1.22 copied the bench's name)
 	}
 	if resume && strings.TrimSpace(request) == "" {
 		if pl, _, err := s.loadPlan(); err == nil {

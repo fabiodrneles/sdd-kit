@@ -126,7 +126,7 @@ Com os portões verdes, a ferramenta `axyn_ship` faz o commit (`feat: <título d
 
 O axyn escolhe sozinho o melhor modelo para cada etapa. Ele não usa uma tabela genérica da internet: testa os modelos que **você** tem no opencode, nas tarefas do **seu** processo.
 
-**Automático por padrão.** Na primeira execução, ou quando a avaliação vence (mais de 30 dias, outra versão do opencode ou do axyn, ou um modelo novo), o `axyn run` avalia todos os modelos gratuitos da máquina antes de planejar e aplica o resultado. O status mostra a fase "avaliando modelos". Para pular: `AXYN_BENCH=off`.
+**Automático por padrão.** Na primeira execução, o `axyn run` avalia todos os modelos gratuitos da máquina antes de planejar e aplica o resultado. Depois, ele avalia de novo tudo só quando a avaliação passa de 30 dias ou quando as tarefas da avaliação mudam. Atualizar o axyn ou o opencode não refaz nada. Um modelo novo, ou um que estava indisponível há mais de um dia, é avaliado sozinho, e os outros resultados são mantidos. O status mostra a fase "avaliando modelos". Para pular: `AXYN_BENCH=off`.
 
 **O conjunto fixo de tarefas.** Cada tarefa tem um identificador estável e é sempre a mesma, para dar para comparar entre rodadas:
 

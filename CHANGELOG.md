@@ -4,6 +4,16 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.23.2] - 2026-10-08
+
+### Corrigido
+
+- "git diff falhou: exit status 128" nos portões: uma pasta com repositório próprio e arquivos com acento ficam fora do diff, e o erro passa a trazer a mensagem do git (#366)
+- no Windows, o axyn põe o `sh` e o `bash` do Git no PATH: o `make ci` e os comandos dos modelos funcionam como no Linux (#366)
+- perfis de cobertura que o modelo deixa soltos (`coverage.out` e parecidos) são apagados antes dos portões e não entram no PR (#366)
+- `axyn run` fora da pasta de um projeto avisa na hora (#366)
+- o ticket de cobertura diz quando parar: medir com `make test`, parar ao passar da meta e não cobrir `main()` nem `os.Exit` (#367)
+
 ## [1.23.1] - 2026-10-08
 
 ### Corrigido

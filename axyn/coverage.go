@@ -423,8 +423,10 @@ func applyCoverageChoice(s *mcpServer, choice string) error {
 		for _, t := range pl.Tickets {
 			id = max(id, t.ID)
 		}
-		body := fmt.Sprintf("Escreva testes para o código que já existe, até a cobertura do projeto chegar a %d%% (hoje: %.1f%%). Não mude o código de produção, só acrescente testes. Comece pelos arquivos menos cobertos:\n- %s",
-			pl.CoverageGoal, pl.CoverageNow, strings.Join(pl.CoverageGaps, "\n- "))
+		// #366: on the owner's machine the model reached 94.8% and kept going for main() and
+		// os.Exit, writing a new coverage file at every try. The ticket says when to stop.
+		body := fmt.Sprintf("Escreva testes para o código que já existe, até a cobertura do projeto chegar a %d%% (hoje: %.1f%%). Não mude o código de produção, só acrescente testes. Comece pelos arquivos menos cobertos:\n- %s\n\nMeça só com `make test` (ele mostra a cobertura total) e pare assim que ela passar de %d%%: não é preciso cobrir main() nem funções que chamam os.Exit. Não grave arquivos de cobertura na pasta do projeto.",
+			pl.CoverageGoal, pl.CoverageNow, strings.Join(pl.CoverageGaps, "\n- "), pl.CoverageGoal)
 		t := ticket{ID: id + 1, Title: fmt.Sprintf("Testes para a cobertura chegar a %d%%", pl.CoverageGoal), Body: body}
 		pl.Tickets = append([]ticket{t}, pl.Tickets...)
 	}

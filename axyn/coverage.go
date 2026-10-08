@@ -391,7 +391,12 @@ func (r *runner) coverageQuestion() string {
 	w("\nAntes de começar o seu pedido, escolha quem escreve os testes que faltam (no terminal, na raiz do projeto):\n")
 	w("  1. O axyn escreve, num ticket antes dos outros, e depois segue com o seu pedido:\n       axyn coverage auto\n")
 	w("  2. Você escreve, quando quiser; o axyn segue já com o seu pedido, sem deixar a cobertura cair, exigindo teste em todo código novo e subindo o mínimo a cada ticket:\n       axyn coverage manual\n")
-	w("\nPara não ver esta pergunta nos próximos projetos, defina AXYN_COVERAGE=auto (ou manual).")
+	// #364: the owner typed "AXYN_COVERAGE=auto" in PowerShell, which is not a command.
+	if hostOS == "windows" {
+		w("\nPara não ver esta pergunta nos próximos projetos (opcional), rode uma vez no PowerShell e abra um terminal novo: [Environment]::SetEnvironmentVariable('AXYN_COVERAGE','auto','User')   (ou 'manual')")
+	} else {
+		w("\nPara não ver esta pergunta nos próximos projetos (opcional), acrescente ao ~/.bashrc ou ~/.zshrc: export AXYN_COVERAGE=auto   (ou manual)")
+	}
 	return b.String()
 }
 

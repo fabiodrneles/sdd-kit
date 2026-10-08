@@ -61,7 +61,7 @@ func buildHistory(dir string, st *runState) string {
 	w("# Histórico do axyn: execução %s\n\n", st.ID)
 	w("Gerado em %s por `axyn history`. Chaves e tokens foram removidos.\n\n", time.Now().Format(time.RFC3339))
 	w("## Resumo\n\n")
-	w("- **Pedido:** %s\n- **Status:** %s (fase: %s)\n", oneLine(st.Request), st.Status, st.Phase)
+	w("- **Pedido:** %s\n- **Status:** %s (fase: %s)\n", requestLabel(st), st.Status, st.Phase)
 	w("- **Início / última atualização:** %s / %s\n", st.Started.Format(time.RFC3339), st.Updated.Format(time.RFC3339))
 	if st.Ticket > 0 {
 		w("- **Ticket atual:** %d de %d «%s», %d tentativa(s), modelo %s\n", st.Ticket, st.Total, st.Title, st.Attempts, st.Model)

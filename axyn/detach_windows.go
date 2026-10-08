@@ -38,6 +38,16 @@ func killTree(pid int) error {
 	return nil
 }
 
+// setTitle sets the console window's title (SetConsoleTitleW): it shows the progress
+// without writing to the window, so the scroll position stays where the user left it.
+func setTitle(s string) {
+	p, err := syscall.UTF16PtrFromString(s)
+	if err != nil {
+		return
+	}
+	_, _, _ = syscall.NewLazyDLL("kernel32.dll").NewProc("SetConsoleTitleW").Call(uintptr(unsafe.Pointer(p)))
+}
+
 // hideWindow starts a helper with no console of its own (CREATE_NO_WINDOW), so it can
 // neither show a window nor touch the user's terminal.
 func hideWindow(cmd *exec.Cmd) {

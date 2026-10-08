@@ -156,6 +156,7 @@ type benchProfile struct {
 	Pinned   map[string]string   `json:"pinned,omitempty"` // steps the user fixed by hand (axyn bench --set)
 	// Contained are, per step, the models under the bar: still used, inside the guide.
 	Contained map[string][]string `json:"contained,omitempty"`
+	Set       string              `json:"set,omitempty"` // the golden set measured (goldenSet)
 
 	prevForReport *benchProfile // the round before, for the drift section; not saved
 }
@@ -676,29 +677,49 @@ func reportText(p, prev *benchProfile) string {
 }
 
 // stale says why the applied profile should be measured again, or "".
-func (p *benchProfile) stale(models []string) string {
+// goldenSet is the version of the golden set: only a change of the tasks or of the scoring
+// makes every result old. A new axyn or opencode does not (#364): v1.23.0 alone re-ran
+// 27 models × 4 steps on the owner's machine before resuming his work.
+const goldenSet = "1"
+
+// fullyStale says why every result must be measured again, or "".
+func (p *benchProfile) fullyStale() string {
 	switch {
 	case time.Since(p.Date) > 30*24*time.Hour:
 		return "a avaliação tem mais de 30 dias"
-	case p.Axyn != version:
-		return "o axyn mudou de versão desde a avaliação"
+	case p.Set != "" && p.Set != goldenSet:
+		return "as tarefas da avaliação mudaram"
 	}
-	if v := toolVersion("opencode", "--version"); v != "não instalado" && p.Opencode != "" && v != p.Opencode {
-		return "o opencode mudou de versão desde a avaliação"
-	}
+	return ""
+}
+
+// pending are the models still to measure: never evaluated, or unavailable in a round
+// more than a day old (a model down in the last day is not called again at every run).
+func (p *benchProfile) pending(models []string) []string {
 	known := map[string]bool{}
 	for _, m := range p.Models {
 		known[m] = true
 	}
 	for _, r := range p.Results {
-		if r.allDown() {
+		if r.allDown() && time.Since(r.Date) > 24*time.Hour {
 			known[r.Model] = false
 		}
 	}
+	var out []string
 	for _, m := range models {
 		if !known[m] {
-			return "há modelos novos que ainda não foram avaliados (" + m + ")"
+			out = append(out, m)
 		}
+	}
+	return out
+}
+
+func (p *benchProfile) stale(models []string) string {
+	if why := p.fullyStale(); why != "" {
+		return why
+	}
+	if pend := p.pending(models); len(pend) > 0 {
+		return fmt.Sprintf("há %d modelo(s) ainda não avaliado(s), como %s", len(pend), pend[0])
 	}
 	return ""
 }
@@ -833,7 +854,7 @@ func runBenchCmd(args []string, stdout, stderr io.Writer) int {
 // task runs times; the profile is saved after every result, so an interruption keeps what ran.
 func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout time.Duration, minScore int, out io.Writer, progress func(done, total int, detail string)) *benchProfile {
 	prev, _ := loadProfile()
-	p := &benchProfile{Date: time.Now(), Axyn: version, Opencode: toolVersion("opencode", "--version"), Models: models, prevForReport: prev}
+	p := &benchProfile{Date: time.Now(), Axyn: version, Opencode: toolVersion("opencode", "--version"), Models: models, Set: goldenSet, prevForReport: prev}
 	if prev != nil {
 		p.Pinned = prev.Pinned // a choice by hand survives every new evaluation
 		// Evaluating only some tasks or models keeps the other results of the last round:
@@ -936,7 +957,7 @@ func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout 
 				mu.Lock()
 				p.Results = append(p.Results, res)
 				p.Routing, p.Contained = route(p.Results, minScore)
-				_ = saveProfile(&benchProfile{Date: p.Date, Axyn: p.Axyn, Opencode: p.Opencode, Models: p.Models, Results: p.Results, Routing: p.Routing, Contained: p.Contained, Pinned: p.Pinned, Applied: prev != nil && prev.Applied})
+				_ = saveProfile(&benchProfile{Date: p.Date, Axyn: p.Axyn, Opencode: p.Opencode, Models: p.Models, Results: p.Results, Routing: p.Routing, Contained: p.Contained, Pinned: p.Pinned, Set: p.Set, Applied: prev != nil && prev.Applied})
 				mu.Unlock()
 			}
 		}(m)
@@ -1104,6 +1125,9 @@ func (r *runner) autoBench() {
 		}
 		if why = p.stale(models); why == "" {
 			return
+		}
+		if p.fullyStale() == "" {
+			models = p.pending(models) // only what is new; every other result is kept
 		}
 	}
 	r.set("avaliando modelos")

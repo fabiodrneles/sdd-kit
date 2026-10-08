@@ -104,6 +104,14 @@ func TestBenchClassifiesAndRoutes(t *testing.T) {
 	if why := p.stale([]string{"bom", "novo"}); !strings.Contains(why, "novo") {
 		t.Errorf("modelo novo: %q", why)
 	}
+	// #364: a new axyn or opencode does not redo everything, and only the new model is pending.
+	p.Axyn, p.Opencode = "v0.0.1", "0.0.1"
+	if why := p.stale([]string{"bom"}); why != "" {
+		t.Errorf("versão nova do axyn ou do opencode não vence a avaliação: %q", why)
+	}
+	if pend := p.pending([]string{"bom", "novo"}); len(pend) != 1 || pend[0] != "novo" {
+		t.Errorf("só o modelo novo é avaliado: %v", pend)
+	}
 	p.Date = time.Now().Add(-40 * 24 * time.Hour)
 	if why := p.stale(nil); !strings.Contains(why, "30 dias") {
 		t.Errorf("avaliação velha: %q", why)

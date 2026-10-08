@@ -202,3 +202,14 @@ func TestReportTermGroupsFailures(t *testing.T) {
 		t.Errorf("falhas iguais numa linha:\n%s", got)
 	}
 }
+
+// #364: the status and its questions are colored on a console.
+func TestColorStatus(t *testing.T) {
+	text := "execução 1: parado\npedido: --timeout\nOnde falta cobertura:\n  checker/checker.go: 0% (70 de 70 instruções sem teste)\n     axyn coverage auto"
+	got := colorStatus(text)
+	for _, want := range []string{"\x1b[1;91mparado", cGray + "pedido: ", cWhite + "Onde falta cobertura:", "\x1b[91m  checker/checker.go: 0%", cYellow + "axyn coverage auto"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("falta %q em %q", want, got)
+		}
+	}
+}

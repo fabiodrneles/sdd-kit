@@ -36,6 +36,9 @@ func killTree(pid int) error {
 	return nil
 }
 
+// setTitle is used on the classic Windows console only.
+func setTitle(string) {}
+
 // hideWindow is a Windows concern: helpers here have no window to hide.
 func hideWindow(*exec.Cmd) {}
 

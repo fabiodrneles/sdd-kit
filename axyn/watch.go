@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -87,7 +88,7 @@ func watchRun(dir, id string, interval time.Duration, out io.Writer) int {
 			}
 			if shownID != st.ID {
 				clear()
-				_, _ = fmt.Fprintf(out, "acompanhando a execução %s: %s (Ctrl + C para sair; o axyn continua trabalhando)\n", st.ID, oneLine(st.Request))
+				_, _ = fmt.Fprintf(out, "acompanhando a execução %s: %s (Ctrl + C para sair; o axyn continua trabalhando)\n", st.ID, requestLabel(st))
 				shownID = st.ID
 			}
 			if paused && alive(st) {
@@ -107,7 +108,7 @@ func watchRun(dir, id string, interval time.Duration, out io.Writer) int {
 				if p, err := loadProfile(); err == nil && st.Status == runDone && st.Opts.Bench != nil && tty {
 					_, _ = fmt.Fprint(out, "\a"+reportTerm(p, benchReportPath(p), true))
 				} else {
-					_, _ = fmt.Fprintf(out, "\a\n%s\n", renderStatus(st))
+					_, _ = fmt.Fprintf(out, "\a\n%s\n", colorStatus(renderStatus(st)))
 				}
 				switch {
 				case st.Status == runDone && st.Opts.Bench != nil:
@@ -358,3 +359,44 @@ func spinnerFrame(frame int) string {
 	}
 	return spinner[frame%len(spinner)]
 }
+
+// colorStatus colors the status and the questions for the console (#364): the state in
+// green, yellow or red, labels in gray, the commands to type in yellow, files without
+// tests in red, headings in white. Off a console the text stays plain.
+func colorStatus(text string) string {
+	var out []string
+	for _, l := range strings.Split(text, "\n") {
+		t := strings.TrimSpace(l)
+		switch {
+		case strings.HasPrefix(l, "execução "):
+			code := cYellow
+			switch {
+			case strings.Contains(l, ": "+runDone):
+				code = "\x1b[1;92m"
+			case strings.Contains(l, ": "+runStopped) || strings.Contains(l, "interrompida"):
+				code = "\x1b[1;91m"
+			}
+			if i := strings.Index(l, ": "); i > 0 {
+				l = cWhite + l[:i] + cReset + ": " + code + l[i+2:] + cReset
+			}
+		case labelRe.MatchString(l):
+			m := labelRe.FindStringSubmatch(l)
+			l = cGray + m[1] + cReset + m[2]
+		case strings.HasPrefix(t, "axyn ") || strings.HasPrefix(t, "$env:") || strings.HasPrefix(t, "[Environment]") || strings.HasPrefix(t, "export "):
+			l = strings.Replace(l, t, cYellow+t+cReset, 1)
+		case zeroCovRe.MatchString(t):
+			l = "\x1b[91m" + l + cReset
+		case strings.HasSuffix(t, ":") && !strings.HasPrefix(t, "-"):
+			l = cWhite + l + cReset
+		case strings.Contains(t, "Error") || strings.Contains(t, "reprovad") || strings.Contains(t, "falhou"):
+			l = "\x1b[91m" + l + cReset
+		}
+		out = append(out, l)
+	}
+	return strings.Join(out, "\n")
+}
+
+var (
+	labelRe   = regexp.MustCompile(`^((?:pedido|ticket|fase|modelo|tentativas no ticket|portões|entregue): )(.*)$`)
+	zeroCovRe = regexp.MustCompile(`^\S+\.go: 0%`)
+)

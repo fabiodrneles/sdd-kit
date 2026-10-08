@@ -48,6 +48,6 @@ func runStopCmd(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintf(stderr, "axyn stop: %v\n", err)
 		return exitFail
 	}
-	_, _ = fmt.Fprintf(stdout, "parei a execução %s (%s).\n%s\n", st.ID, oneLine(st.Request), msg)
+	_, _ = fmt.Fprintf(stdout, "parei a execução %s (%s).\n%s\n", st.ID, requestLabel(st), msg)
 	return exitOK
 }

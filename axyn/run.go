@@ -185,7 +185,7 @@ func renderStatus(st *runState) string {
 		status = "interrompida (o processo do axyn parou, talvez o computador travou ou o terminal fechou); para continuar: axyn run --resume"
 	}
 	var b strings.Builder
-	fmt.Fprintf(&b, "execução %s: %s\npedido: %s\n", st.ID, status, oneLine(st.Request))
+	fmt.Fprintf(&b, "execução %s: %s\npedido: %s\n", st.ID, status, requestLabel(st))
 	if st.Ticket > 0 {
 		fmt.Fprintf(&b, "ticket: %d de %d «%s»\n", st.Ticket, st.Total, st.Title)
 	}
@@ -800,6 +800,20 @@ func runStatusCmd(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintf(stderr, "axyn status: %v\n", err)
 		return exitFail
 	}
-	_, _ = fmt.Fprintln(stdout, withUpdate(renderStatus(st)))
+	text := withUpdate(renderStatus(st))
+	if isTerminal(stdout) {
+		enableVT()
+		text = colorStatus(text)
+	}
+	_, _ = fmt.Fprintln(stdout, text)
 	return exitOK
+}
+
+// requestLabel is what was asked; a resume by axyn v1.22 copied the bench's name into the
+// project's work, and that run shows as the work it is (#364).
+func requestLabel(st *runState) string {
+	if st.Opts.Bench == nil && st.Request == "avaliação dos modelos" {
+		return "retomada do trabalho do projeto"
+	}
+	return oneLine(st.Request)
 }

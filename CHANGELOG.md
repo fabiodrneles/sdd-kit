@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.22.1] - 2026-10-08
+
+### Corrigido
+
+- painel legível e rolável na janela clássica do Windows, log colorido e diffs resumidos (#359)
+
 ## [1.22.0] - 2026-10-08
 
 ### Adicionado

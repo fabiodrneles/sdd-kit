@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.23.2] - 2026-10-08
+
+### Corrigido
+
+- portões resistem a arquivos estranhos, shell do Git no Windows e perfis de cobertura soltos removidos (#366)
+
 ## [1.23.1] - 2026-10-08
 
 ### Corrigido

@@ -258,9 +258,9 @@ func (r *runner) measureCoverage() string {
 	pl.CoverageDrop = false
 	_ = r.s.savePlan(pl, path)
 	if pl.CoverageFloor >= goal {
-		return prefix + fmt.Sprintf("cobertura atual do projeto: %.1f%% (meta %d%%): já está na meta", c, goal)
+		return prefix + fmt.Sprintf("cobertura atual do projeto na branch base (%s): %.1f%% (meta %d%%): já está na meta", r.s.base, c, goal)
 	}
-	return prefix + fmt.Sprintf("cobertura atual do projeto: %.1f%% (meta %d%%). O axyn não deixa cair abaixo disso, exige teste em todo código novo e sobe o mínimo sozinho a cada ticket entregue, até a meta", c, goal)
+	return prefix + fmt.Sprintf("cobertura atual do projeto na branch base (%s): %.1f%% (meta %d%%); os testes de um ticket só contam aqui depois que o PR dele é mesclado. O axyn não deixa cair abaixo disso, exige teste em todo código novo e sobe o mínimo sozinho a cada ticket entregue, até a meta", r.s.base, c, goal)
 }
 
 // raiseCoverage runs before a green ticket's commit: the floor goes up to the coverage the

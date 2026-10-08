@@ -211,8 +211,9 @@ func TestTestsOnlyFindings(t *testing.T) {
 	}
 }
 
-// #375: before an attempt of a tests-only ticket, production files go back to the base;
-// the tests and the files of the base errors stay.
+// #375, #379: when a tests-only ticket changed production code, the tree goes back to the
+// base before the next attempt (tests that called the new code would push the model to
+// write it again).
 func TestRestoreProduction(t *testing.T) {
 	dir := t.TempDir()
 	run := func(args ...string) {
@@ -225,30 +226,25 @@ func TestRestoreProduction(t *testing.T) {
 	run("init", "-q")
 	_ = os.MkdirAll(filepath.Join(dir, "cmd"), 0o755)
 	_ = os.WriteFile(filepath.Join(dir, "cmd", "check.go"), []byte("package cmd\n"), 0o644)
-	_ = os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0o644)
 	run("add", "-A")
 	run("commit", "-q", "-m", "base")
-	_ = os.WriteFile(filepath.Join(dir, "cmd", "check.go"), []byte("package cmd\nvar timeout = 30\n"), 0o644)
-	_ = os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n// fixed\n"), 0o644)
-	_ = os.WriteFile(filepath.Join(dir, "cmd", "timeout.go"), []byte("package cmd\n"), 0o644)
-	_ = os.WriteFile(filepath.Join(dir, "cmd", "check_test.go"), []byte("package cmd\n"), 0o644)
 	s := &mcpServer{dir: dir, base: "HEAD"}
-	pl := &plan{BaseErrors: []string{"main.go:1:1: something (errcheck)"}}
-	put := s.restoreProduction(pl)
-	if len(put) != 2 {
-		t.Errorf("voltam check.go e timeout.go: %v", put)
+	_ = os.WriteFile(filepath.Join(dir, "cmd", "check_test.go"), []byte("package cmd\n"), 0o644)
+	if put := s.restoreProduction(&plan{}); put != nil {
+		t.Errorf("só testes: nada volta: %v", put)
+	}
+	_ = os.WriteFile(filepath.Join(dir, "cmd", "check.go"), []byte("package cmd\nvar timeout = 30\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(dir, "cmd", "timeout.go"), []byte("package cmd\n"), 0o644)
+	if put := s.restoreProduction(&plan{}); len(put) != 2 {
+		t.Errorf("check.go e timeout.go mudaram: %v", put)
 	}
 	if b, _ := os.ReadFile(filepath.Join(dir, "cmd", "check.go")); string(b) != "package cmd\n" {
 		t.Errorf("check.go volta à base: %q", b)
 	}
-	if _, err := os.Stat(filepath.Join(dir, "cmd", "timeout.go")); err == nil {
-		t.Error("arquivo novo de produção sai")
-	}
-	if _, err := os.Stat(filepath.Join(dir, "cmd", "check_test.go")); err != nil {
-		t.Error("o teste fica")
-	}
-	if b, _ := os.ReadFile(filepath.Join(dir, "main.go")); !strings.Contains(string(b), "fixed") {
-		t.Error("o arquivo do erro da base fica")
+	for _, gone := range []string{"timeout.go", "check_test.go"} {
+		if _, err := os.Stat(filepath.Join(dir, "cmd", gone)); err == nil {
+			t.Errorf("%s sai: o ticket recomeça da base", gone)
+		}
 	}
 }
 
@@ -265,5 +261,33 @@ func TestCmdSafe(t *testing.T) {
 	}
 	if strings.ContainsAny(windowsShellNote(), "\"&|<>") {
 		t.Error("a nota do Windows não tem caracteres que o cmd.exe corta")
+	}
+}
+
+// #380: the lock of a tests-only ticket undoes production files only; tests stay.
+func TestRevertOffenders(t *testing.T) {
+	dir := t.TempDir()
+	run := func(args ...string) {
+		cmd := exec.Command("git", append([]string{"-c", "user.email=a@b", "-c", "user.name=a"}, args...)...)
+		cmd.Dir = dir
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v %s", args, err, out)
+		}
+	}
+	run("init", "-q")
+	_ = os.WriteFile(filepath.Join(dir, "check.go"), []byte("package x\n"), 0o644)
+	run("add", "-A")
+	run("commit", "-q", "-m", "base")
+	_ = os.WriteFile(filepath.Join(dir, "check.go"), []byte("package x\nvar t = 1\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(dir, "check_test.go"), []byte("package x\n"), 0o644)
+	s := &mcpServer{dir: dir, base: "HEAD"}
+	if got := s.revertOffenders(&plan{}); len(got) != 1 {
+		t.Errorf("check.go desfeito: %v", got)
+	}
+	if b, _ := os.ReadFile(filepath.Join(dir, "check.go")); string(b) != "package x\n" {
+		t.Errorf("produção volta: %q", b)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "check_test.go")); err != nil {
+		t.Error("o teste fica")
 	}
 }

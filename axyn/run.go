@@ -398,6 +398,11 @@ func callAgent(dir, name, modelID, prompt string, timeout time.Duration, log io.
 	defer cancel()
 	cmd := exec.CommandContext(ctx, argv[0], args...)
 	cmd.Dir = dir
+	// opencode's shell tool stops a command after 2 minutes; make ci on a small machine
+	// takes longer (#380). Its default goes to 15 minutes; the call itself keeps its own cap.
+	if os.Getenv("OPENCODE_EXPERIMENTAL_BASH_DEFAULT_TIMEOUT_MS") == "" {
+		cmd.Env = append(os.Environ(), "OPENCODE_EXPERIMENTAL_BASH_DEFAULT_TIMEOUT_MS=900000")
+	}
 	tail := &tailWriter{max: 16 << 10}
 	w := io.MultiWriter(log, tail)
 	cmd.Stdout, cmd.Stderr = w, w
@@ -610,8 +615,8 @@ func (r *runner) ticket() (string, string) {
 		if t.testsOnly() {
 			if pl, _, err := r.s.loadPlan(); err == nil {
 				if put := r.s.restoreProduction(pl); len(put) > 0 {
-					_, _ = fmt.Fprintf(r.log, "o ticket «%s» só acrescenta testes: voltei %s à versão da base antes da tentativa; os testes ficam\n", t.Title, strings.Join(put, ", "))
-					prompt += "\n\nO axyn voltou " + strings.Join(put, ", ") + " à versão da base: este ticket só acrescenta testes. Apague os testes que dependiam dessas mudanças (de funcionalidades da spec que ainda não existem) e cubra o código como ele está."
+					_, _ = fmt.Fprintf(r.log, "o ticket «%s» só acrescenta testes, e a tentativa anterior mudou código de produção (%s): o ticket recomeça da base\n", t.Title, strings.Join(put, ", "))
+					prompt += "\n\nA tentativa anterior mudou código de produção (" + strings.Join(put, ", ") + ") e foi descartada: o projeto está como na base. Este ticket só acrescenta testes para o código como ele está; não implemente nada da spec."
 				}
 			}
 		}
@@ -631,6 +636,18 @@ func (r *runner) ticket() (string, string) {
 			r.st.Gate = "modelo " + cur + " " + why + "; trocando para " + next
 			continue
 		}
+		// The lock of a tests-only ticket (#380): whatever production code the model changed
+		// is undone before the gates, so it never reaches a delivery; its tests must pass on
+		// the code as it is.
+		lockNote := ""
+		if t.testsOnly() {
+			if pl, _, err := r.s.loadPlan(); err == nil {
+				if undone := r.s.revertOffenders(pl); len(undone) > 0 {
+					lockNote = "trava do ticket só de testes: desfiz as mudanças em " + strings.Join(undone, ", ") + "; os testes precisam passar com o código como ele está, sem mexer em produção\n"
+					_, _ = fmt.Fprint(r.log, lockNote)
+				}
+			}
+		}
 		r.set("portões")
 		var green bool
 		var report string
@@ -641,6 +658,7 @@ func (r *runner) ticket() (string, string) {
 		} else if green, report, err = r.gate(); err != nil {
 			return runStopped, err.Error()
 		}
+		report = lockNote + report
 		r.st.Gate = firstLine(report)
 		if green {
 			return r.ship(t)

@@ -10,11 +10,14 @@ import (
 
 func TestDownReason(t *testing.T) {
 	cases := map[string]string{
-		"Error: 429 Too Many Requests":                    "limite",
-		"AI_APICallError: insufficient_quota":             "limite",
-		"provider returned 503 Service Unavailable":       "fora do ar",
-		"TypeError: fetch failed (ECONNREFUSED)":          "fora do ar",
-		"tudo certo, adicionei a flag --timeout ao check": "",
+		"Error: 429 Too Many Requests":                       "limite",
+		"AI_APICallError: insufficient_quota":                "limite",
+		"provider returned 503 Service Unavailable":          "fora do ar",
+		"TypeError: fetch failed (ECONNREFUSED)":             "fora do ar",
+		"tudo certo, adicionei a flag --timeout ao check":    "",
+		"Error: 401 Unauthorized: No auth credentials found": "sem chave",
+		"AI_APICallError: Invalid API key provided":          "sem chave",
+		"402 Payment Required":                               "sem chave",
 	}
 	for out, want := range cases {
 		got := downReason(out, false)

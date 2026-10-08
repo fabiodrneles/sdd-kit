@@ -247,4 +247,7 @@ func TestBenchDownModelIsSkipped(t *testing.T) {
 	if !strings.Contains(o.String(), "pulado") || strings.Contains(o.String(), "semchave, plano: nota") {
 		t.Errorf("as outras tarefas ficam como indisponíveis:\n%s", o.String())
 	}
+	if !strings.Contains(o.String(), "| semchave | indisponível (não conta) |") || strings.Contains(o.String(), "semchave, plan-001 (tentativa 1): nota") {
+		t.Errorf("no relatório, indisponível e sem nota:\n%s", o.String())
+	}
 }

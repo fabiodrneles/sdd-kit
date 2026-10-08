@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"unicode/utf8"
 )
@@ -115,33 +116,83 @@ func reportTerm(p *benchProfile, path string, color bool) string {
 			}
 		}
 		if len(held) > 0 {
-			line += c(cGray, fmt.Sprintf("  (no modo guiado: %s)", strings.Join(held, ", ")))
+			line += c(cGray, fmt.Sprintf("  (no modo guiado: %s)", firstOf(held, 3)))
 		}
 		w("  %s %s %s\n", c(cYellow, glyph("▸", "►")), c(cWhite, label), line)
 	}
 
-	var bad []string
-	for _, r := range p.Results {
-		for _, x := range r.Runs {
-			if x.Down || (x.Pass && !x.Cheat && x.Score >= 50) {
+	// One line per model, and the models that failed the same steps for the same reason
+	// share one line (#362): 19 models without a valid key are one line, not 38.
+	type failure struct {
+		models []string
+		steps  string
+		why    string
+		old    bool
+	}
+	var groups []*failure
+	byKey := map[string]*failure{}
+	for _, m := range p.Models {
+		var steps []string
+		why, old := "", false
+		for _, t := range benchTasks {
+			r := findResult(p.Results, m, t.ID)
+			if r == nil {
 				continue
 			}
-			why := strings.Join(x.Notes, "; ")
-			if why == "" {
-				why = "reprovado"
+			for _, x := range r.Runs {
+				if x.Down || (x.Pass && !x.Cheat && x.Score >= 50) {
+					continue
+				}
+				steps = append(steps, taskNames[r.Task])
+				if why == "" {
+					why = strings.Join(x.Notes, "; ")
+				}
+				old = old || r.old(p.Date)
+				break
+			}
+		}
+		if len(steps) == 0 {
+			continue
+		}
+		if why == "" {
+			why = "reprovado"
+		}
+		why = shorten(oneLine(why), 100)
+		key := strings.Join(steps, ",") + "|" + digitsRe.ReplaceAllString(why, "")
+		if g := byKey[key]; g != nil {
+			g.models = append(g.models, short(m))
+			continue
+		}
+		g := &failure{models: []string{short(m)}, steps: strings.Join(steps, ", "), why: why, old: old}
+		byKey[key] = g
+		groups = append(groups, g)
+	}
+	if len(groups) > 0 {
+		w("\n%s\n", c(cWhite, "  O que deu errado"))
+		for _, g := range groups {
+			who := g.models[0]
+			if len(g.models) > 1 {
+				who = fmt.Sprintf("%d modelos: %s", len(g.models), firstOf(g.models, 3))
 			}
 			when := ""
-			if r.old(p.Date) {
+			if g.old {
 				when = c(cGray, " *")
 			}
-			bad = append(bad, fmt.Sprintf("  %s %s %s%s %s", c(dimRd, glyph("✘", "×")), pad(short(r.Model), width), c(cWhite, pad(taskNames[r.Task], 9)), when, c(cGray, shorten(oneLine(why), 110))))
+			w("  %s %s\n      %s%s %s\n", c(dimRd, glyph("✘", "×")), who, c(cWhite, g.steps), when, c(cGray, "· "+g.why))
 		}
-	}
-	if len(bad) > 0 {
-		w("\n%s\n%s\n", c(cWhite, "  O que deu errado"), strings.Join(bad, "\n"))
 	}
 	if path != "" {
 		w("\n  %s %s\n", c(cGray, "relatório completo, com o código de cada tentativa:"), path)
 	}
 	return b.String()
+}
+
+var digitsRe = regexp.MustCompile(`[0-9.]+s?`)
+
+// firstOf names the first n, then "+K".
+func firstOf(names []string, n int) string {
+	if len(names) <= n {
+		return strings.Join(names, ", ")
+	}
+	return strings.Join(names[:n], ", ") + fmt.Sprintf(" +%d", len(names)-n)
 }

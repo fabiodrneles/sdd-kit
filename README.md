@@ -603,6 +603,8 @@ axyn bench plano testes
 # Etapas: plano, codigo, testes, conserto (ou plan, code, tests, fix).
 ```
 
+No começo, a avaliação mostra a conta, por exemplo `avaliando 27 modelo(s) em 2 etapa(s) (código, conserto) = 54 tentativas`: cada modelo faz cada etapa escolhida uma vez. O painel mostra em que modelo está (`modelo 3 de 27`). Com as 4 etapas, os mesmos 27 modelos dariam 108 tentativas; para encurtar, avalie só algumas etapas ou só alguns modelos (`--models`).
+
 A avaliação roda em segundo plano e a janela vira um painel:
 
 | Tecla ou comando | O que faz |
@@ -619,7 +621,7 @@ No fim, o painel mostra o resumo, uma notificação avisa e o resultado já pass
 
 | Quero | Comando |
 |---|---|
-| Só alguns modelos | `axyn bench --models opencode/A,opencode/B` |
+| Só alguns modelos (bem mais rápido) | `axyn bench plano codigo testes conserto --models opencode/fledge-alpha-free,opencode/ling-3.1-flash-free` (2 modelos × 4 etapas = 8 tentativas; os nomes saem do `axyn model`) |
 | Incluir os pagos | `axyn bench --all` |
 | Mais confiança (cada tarefa 3 vezes) | `axyn bench --runs 3` |
 | Escolher eu o modelo de uma etapa | `axyn bench --set plano=MODELO` (desfazer: `--set plano=`) |
@@ -797,8 +799,8 @@ Depois de 10 tentativas por modelo (cada uma com os erros da anterior, e com mai
 **Quero ver o código que o modelo escreveu**
 `axyn history` (o arquivo traz o código de cada tentativa que não passou), ou abra o PR em rascunho com `gh pr list` e `gh pr view N --web`.
 
-**A avaliação (`axyn bench`) mostra um modelo como "indisponível"**
-O modelo estava sem cota, fora do ar ou saiu do servidor, e não mudou nenhum arquivo. Ele não leva nota ruim e é avaliado de novo na próxima rodada, e o axyn usa os outros modelos. Nada a fazer; para tentar de novo agora: `axyn bench`.
+**A avaliação (`axyn bench`) mostra um modelo como "indisponível" (ou o log mostra em vermelho `Missing Authentication header`, `401`, `No auth credentials`)**
+O modelo estava sem cota, fora do ar, saiu do servidor ou o provedor recusou a chave de API (falta a chave ou ela é inválida), e não mudou nenhum arquivo. Para incluir os modelos de um provedor que pede chave, rode `opencode auth login` e escolha o provedor; para não esperar por eles, avalie só os do opencode com `--models`. Ele não leva nota ruim e é avaliado de novo na próxima rodada, e o axyn usa os outros modelos. Nada a fazer; para tentar de novo agora: `axyn bench`.
 
 **Todos os modelos foram mal numa etapa da avaliação**
 Nenhum modelo é descartado: os que ficaram abaixo da nota mínima rodam no **modo guiado**, com arquivos limitados aos do ticket, diffs pequenos e testes antigos protegidos. Os portões continuam valendo. Para melhorar o resultado, inclua outros modelos (`axyn model` mostra os disponíveis) e rode `axyn bench` de novo.

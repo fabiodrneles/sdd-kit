@@ -608,6 +608,10 @@ func reportText(p, prev *benchProfile) string {
 			if r.old(p.Date) {
 				mark, anyOld = " *", true
 			}
+			if r.allDown() {
+				w(" indisponível (não conta)%s |", mark) // #362: no zero for a model that was down
+				continue
+			}
 			w(" %d, taxa %.0f%%, %s%s |", r.score(), 100*r.rate(), level(*r), mark)
 		}
 		w("\n")
@@ -657,7 +661,11 @@ func reportText(p, prev *benchProfile) string {
 					when = ", rodada de " + r.Date.Format("2006-01-02")
 				}
 			}
-			w("- %s, %s (tentativa %d%s): nota %d em %.0fs", r.Model, r.Task, i+1, when, x.Score, x.Seconds)
+			verdict := fmt.Sprintf("nota %d", x.Score)
+			if x.Down {
+				verdict = "indisponível, sem nota"
+			}
+			w("- %s, %s (tentativa %d%s): %s em %.0fs", r.Model, r.Task, i+1, when, verdict, x.Seconds)
 			if len(x.Notes) > 0 {
 				w(": %s", strings.Join(x.Notes, "; "))
 			}
@@ -712,7 +720,20 @@ func runBenchCmd(args []string, stdout, stderr io.Writer) int {
 	applyFlag := fs.Bool("apply", false, "aplica a última avaliação")
 	off := fs.Bool("off", false, "deixa de usar a avaliação (volta à escada do axyn model)")
 	set := fs.String("set", "", "fixa à mão o modelo de uma etapa, por exemplo plano=MODELO (etapas: plano, codigo, testes, conserto); etapa= sem modelo desfaz")
-	if err := fs.Parse(args); err != nil {
+	// The step names may come before or after the flags: axyn bench plano testes --models A
+	// reads both (#362); Go's flag package alone stops at the first name.
+	var names []string
+	for {
+		if err := fs.Parse(args); err != nil {
+			return exitUsage
+		}
+		if fs.NArg() == 0 {
+			break
+		}
+		names = append(names, fs.Arg(0))
+		args = fs.Args()[1:]
+	}
+	if err := fs.Parse(nil); err != nil {
 		return exitUsage
 	}
 	if *set != "" {
@@ -770,7 +791,7 @@ func runBenchCmd(args []string, stdout, stderr io.Writer) int {
 		return exitFail
 	}
 	want := strings.Split(*tasks, ",")
-	want = append(want, fs.Args()...) // axyn bench plano testes
+	want = append(want, names...) // axyn bench plano testes
 	chosen := pickTasks(want)
 	if !*here && !*ask && isTerminal(stdout) {
 		return startBench(models, chosen, *runs, *parallel, *timeout, *minScore, stdout, stderr)
@@ -850,7 +871,15 @@ func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout 
 	benchRoundDir = filepath.Join(benchDir(), "bench-"+p.Date.Format("20060102-150405"))
 	defer func() { benchRoundDir = "" }()
 	est := time.Duration(total) * 3 * time.Minute / time.Duration(parallel) // about 3 minutes per attempt
-	_, _ = fmt.Fprintf(out, "avaliando %d modelo(s) em %d tarefa(s), %d vez(es) cada: %d tentativas, %d modelo(s) por vez, por volta de %s (depende da máquina e da velocidade dos modelos; o que já rodou fica salvo)\n", len(models), len(chosen), runs, total, parallel, clock(est))
+	var steps []string
+	for _, t := range chosen {
+		steps = append(steps, roleNames[t.Role])
+	}
+	times := ""
+	if runs > 1 {
+		times = fmt.Sprintf(" × %d vezes", runs)
+	}
+	_, _ = fmt.Fprintf(out, "avaliando %d modelo(s) em %d etapa(s) (%s)%s = %d tentativas, %d modelo(s) por vez, por volta de %s (depende da máquina e da velocidade dos modelos; o que já rodou fica salvo)\n", len(models), len(chosen), strings.Join(steps, ", "), times, total, parallel, clock(est))
 	_ = os.MkdirAll(benchDir(), 0o755)
 	var log io.Writer = io.Discard
 	if logf, err := openLog(filepath.Join(benchDir(), "bench-"+p.Date.Format("20060102-150405")+".log")); err == nil {
@@ -861,9 +890,10 @@ func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout 
 	n := 0
 	sem := make(chan struct{}, parallel)
 	var wg sync.WaitGroup
-	for _, m := range models {
+	for mi, m := range models {
 		wg.Add(1)
 		sem <- struct{}{}
+		which := fmt.Sprintf("modelo %d de %d: %s", mi+1, len(models), strings.TrimPrefix(m, "opencode/"))
 		go func(m string) {
 			defer wg.Done()
 			defer func() { <-sem }()
@@ -873,7 +903,7 @@ func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout 
 				for i := 0; i < runs; i++ {
 					if progress != nil {
 						mu.Lock()
-						progress(n, total, fmt.Sprintf("%s, %s", m, roleNames[t.Role]))
+						progress(n, total, fmt.Sprintf("%s, %s", which, roleNames[t.Role]))
 						mu.Unlock()
 					}
 					var run benchRun
@@ -899,7 +929,7 @@ func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout 
 					n++
 					_, _ = fmt.Fprintf(out, "[%d/%d] %s, %s: %s (%.0fs)\n", n, total, m, roleNames[t.Role], verdict, run.Seconds)
 					if progress != nil {
-						progress(n, total, fmt.Sprintf("%s, %s: %s", m, roleNames[t.Role], verdict))
+						progress(n, total, fmt.Sprintf("%s, %s: %s", which, roleNames[t.Role], verdict))
 					}
 					mu.Unlock()
 				}

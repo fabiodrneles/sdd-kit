@@ -164,13 +164,26 @@ func checkProtected(files []fileDiff, protected []string) []finding {
 	return out
 }
 
+// checkSize limits the production code a ticket changes. Test files do not count (#368):
+// a ticket that only adds tests to reach the coverage goal wrote 1180 lines of tests on
+// the owner's project and was rejected, though tests are what the axyn asks for. Removed
+// test lines still count, and the loosened-tests gate watches what changes in them.
 func checkSize(files []fileDiff, max int) []finding {
-	n := 0
+	n, tests := 0, 0
 	for _, f := range files {
+		if isTestPath(f.path) {
+			tests += len(f.added)
+			n += len(f.removed)
+			continue
+		}
 		n += len(f.added) + len(f.removed)
 	}
 	if n > max {
-		return []finding{{"size", fmt.Sprintf("diff de %d linhas passa do limite de %d", n, max)}}
+		msg := fmt.Sprintf("diff de %d linhas passa do limite de %d", n, max)
+		if tests > 0 {
+			msg += fmt.Sprintf(" (fora %d linhas novas de teste, que não contam)", tests)
+		}
+		return []finding{{"size", msg}}
 	}
 	return nil
 }

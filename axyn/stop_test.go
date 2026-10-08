@@ -180,3 +180,33 @@ func TestGateRetriesCleanupOnlyFailure(t *testing.T) {
 		t.Errorf("falha de verdade continua reprovada: %v", findings)
 	}
 }
+
+// #372: a tests-only ticket may not change production code, except the files the base
+// errors name (the first ticket fixes them).
+func TestTestsOnlyFindings(t *testing.T) {
+	dir := t.TempDir()
+	run := func(args ...string) {
+		cmd := exec.Command("git", append([]string{"-c", "user.email=a@b", "-c", "user.name=a"}, args...)...)
+		cmd.Dir = dir
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v %s", args, err, out)
+		}
+	}
+	run("init", "-q")
+	_ = os.MkdirAll(filepath.Join(dir, "checker"), 0o755)
+	_ = os.MkdirAll(filepath.Join(dir, "cmd"), 0o755)
+	_ = os.WriteFile(filepath.Join(dir, "checker", "checker.go"), []byte("package checker\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(dir, "cmd", "check.go"), []byte("package cmd\n"), 0o644)
+	run("add", "-A")
+	run("commit", "-q", "-m", "base")
+	_ = os.WriteFile(filepath.Join(dir, "checker", "checker.go"), []byte("package checker\n// fix\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(dir, "cmd", "check.go"), []byte("package cmd\nvar timeout = 30\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(dir, "cmd", "check_test.go"), []byte("package cmd\n"), 0o644)
+	s := &mcpServer{dir: dir, base: "HEAD"}
+	pl := &plan{BaseErrors: []string{`checker\checker.go:71:23: Error return value of resp.Body.Close is not checked (errcheck)`}}
+	tk := &ticket{Title: "Testes para a cobertura chegar a 80%"}
+	got := s.testsOnlyFindings(pl, tk)
+	if len(got) != 1 || !strings.Contains(got[0].reason, "cmd/check.go") {
+		t.Errorf("só cmd/check.go é reprovado (checker.go corrige o erro da base; o teste é livre): %v", got)
+	}
+}

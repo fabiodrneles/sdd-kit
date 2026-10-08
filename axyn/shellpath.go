@@ -29,7 +29,8 @@ func useGitShell() {
 	if hostOS != "windows" {
 		return
 	}
-	if _, err := exec.LookPath("sh"); err == nil {
+	if sh, err := exec.LookPath("sh"); err == nil {
+		setGitBash([]string{strings.TrimSuffix(strings.TrimSuffix(sh, `\sh.exe`), `\sh`)})
 		return
 	}
 	out, err := exec.Command("git", "--exec-path").Output()
@@ -46,12 +47,31 @@ func useGitShell() {
 		return
 	}
 	_ = os.Setenv("PATH", strings.Join(add, ";")+";"+os.Getenv("PATH"))
-	if os.Getenv("SHELL") == "" {
-		for _, d := range add {
-			if _, err := os.Stat(d + `\bash.exe`); err == nil {
-				_ = os.Setenv("SHELL", d+`\bash.exe`) // opencode's shell tool uses it
-				break
+	setGitBash(add)
+}
+
+// setGitBash points opencode's shell tool at Git Bash: it reads SHELL and, in newer
+// versions, OPENCODE_GIT_BASH_PATH (#370: the owner's opencode still ran PowerShell).
+func setGitBash(dirs []string) {
+	for _, d := range dirs {
+		if _, err := os.Stat(d + `\bash.exe`); err == nil {
+			if os.Getenv("SHELL") == "" {
+				_ = os.Setenv("SHELL", d+`\bash.exe`)
 			}
+			if os.Getenv("OPENCODE_GIT_BASH_PATH") == "" {
+				_ = os.Setenv("OPENCODE_GIT_BASH_PATH", d+`\bash.exe`)
+			}
+			return
 		}
 	}
+}
+
+// windowsShellNote opens every prompt on Windows with the rules of its terminal, so the
+// model writes commands that work whichever shell opencode gives it (#370): the owner's
+// models lost minutes on &&, ||, grep, ls -la and -flag=value in PowerShell 5.1.
+func windowsShellNote() string {
+	if hostOS != "windows" {
+		return ""
+	}
+	return "Ambiente: Windows. Se o seu terminal for o PowerShell, não use && nem || (rode um comando por vez), nem grep, ls -la, cat <<, /tmp; ponha entre aspas os argumentos com = (go tool cover \"-func=c.out\", go test \"-coverprofile=c.out\"). Para verificar o projeto, prefira make ci e make test.\n\n"
 }

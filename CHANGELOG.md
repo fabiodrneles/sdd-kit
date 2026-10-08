@@ -8,7 +8,8 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ### Corrigido
 
-- linhas novas de teste não contam no limite de tamanho (#368)
+- linhas novas de teste não contam no limite de tamanho: um ticket só de testes para a cobertura deixa de ser reprovado por `[size]` (#368)
+- no Windows, o opencode é apontado para o Git Bash (`SHELL` e `OPENCODE_GIT_BASH_PATH`), e cada pedido ao modelo diz como escrever comandos para o terminal dele (sem `&&`, `||`, `grep`; argumentos com `=` entre aspas) (#369)
 
 ## [1.23.2] - 2026-10-08
 

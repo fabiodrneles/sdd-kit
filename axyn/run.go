@@ -610,8 +610,8 @@ func (r *runner) ticket() (string, string) {
 		if t.testsOnly() {
 			if pl, _, err := r.s.loadPlan(); err == nil {
 				if put := r.s.restoreProduction(pl); len(put) > 0 {
-					_, _ = fmt.Fprintf(r.log, "o ticket «%s» só acrescenta testes: voltei %s à versão da base antes da tentativa; os testes ficam\n", t.Title, strings.Join(put, ", "))
-					prompt += "\n\nO axyn voltou " + strings.Join(put, ", ") + " à versão da base: este ticket só acrescenta testes. Apague os testes que dependiam dessas mudanças (de funcionalidades da spec que ainda não existem) e cubra o código como ele está."
+					_, _ = fmt.Fprintf(r.log, "o ticket «%s» só acrescenta testes, e a tentativa anterior mudou código de produção (%s): o ticket recomeça da base\n", t.Title, strings.Join(put, ", "))
+					prompt += "\n\nA tentativa anterior mudou código de produção (" + strings.Join(put, ", ") + ") e foi descartada: o projeto está como na base. Este ticket só acrescenta testes para o código como ele está; não implemente nada da spec."
 				}
 			}
 		}

@@ -76,7 +76,7 @@ func windowsShellNote() string {
 	}
 	// No quote, ampersand, pipe or angle bracket here: on Windows opencode is often a .cmd
 	// shim, and cmd.exe cuts the argument at them (#377: the model got no ticket at all).
-	return "Ambiente: Windows. Se o seu terminal for o PowerShell, rode um comando por vez (sem encadear com E-E ou OU-OU), e não use grep, ls -la nem /tmp; ponha entre aspas simples os argumentos com sinal de igual, por exemplo go tool cover '-func=c.out'. Para verificar o projeto, prefira make ci e make test.\n\n"
+	return "Ambiente: Windows. Se o seu terminal for o PowerShell, rode um comando por vez (sem encadear com E-E ou OU-OU), e não use grep, ls -la nem /tmp; ponha entre aspas simples os argumentos com sinal de igual, por exemplo go tool cover '-func=c.out'. Para verificar o projeto, prefira make ci e make test; nesta máquina eles podem passar de 2 minutos, então use um tempo limite maior no comando (por exemplo 600000 ms).\n\n"
 }
 
 // cmdSafe makes an argument survive cmd.exe, which runs .cmd and .bat files (npm installs

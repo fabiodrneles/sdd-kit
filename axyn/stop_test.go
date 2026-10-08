@@ -291,3 +291,65 @@ func TestRevertOffenders(t *testing.T) {
 		t.Error("o teste fica")
 	}
 }
+
+func TestFreezeTests(t *testing.T) {
+	dir := t.TempDir()
+	run := func(args ...string) {
+		cmd := exec.Command("git", append([]string{"-c", "user.email=a@b", "-c", "user.name=a"}, args...)...)
+		cmd.Dir = dir
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v %s", args, err, out)
+		}
+	}
+	run("init", "-q")
+	old := "package x\n\nfunc TestA(t *testing.T) { want(1) }\n"
+	_ = os.WriteFile(filepath.Join(dir, "a_test.go"), []byte(old), 0o644)
+	_ = os.WriteFile(filepath.Join(dir, "b_test.go"), []byte("package x\n"), 0o644)
+	run("add", "-A")
+	run("commit", "-q", "-m", "base")
+	s := &mcpServer{dir: dir, base: "HEAD"}
+	p, err := s.statePath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.savePlan(&plan{Tickets: []ticket{{ID: 1, Title: "timeout"}}}, p); err != nil {
+		t.Fatal(err)
+	}
+	attempt := func() ([]string, []string) {
+		_ = os.WriteFile(filepath.Join(dir, "a_test.go"), []byte("package x\n\nfunc TestA(t *testing.T) {}\n"), 0o644)
+		_ = os.WriteFile(filepath.Join(dir, "b_test.go"), []byte("package x\n\nfunc TestB(t *testing.T) {}\n"), 0o644)
+		_ = os.WriteFile(filepath.Join(dir, "c_test.go"), []byte("package x\n"), 0o644)
+		return s.freezeTests(1)
+	}
+	// 381 AC: a changed test goes back; tests added to a file or in a new file stay.
+	undone, ask := attempt()
+	if len(undone) != 1 || undone[0] != "a_test.go" || len(ask) != 0 {
+		t.Fatalf("1ª tentativa: desfeito %v, pergunta %v", undone, ask)
+	}
+	if b, _ := os.ReadFile(filepath.Join(dir, "a_test.go")); string(b) != old {
+		t.Errorf("o teste existente volta: %q", b)
+	}
+	if b, _ := os.ReadFile(filepath.Join(dir, "b_test.go")); !strings.Contains(string(b), "TestB") {
+		t.Error("o teste acrescentado fica")
+	}
+	// The model insists: the owner is asked, and releasing the file lifts the lock.
+	if _, ask = attempt(); len(ask) != 1 {
+		t.Fatalf("2ª tentativa pergunta ao dono: %v", ask)
+	}
+	pl, _, _ := s.loadPlan()
+	q := testLockQuestion(&pl.Tickets[0], ask)
+	question, opts := pendingQuestion(q)
+	if !strings.Contains(question, testLockMark) || !strings.HasPrefix(opts["A"], "liberar") {
+		t.Fatalf("pergunta no formato do axyn decide: %q %v", question, opts)
+	}
+	answerTestLock(&pl.Tickets[0], "A) "+opts["A"])
+	_ = s.savePlan(pl, p)
+	if undone, _ = attempt(); len(undone) != 0 {
+		t.Errorf("liberado, o teste não volta: %v", undone)
+	}
+	// A tests-only ticket writes tests; the lock is not for it.
+	_ = s.savePlan(&plan{Tickets: []ticket{{ID: 1, TestsOnly: true}}}, p)
+	if undone, _ = attempt(); len(undone) != 0 {
+		t.Errorf("ticket só de testes sem trava: %v", undone)
+	}
+}

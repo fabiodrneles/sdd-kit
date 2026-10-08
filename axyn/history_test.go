@@ -27,7 +27,7 @@ func TestRedact(t *testing.T) {
 // its reason, the question and the answer, the commits and the log, and no secret.
 func TestHistoryHasEverythingAndNoSecret(t *testing.T) {
 	dir := repo(t)
-	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `rm -f x_test.go; echo "usando OPENAI_API_KEY=sk-vazou123456 GITHUB_TOKEN=ghp_vazou123456"`))
+	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `printf '\nfunc TestC(t *testing.T) { t.Skip() }\n' >> x_test.go; echo "usando OPENAI_API_KEY=sk-vazou123456 GITHUB_TOKEN=ghp_vazou123456"`))
 	if code, out := runLoopIn(t, dir); code == exitOK || !strings.Contains(out, askMarker) {
 		t.Fatalf("a execução deveria parar com a pergunta: code %d\n%s", code, out)
 	}

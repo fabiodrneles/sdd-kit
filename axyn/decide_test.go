@@ -11,7 +11,7 @@ import (
 // axyn decide records the instruction, gives the ticket new attempts and the coder sees it.
 func TestStopExplainsAndDecideResumes(t *testing.T) {
 	dir := repo(t)
-	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `rm -f x_test.go`))
+	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `printf '\nfunc TestC(t *testing.T) { t.Skip() }\n' >> x_test.go`))
 	code, out := runLoopIn(t, dir)
 	if code == exitOK {
 		t.Fatalf("deveria parar:\n%s", out)
@@ -80,7 +80,7 @@ func TestCoverageMeaning(t *testing.T) {
 // axyn retry: fresh attempts on the same model, and the model learns what already failed.
 func TestRetryGivesNewAttemptsWithHistory(t *testing.T) {
 	dir := repo(t)
-	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `rm -f x_test.go`))
+	t.Setenv("AXYN_OPENCODE", fakeAgent(t, `printf '\nfunc TestC(t *testing.T) { t.Skip() }\n' >> x_test.go`))
 	if code, _ := runLoopIn(t, dir); code == exitOK {
 		t.Fatal("deveria parar")
 	}

@@ -72,6 +72,10 @@ func watchRun(dir, id string, interval time.Duration, out io.Writer) int {
 	var follow *logFollow
 	paused := false // p + Enter: nothing is written, so the window can be scrolled (#360)
 	lastLive := ""
+	var lastTitle, lastDraw time.Time
+	if classicConsole && tty {
+		defer setTitle("Windows PowerShell")
+	}
 	clear := func() {
 		if tty {
 			_, _ = fmt.Fprint(out, "\r\x1b[K")
@@ -156,10 +160,22 @@ func watchRun(dir, id string, interval time.Duration, out io.Writer) int {
 		}
 		if classicConsole {
 			// The classic console jumps back to the end on every write, so a line redrawn
-			// all the time would forbid scrolling (#360): one line per change of progress.
-			if k := fmt.Sprint(st.Phase, st.Done, st.Of, st.Detail); k != lastLive {
-				_, _ = fmt.Fprintln(out, liveLine(st, frame, time.Now()))
-				lastLive = k
+			// all the time would forbid scrolling (#360). The window title, which writes
+			// nothing, shows the spinner and the clock every second (#364); the line is
+			// redrawn in place every 30 s, and a new line starts at each change.
+			now := time.Now()
+			line := liveLine(st, frame, now)
+			if now.Sub(lastTitle) >= time.Second {
+				setTitle("axyn " + ansiRe.ReplaceAllString(line, ""))
+				lastTitle = now
+				frame++
+			}
+			if k := fmt.Sprint(st.Phase, st.Done, st.Of, st.Detail, st.Ticket, st.Attempts); k != lastLive || now.Sub(lastDraw) >= 30*time.Second {
+				if k != lastLive && lastLive != "" {
+					_, _ = fmt.Fprint(out, "\n")
+				}
+				_, _ = fmt.Fprint(out, "\r\x1b[K"+line)
+				lastLive, lastDraw = k, now
 			}
 			time.Sleep(120 * time.Millisecond)
 			continue

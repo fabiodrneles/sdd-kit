@@ -152,3 +152,31 @@ func TestCheckSizeIgnoresNewTests(t *testing.T) {
 		t.Errorf("linhas de teste apagadas contam: %v", f)
 	}
 }
+
+// #371: a make ci that failed only on the Windows cleanup is run again; a real failure is not.
+func TestGateRetriesCleanupOnlyFailure(t *testing.T) {
+	dir := t.TempDir()
+	for _, args := range [][]string{{"init", "-q"}, {"-c", "user.email=a@b", "-c", "user.name=a", "commit", "-q", "--allow-empty", "-m", "base"}} {
+		cmd := exec.Command("git", args...)
+		cmd.Dir = dir
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("git: %v %s", err, out)
+		}
+	}
+	flaky := `if [ -f .tried ]; then echo "ok  x 1s"; else touch .tried; echo "ok  x 1s"; echo "go: unlinkat x.exe: being used by another process"; exit 1; fi`
+	var log strings.Builder
+	_, findings, err := evalGate(dir, "HEAD", 400, flaky, nil, &log)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range findings {
+		if f.gate == "ci" {
+			t.Errorf("a falha só de limpeza devia ser repetida e passar: %v\n%s", f, log.String())
+		}
+	}
+	_ = os.Remove(filepath.Join(dir, ".tried"))
+	_, findings, _ = evalGate(dir, "HEAD", 400, `echo "--- FAIL: TestX"; exit 1`, nil, &log)
+	if len(findings) == 0 || findings[len(findings)-1].gate != "ci" {
+		t.Errorf("falha de verdade continua reprovada: %v", findings)
+	}
+}

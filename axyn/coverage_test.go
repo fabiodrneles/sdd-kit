@@ -154,7 +154,7 @@ func TestCoverageWhenBaseLintFails(t *testing.T) {
 	_ = s.savePlan(&plan{Spec: "specs/x.md", Tickets: []ticket{{ID: 1, Title: "pedido", Attempts: []attempt{{Model: "m"}, {Model: "m"}}}}}, p)
 	r := &runner{s: s, st: &runState{}}
 	msg := r.measureCoverage()
-	if !strings.Contains(msg, "já falha na branch base") || !strings.Contains(msg, "errcheck") || !strings.Contains(msg, "cobertura atual do projeto: 0.0%") {
+	if !strings.Contains(msg, "já falha na branch base") || !strings.Contains(msg, "errcheck") || !strings.Contains(msg, "): 0.0% (meta") {
 		t.Errorf("medição com o lint quebrado na base: %q", msg)
 	}
 	t.Setenv("AXYN_COVERAGE", "")
@@ -192,7 +192,7 @@ func TestCoverageRemeasuredAfterFailedCheck(t *testing.T) {
 	p, _ := s.statePath()
 	_ = s.savePlan(&plan{Spec: "specs/x.md", CoverageChecked: true, Tickets: []ticket{{ID: 1, Title: "pedido"}}}, p)
 	r := &runner{s: s, st: &runState{}}
-	if msg := r.measureCoverage(); !strings.Contains(msg, "cobertura atual do projeto: 0.0%") {
+	if msg := r.measureCoverage(); !strings.Contains(msg, "): 0.0% (meta") {
 		t.Errorf("deveria medir de novo: %q", msg)
 	}
 	if pl, _, _ := s.loadPlan(); !pl.CoverageMeasured {

@@ -100,7 +100,11 @@ func watchRun(dir, id string, interval time.Duration, out io.Writer) int {
 			}
 			if !alive(st) {
 				clear()
-				_, _ = fmt.Fprintf(out, "\a\n%s\n", renderStatus(st))
+				if p, err := loadProfile(); err == nil && st.Status == runDone && st.Opts.Bench != nil && tty {
+					_, _ = fmt.Fprint(out, "\a"+reportTerm(p, benchReportPath(p), true))
+				} else {
+					_, _ = fmt.Fprintf(out, "\a\n%s\n", renderStatus(st))
+				}
 				switch {
 				case st.Status == runDone && st.Opts.Bench != nil:
 					notify("axyn: avaliação concluída", "O axyn já usa o melhor modelo de cada etapa; o resumo está no terminal.")

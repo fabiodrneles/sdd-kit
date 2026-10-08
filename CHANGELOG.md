@@ -4,6 +4,22 @@ Todas as mudanças relevantes deste projeto. Formato [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.22.0] - 2026-10-08
+
+### Adicionado
+
+- `axyn bench` roda em segundo plano com um painel na mesma janela: Enter alterna entre o progresso e o log ao vivo, Ctrl + C fecha só o painel e `axyn bench --watch` volta (#357)
+- comando curto: `axyn bench plano testes` refaz só essas etapas, com o nome em português ou em inglês (#357)
+- `axyn logs` acompanha o log de forma legível, com cores (#357)
+- relatório da avaliação colorido no terminal: notas por cor, quem faz cada etapa e só o que deu errado (#358)
+- README explica a avaliação, as teclas do painel, como personalizar e os problemas comuns (#357)
+
+### Corrigido
+
+- resultados de uma rodada anterior aparecem marcados com `*`, e modelos sem chave saem do relatório e da escolha (#358)
+- modelo sem rota no servidor conta como indisponível, e não como nota zero (#357)
+- acentos certos no PowerShell: logs e relatórios gravados com a marca de UTF-8 (#357)
+
 ## [1.21.1] - 2026-10-07
 
 ### Corrigido

@@ -92,6 +92,12 @@ type benchResult struct {
 	Task  string     `json:"task"`
 	Role  string     `json:"role"`
 	Runs  []benchRun `json:"runs"`
+	Date  time.Time  `json:"date,omitempty"` // the round that measured it (zero: before v1.22)
+}
+
+// old says the result came from an earlier round (kept because this one skipped it).
+func (r benchResult) old(round time.Time) bool {
+	return r.Date.IsZero() || r.Date.Before(round)
 }
 
 func (r benchResult) rate() float64 {
@@ -589,6 +595,7 @@ func reportText(p, prev *benchProfile) string {
 		w("---|")
 	}
 	w("\n")
+	anyOld := false
 	for _, m := range p.Models {
 		w("| %s |", m)
 		for _, t := range benchTasks {
@@ -597,9 +604,16 @@ func reportText(p, prev *benchProfile) string {
 				w(" — |")
 				continue
 			}
-			w(" %d, taxa %.0f%%, %s |", r.score(), 100*r.rate(), level(*r))
+			mark := ""
+			if r.old(p.Date) {
+				mark, anyOld = " *", true
+			}
+			w(" %d, taxa %.0f%%, %s%s |", r.score(), 100*r.rate(), level(*r), mark)
 		}
 		w("\n")
+	}
+	if anyOld {
+		w("\n\\* resultado de uma rodada anterior, mantido porque esta rodada não refez essa etapa. Para refazer: `axyn bench` (tudo) ou só as etapas, por exemplo `axyn bench codigo conserto`.\n")
 	}
 	w("\n## Para que o axyn vai usar cada modelo\n\n")
 	for _, role := range []string{roleplan, roleCode, roleTests, roleFix} {
@@ -636,7 +650,14 @@ func reportText(p, prev *benchProfile) string {
 	w("\n## Detalhes de cada tentativa\n\nO código que o modelo escreveu em cada tentativa fica na pasta `bench-%s/` ao lado deste relatório, um arquivo `.diff` por tentativa; a saída completa dos modelos, em `bench-%s.log`.\n\n", p.Date.Format("20060102-150405"), p.Date.Format("20060102-150405"))
 	for _, r := range p.Results {
 		for i, x := range r.Runs {
-			w("- %s, %s (tentativa %d): nota %d em %.0fs", r.Model, r.Task, i+1, x.Score, x.Seconds)
+			when := ""
+			if r.old(p.Date) {
+				when = ", rodada anterior"
+				if !r.Date.IsZero() {
+					when = ", rodada de " + r.Date.Format("2006-01-02")
+				}
+			}
+			w("- %s, %s (tentativa %d%s): nota %d em %.0fs", r.Model, r.Task, i+1, when, x.Score, x.Seconds)
 			if len(x.Notes) > 0 {
 				w(": %s", strings.Join(x.Notes, "; "))
 			}
@@ -721,6 +742,11 @@ func runBenchCmd(args []string, stdout, stderr io.Writer) int {
 			_, _ = fmt.Fprintln(stdout, "nenhuma avaliação ainda; rode: axyn bench")
 			return exitOK
 		}
+		if isTerminal(stdout) {
+			enableVT()
+			_, _ = fmt.Fprint(stdout, reportTerm(p, benchReportPath(p), true))
+			return exitOK
+		}
 		_, _ = fmt.Fprintln(stdout, report(p, nil))
 		return exitOK
 	}
@@ -751,7 +777,12 @@ func runBenchCmd(args []string, stdout, stderr io.Writer) int {
 	text := report(p, prev)
 	mdPath := filepath.Join(benchDir(), "bench-"+p.Date.Format("20060102-150405")+".md")
 	_ = writeText(mdPath, text)
-	_, _ = fmt.Fprintf(stdout, "\n%s\nrelatório completo: %s\n", text, mdPath)
+	if isTerminal(stdout) {
+		enableVT()
+		_, _ = fmt.Fprint(stdout, reportTerm(p, mdPath, true))
+	} else {
+		_, _ = fmt.Fprintf(stdout, "\n%s\nrelatório completo: %s\n", text, mdPath)
+	}
 	apply := true
 	if *ask {
 		_, _ = fmt.Fprint(stdout, "\nUsar esta recomendação nas próximas execuções do axyn? (s/N): ")
@@ -787,13 +818,14 @@ func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout 
 				run[m+"|"+t.ID] = true
 			}
 		}
+		// A model that lost its key (or never had one) leaves with its old results (#359).
 		for _, r := range prev.Results {
-			if !run[r.Model+"|"+r.Task] {
+			if !run[r.Model+"|"+r.Task] && keyAvailable(r.Model) {
 				p.Results = append(p.Results, r)
 			}
 		}
 		for _, m := range prev.Models {
-			if !inList(p.Models, m) {
+			if !inList(p.Models, m) && keyAvailable(m) {
 				p.Models = append(p.Models, m)
 			}
 		}
@@ -831,7 +863,7 @@ func benchCore(models []string, chosen []benchTask, runs, parallel int, timeout 
 			defer wg.Done()
 			defer func() { <-sem }()
 			for _, t := range chosen {
-				res := benchResult{Model: m, Task: t.ID, Role: t.Role}
+				res := benchResult{Model: m, Task: t.ID, Role: t.Role, Date: p.Date}
 				for i := 0; i < runs; i++ {
 					if progress != nil {
 						mu.Lock()
@@ -1246,4 +1278,9 @@ func benchJob(dir string, st *runState, out io.Writer) int {
 	}
 	r.stop(runDone, "avaliação concluída e aplicada; relatório completo: "+md+"\n"+strings.TrimSpace(summary))
 	return exitOK
+}
+
+// benchReportPath is where the Markdown report of a round is written.
+func benchReportPath(p *benchProfile) string {
+	return filepath.Join(benchDir(), "bench-"+p.Date.Format("20060102-150405")+".md")
 }

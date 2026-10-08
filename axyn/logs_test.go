@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -163,5 +165,40 @@ func TestPrettyLineColors(t *testing.T) {
 	}
 	if got := prettyLine(`go: unlinkat C:\x\b.test.exe: O arquivo já está sendo usado por outro processo.`, false); !strings.Contains(got, "não conta") {
 		t.Errorf("Windows cleanup warning: %q", got)
+	}
+}
+
+// #362: the bench says how many models and steps make the attempts.
+func TestBenchCountIsClear(t *testing.T) {
+	if _, err := exec.LookPath("go"); err != nil {
+		t.Skip("sem go")
+	}
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	t.Setenv("AXYN_OPENCODE", benchAgent(t))
+	var o, e strings.Builder
+	if code := runBenchCmd([]string{"plano", "testes", "--models", "bom,trapaceiro", "--timeout", "2m"}, &o, &e); code != exitOK {
+		t.Fatalf("bench: %d %s", code, e.String())
+	}
+	if !strings.Contains(o.String(), "avaliando 2 modelo(s) em 2 etapa(s) (plano, testes) = 4 tentativas") {
+		t.Errorf("contagem:\n%s", o.String())
+	}
+	st := &runState{Phase: "avaliando modelos", Done: 1, Of: 4, Detail: "modelo 1 de 2: bom, plano", Started: time.Now(), PhaseSince: time.Now()}
+	if l := liveLine(st, 0, time.Now()); !strings.Contains(l, "1/4 tentativas") || !strings.Contains(l, "modelo 1 de 2") {
+		t.Errorf("linha ao vivo: %q", l)
+	}
+}
+
+// #362: models that failed the same steps for the same reason share one line.
+func TestReportTermGroupsFailures(t *testing.T) {
+	now := time.Now()
+	p := &benchProfile{Date: now, Models: []string{"openrouter/a", "openrouter/b", "openrouter/c", "openrouter/d"}}
+	for i, m := range p.Models {
+		p.Results = append(p.Results, benchResult{Model: m, Task: "code-001", Role: roleCode, Date: now,
+			Runs: []benchRun{{Notes: []string{fmt.Sprintf("o CI não passou: FAIL benchcode %d.%03ds", i, i)}}}})
+	}
+	p.Routing, p.Contained = route(p.Results, 50)
+	got := reportTerm(p, "", false)
+	if !strings.Contains(got, "4 modelos: openrouter/a, openrouter/b, openrouter/c +1") || strings.Count(got, "o CI não passou") != 1 {
+		t.Errorf("falhas iguais numa linha:\n%s", got)
 	}
 }

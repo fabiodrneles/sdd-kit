@@ -30,7 +30,7 @@ jobs:
         with:
           fetch-depth: 0
       - id: version
-        uses: fabiodrneles/go-release-manager@v1.1.0
+        uses: fabiodrneles/go-release-manager@v1.1.1
         with:
           create: true
           release-as: ${{ inputs.release-as }}

@@ -39,7 +39,7 @@ jobs:
         with:
           go-version: stable
       - name: Instalar o go-release-manager
-        run: go install github.com/fabiodrneles/go-release-manager@v1.1.1
+        run: go install github.com/fabiodrneles/go-release-manager@v1.2.0
       - name: Abrir o PR de fechamento
         env:
           GH_TOKEN: ${{ secrets.SDD_ENGINE_TOKEN || github.token }}
